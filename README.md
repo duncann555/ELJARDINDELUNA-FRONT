@@ -16,7 +16,6 @@ Por defecto espera el backend en `http://localhost:3001/api`.
 Debes configurar estas variables en Vercel:
 
 - `VITE_API_URL`
-- `VITE_FREE_SHIPPING_THRESHOLD`
 - `VITE_MP_CHECKOUT_MODE`
 
 Valor esperado en produccion para la API:
