@@ -13,6 +13,7 @@ import {
 } from "../../helpers/app";
 import {
   CHECKOUT_PEDIDO_STORAGE_KEY,
+  guardarStorageJson,
   leerStorageJson,
 } from "../../helpers/checkout";
 
@@ -62,11 +63,23 @@ function PagoEstado() {
     searchParams.get("preference_id") || pedidoGuardado?.preferenceId || "";
 
   useEffect(() => {
+    if (!pedidoGuardado?.pedidoId) return;
+
+    guardarStorageJson(CHECKOUT_PEDIDO_STORAGE_KEY, {
+      ...pedidoGuardado,
+      preferenceId: preferenceId || pedidoGuardado.preferenceId || null,
+      paymentId: paymentId || pedidoGuardado.paymentId || null,
+      estadoPago: paymentStatus || pedidoGuardado.estadoPago || "pending",
+      esRecuperableCheckout: paymentStatus !== "approved",
+    });
+  }, [paymentId, paymentStatus, pedidoGuardado, preferenceId]);
+
+  useEffect(() => {
     vaciarCarrito();
   }, [vaciarCarrito]);
 
   useEffect(() => {
-    if (!token || !preferenceId || sincronizadoRef.current) return;
+    if (!token || !preferenceId || !paymentId || sincronizadoRef.current) return;
 
     sincronizadoRef.current = true;
     let desmontado = false;

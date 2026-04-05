@@ -1,6 +1,10 @@
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const PHONE_REGEX = /^\d{8,15}$/;
 export const CODIGO_POSTAL_REGEX = /^[A-Za-z0-9-]{3,10}$/;
+export const EMAIL_MIN_LENGTH = 6;
+export const EMAIL_MAX_LENGTH = 120;
+export const DOMICILIO_MAX_LENGTH = 160;
+export const PRODUCT_STOCK_MAX = 9999;
 
 const PRODUCT_IMAGE_MAX_SIZE = 2 * 1024 * 1024;
 const PRODUCT_IMAGE_TYPES = new Set([
@@ -47,6 +51,10 @@ export const validateEmail = (value, { required = true } = {}) => {
     return required ? "El email es obligatorio" : "";
   }
 
+  if (text.length < EMAIL_MIN_LENGTH || text.length > EMAIL_MAX_LENGTH) {
+    return `El email debe contener entre ${EMAIL_MIN_LENGTH} y ${EMAIL_MAX_LENGTH} caracteres`;
+  }
+
   if (!EMAIL_REGEX.test(text)) {
     return "El email ingresado no es valido";
   }
@@ -79,8 +87,8 @@ export const validateLoginPassword = (value) => {
   if (text.length < 8) {
     return "La contraseña debe contener al menos 8 caracteres";
   }
-  if (text.length > 128) {
-    return "La contraseña no puede superar los 128 caracteres";
+  if (text.length > 16) {
+    return "La contraseña no puede superar los 16 caracteres";
   }
 
   return "";
@@ -93,8 +101,8 @@ export const validatePassword = (value) => {
   if (text.length < 8) {
     return "La contraseña debe contener al menos 8 caracteres";
   }
-  if (text.length > 72) {
-    return "La contraseña no puede superar los 72 caracteres";
+  if (text.length > 16) {
+    return "La contraseña no puede superar los 16 caracteres";
   }
 
   return "";
@@ -148,7 +156,7 @@ export const validateDomicilio = (value) => {
   const text = normalizeText(value);
 
   if (!text) return "El domicilio es obligatorio";
-  if (text.length < 5 || text.length > 150) {
+  if (text.length < 5 || text.length > DOMICILIO_MAX_LENGTH) {
     return "El domicilio no es valido";
   }
 
@@ -210,8 +218,12 @@ export const validateProductoStock = (value) => {
   if (!text) return "El stock es un dato obligatorio";
 
   const numberValue = Number(text);
-  if (!Number.isInteger(numberValue) || numberValue < 0) {
-    return "El stock debe ser un numero entero mayor o igual a 0";
+  if (
+    !Number.isInteger(numberValue) ||
+    numberValue < 0 ||
+    numberValue > PRODUCT_STOCK_MAX
+  ) {
+    return `El stock debe ser un numero entero entre 0 y ${PRODUCT_STOCK_MAX}`;
   }
 
   return "";

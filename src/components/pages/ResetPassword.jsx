@@ -171,6 +171,8 @@ export default function ResetPassword() {
               placeholder="Nueva contrasena"
               className="ml-input"
               autoComplete="new-password"
+              minLength={8}
+              maxLength={16}
               value={password}
               disabled={!token || Boolean(successMessage)}
               isInvalid={Boolean(touched.password && fieldErrors.password)}
@@ -192,6 +194,8 @@ export default function ResetPassword() {
               placeholder="Repetir contrasena"
               className="ml-input"
               autoComplete="new-password"
+              minLength={8}
+              maxLength={16}
               value={passwordConfirm}
               disabled={!token || Boolean(successMessage)}
               isInvalid={Boolean(

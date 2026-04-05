@@ -25,6 +25,7 @@ import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
 import {
   CHECKOUT_ENVIO_STORAGE_KEY,
   CHECKOUT_PEDIDO_STORAGE_KEY,
+  eliminarStorageItem,
   guardarStorageJson,
   leerStorageJson,
   obtenerCheckoutUrl,
@@ -48,9 +49,55 @@ const ENVIO_INICIAL = {
   referencia: "",
   codigoPostal: "",
 };
-const ENVIO_FIJO = 15000;
-const ENVIO_GRATIS_DESDE = 60000;
+const ENVIO_FIJO = Number(import.meta.env.VITE_FIXED_SHIPPING_COST || 15000);
+const ENVIO_GRATIS_DESDE = Number(
+  import.meta.env.VITE_FREE_SHIPPING_THRESHOLD || 60000,
+);
 const normalizePhone = (value) => String(value || "").replace(/\D/g, "");
+const normalizeCheckoutText = (value) => String(value || "").trim();
+
+const construirEnvioPayload = (envio) => ({
+  provincia: normalizeCheckoutText(envio.provincia),
+  ciudad: normalizeCheckoutText(envio.ciudad),
+  domicilio: normalizeCheckoutText(envio.domicilio),
+  celular: normalizePhone(envio.celular),
+  entreCalles: normalizeCheckoutText(envio.entreCalles),
+  referencia: normalizeCheckoutText(envio.referencia),
+  codigoPostal: normalizeCheckoutText(envio.codigoPostal),
+});
+
+const construirProductosResumen = (carritoCheckout) =>
+  carritoCheckout
+    .map((item) => ({
+      id: String(obtenerProductoId(item) || ""),
+      nombre: String(item.nombre || ""),
+      cantidad: Number(item.cantidad || 0),
+      precio: Number(item.precio || 0),
+    }))
+    .sort((a, b) => a.id.localeCompare(b.id));
+
+const construirCheckoutHash = ({ userId, productos, envio }) =>
+  JSON.stringify({
+    userId: String(userId || ""),
+    productos: productos.map(({ id, cantidad }) => ({ id, cantidad })),
+    envio,
+  });
+
+const puedeReutilizarPedidoGuardado = ({ pedidoGuardado, userId, checkoutHash }) =>
+  Boolean(
+    pedidoGuardado?.pedidoId &&
+      pedidoGuardado?.checkoutHash &&
+      pedidoGuardado.checkoutHash === checkoutHash &&
+      String(pedidoGuardado.userId || "") === String(userId || "") &&
+      pedidoGuardado.esRecuperableCheckout !== false,
+  );
+
+const pedidoGuardadoDebeRecrearse = ({ status, message }) =>
+  status === 404 ||
+  status === 403 ||
+  /fue cancelado|pedido no encontrado|no tienes permisos/i.test(
+    String(message || ""),
+  );
 
 const validateDomicilioCompleto = (value) => {
   const validation = validateDomicilio(value);
@@ -316,103 +363,168 @@ const Carrito = () => {
         },
       });
 
-      const pedidoPayload = {
-        productos: carritoCheckout.map((item) => ({
-          producto: obtenerProductoId(item),
-          cantidad: item.cantidad,
-        })),
-        envio: {
-          provincia: envio.provincia.trim(),
-          ciudad: envio.ciudad.trim(),
-          domicilio: envio.domicilio.trim(),
-          celular: normalizePhone(envio.celular),
-          entreCalles: envio.entreCalles.trim(),
-          referencia: envio.referencia.trim(),
-          codigoPostal: envio.codigoPostal.trim(),
-        },
-      };
-
-      const pedidoResponse = await fetch(`${API_URL}/pedidos`, {
-        method: "POST",
-        headers: buildAuthHeaders(token, {
-          "Content-Type": "application/json",
-        }),
-        body: JSON.stringify(pedidoPayload),
+      const productosResumen = construirProductosResumen(carritoCheckout);
+      const envioPayload = construirEnvioPayload(envio);
+      const checkoutHash = construirCheckoutHash({
+        userId: user.uid,
+        productos: productosResumen,
+        envio: envioPayload,
       });
+      const pedidoGuardado = leerStorageJson(CHECKOUT_PEDIDO_STORAGE_KEY, null);
 
-      const pedidoData = await safeJson(pedidoResponse);
-
-      if (isAuthError(pedidoResponse, pedidoData)) {
-        logout();
-        throw new Error("Tu sesion vencio. Vuelve a ingresar antes de continuar.");
-      }
-
-      if (!pedidoResponse.ok) {
-        throw new Error(getApiErrorMessage(pedidoData, "No se pudo crear el pedido."));
-      }
-
-      const pedidoId = pedidoData?.pedidoId;
-
-      if (!pedidoId) {
-        throw new Error("No recibimos un ID de pedido valido.");
-      }
-
-      const checkoutResponse = await fetch(`${API_URL}/pagos/checkout`, {
-        method: "POST",
-        headers: buildAuthHeaders(token, {
-          "Content-Type": "application/json",
-        }),
-        body: JSON.stringify({ pedidoId }),
-      });
-
-      const checkoutData = await safeJson(checkoutResponse);
-
-      if (isAuthError(checkoutResponse, checkoutData)) {
-        logout();
-        throw new Error("Tu sesion vencio. Ingresa nuevamente y reintenta el pago.");
-      }
-
-      if (!checkoutResponse.ok) {
-        throw new Error(
-          getApiErrorMessage(
-            checkoutData,
-            "No se pudo iniciar el checkout de Mercado Pago.",
-          ),
-        );
-      }
-
-      const checkoutUrl = obtenerCheckoutUrl(checkoutData);
-
-      if (!checkoutUrl) {
-        throw new Error("Mercado Pago no devolvio una URL de checkout valida.");
-      }
-
-      guardarStorageJson(CHECKOUT_PEDIDO_STORAGE_KEY, {
+      const construirResumenPedidoGuardado = ({
         pedidoId,
-        preferenceId: checkoutData?.id || null,
-        createdAt: new Date().toISOString(),
-        subtotal: Number(pedidoData?.subtotal || subtotal),
-        total: Number(pedidoData?.total || totalFinal),
-        cantidadTotal: carritoCheckout.reduce(
-          (acumulado, item) => acumulado + Number(item.cantidad || 0),
-          0,
-        ),
-        envio: pedidoData?.envio || {
-          ...pedidoPayload.envio,
+        pedidoData,
+        preferenceId = null,
+        baseResumen = {},
+      }) => ({
+        ...baseResumen,
+        pedidoId,
+        userId: String(user.uid || ""),
+        checkoutHash,
+        esRecuperableCheckout: true,
+        preferenceId,
+        createdAt: baseResumen.createdAt || new Date().toISOString(),
+        subtotal: Number(pedidoData?.subtotal ?? baseResumen.subtotal ?? subtotal),
+        total: Number(pedidoData?.total ?? baseResumen.total ?? totalFinal),
+        cantidadTotal:
+          baseResumen.cantidadTotal ||
+          productosResumen.reduce(
+            (acumulado, item) => acumulado + Number(item.cantidad || 0),
+            0,
+          ),
+        envio: pedidoData?.envio || baseResumen.envio || {
+          ...envioPayload,
           proveedor: "Envio nacional",
           costo: costoEnvio,
           esGratis: envioEsGratis,
         },
-        productos: carritoCheckout.map((item) => ({
-          id: obtenerProductoId(item),
-          nombre: item.nombre,
-          cantidad: item.cantidad,
-          precio: item.precio,
-        })),
+        productos: baseResumen.productos || productosResumen,
+      });
+
+      const crearNuevoPedido = async () => {
+        const pedidoResponse = await fetch(`${API_URL}/pedidos`, {
+          method: "POST",
+          headers: buildAuthHeaders(token, {
+            "Content-Type": "application/json",
+          }),
+          body: JSON.stringify({
+            productos: productosResumen.map((item) => ({
+              producto: item.id,
+              cantidad: item.cantidad,
+            })),
+            envio: envioPayload,
+          }),
+        });
+
+        const pedidoData = await safeJson(pedidoResponse);
+
+        if (isAuthError(pedidoResponse, pedidoData)) {
+          logout();
+          throw new Error("Tu sesion vencio. Vuelve a ingresar antes de continuar.");
+        }
+
+        if (!pedidoResponse.ok) {
+          throw new Error(getApiErrorMessage(pedidoData, "No se pudo crear el pedido."));
+        }
+
+        const pedidoId = pedidoData?.pedidoId;
+
+        if (!pedidoId) {
+          throw new Error("No recibimos un ID de pedido valido.");
+        }
+
+        const resumenPedido = construirResumenPedidoGuardado({
+          pedidoId,
+          pedidoData,
+        });
+
+        guardarStorageJson(CHECKOUT_PEDIDO_STORAGE_KEY, resumenPedido);
+
+        return resumenPedido;
+      };
+
+      const iniciarCheckoutPedido = async (pedidoId) => {
+        const checkoutResponse = await fetch(`${API_URL}/pagos/checkout`, {
+          method: "POST",
+          headers: buildAuthHeaders(token, {
+            "Content-Type": "application/json",
+          }),
+          body: JSON.stringify({ pedidoId }),
+        });
+
+        const checkoutData = await safeJson(checkoutResponse);
+
+        if (isAuthError(checkoutResponse, checkoutData)) {
+          logout();
+          throw new Error("Tu sesion vencio. Ingresa nuevamente y reintenta el pago.");
+        }
+
+        if (!checkoutResponse.ok) {
+          const message = getApiErrorMessage(
+            checkoutData,
+            "No se pudo iniciar el checkout de Mercado Pago.",
+          );
+          const checkoutError = new Error(message);
+          checkoutError.status = checkoutResponse.status;
+          checkoutError.reintentarConPedidoNuevo = pedidoGuardadoDebeRecrearse({
+            status: checkoutResponse.status,
+            message,
+          });
+          throw checkoutError;
+        }
+
+        const checkoutUrl = obtenerCheckoutUrl(checkoutData);
+
+        if (!checkoutUrl) {
+          throw new Error("Mercado Pago no devolvio una URL de checkout valida.");
+        }
+
+        return { checkoutData, checkoutUrl };
+      };
+
+      const reutilizarPedido =
+        puedeReutilizarPedidoGuardado({
+          pedidoGuardado,
+          userId: user.uid,
+          checkoutHash,
+        }) &&
+        pedidoGuardado;
+
+      let resumenPedido = reutilizarPedido
+        ? construirResumenPedidoGuardado({
+            pedidoId: pedidoGuardado.pedidoId,
+            preferenceId: pedidoGuardado.preferenceId || null,
+            baseResumen: pedidoGuardado,
+          })
+        : await crearNuevoPedido();
+
+      let checkoutResultado;
+
+      try {
+        checkoutResultado = await iniciarCheckoutPedido(resumenPedido.pedidoId);
+      } catch (checkoutError) {
+        if (reutilizarPedido && checkoutError?.reintentarConPedidoNuevo) {
+          eliminarStorageItem(CHECKOUT_PEDIDO_STORAGE_KEY);
+          resumenPedido = await crearNuevoPedido();
+          checkoutResultado = await iniciarCheckoutPedido(resumenPedido.pedidoId);
+        } else {
+          throw checkoutError;
+        }
+      }
+
+      guardarStorageJson(CHECKOUT_PEDIDO_STORAGE_KEY, {
+        ...resumenPedido,
+        preferenceId:
+          checkoutResultado.checkoutData?.id ||
+          resumenPedido.preferenceId ||
+          null,
+        esRecuperableCheckout: true,
+        estadoPago: "pending",
       });
 
       Swal.close();
-      window.location.assign(checkoutUrl);
+      window.location.assign(checkoutResultado.checkoutUrl);
     } catch (error) {
       console.error("Error Mercado Pago:", error);
       Swal.close();
@@ -602,6 +714,7 @@ const Carrito = () => {
                       <Form.Control
                         type="text"
                         name="provincia"
+                        minLength={2}
                         maxLength={80}
                         value={envio.provincia}
                         onChange={handleEnvioChange}
@@ -621,6 +734,7 @@ const Carrito = () => {
                       <Form.Control
                         type="text"
                         name="ciudad"
+                        minLength={2}
                         maxLength={80}
                         value={envio.ciudad}
                         onChange={handleEnvioChange}
@@ -640,7 +754,8 @@ const Carrito = () => {
                       <Form.Control
                         type="text"
                         name="domicilio"
-                        maxLength={150}
+                        minLength={5}
+                        maxLength={160}
                         value={envio.domicilio}
                         onChange={handleEnvioChange}
                         onBlur={handleEnvioBlur}
@@ -659,6 +774,7 @@ const Carrito = () => {
                       <Form.Control
                         type="text"
                         name="codigoPostal"
+                        minLength={3}
                         maxLength={10}
                         value={envio.codigoPostal}
                         onChange={handleEnvioChange}
@@ -678,6 +794,7 @@ const Carrito = () => {
                       <Form.Control
                         type="text"
                         name="celular"
+                        minLength={8}
                         maxLength={18}
                         value={envio.celular}
                         onChange={handleEnvioChange}

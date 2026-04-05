@@ -91,6 +91,8 @@ export default function ForgotPassword() {
             placeholder="Email"
             className="ml-input"
             autoComplete="email"
+            minLength={6}
+            maxLength={120}
             value={email}
             isInvalid={Boolean(touched && fieldError)}
             onChange={(event) => {

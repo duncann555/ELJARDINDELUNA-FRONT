@@ -112,6 +112,7 @@ export default function Contacto() {
                     <Form.Control
                       type="text"
                       placeholder="Nombre"
+                      minLength={3}
                       maxLength={50}
                       className={`form-control-clean ${errors.nombre ? "is-invalid" : ""}`}
                       {...register("nombre", {
@@ -131,6 +132,7 @@ export default function Contacto() {
                     <Form.Control
                       type="email"
                       placeholder="name@example.com"
+                      minLength={6}
                       maxLength={120}
                       className={`form-control-clean ${errors.email ? "is-invalid" : ""}`}
                       {...register("email", {
@@ -151,6 +153,7 @@ export default function Contacto() {
                       type="tel"
                       placeholder="Telefono"
                       inputMode="numeric"
+                      minLength={8}
                       maxLength={15}
                       className={`form-control-clean ${errors.telefono ? "is-invalid" : ""}`}
                       {...register("telefono", {
@@ -173,6 +176,7 @@ export default function Contacto() {
                       as="textarea"
                       placeholder="Deja tu mensaje aqui"
                       style={{ height: "150px" }}
+                      minLength={10}
                       maxLength={1000}
                       className={`form-control-clean ${errors.mensaje ? "is-invalid" : ""}`}
                       {...register("mensaje", {

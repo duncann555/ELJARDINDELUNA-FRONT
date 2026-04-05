@@ -266,6 +266,8 @@ export default function Register() {
                           type="text"
                           placeholder="Nombre"
                           className="ml-input"
+                          minLength={3}
+                          maxLength={50}
                           value={formValues.nombre}
                           isInvalid={Boolean(touched.nombre && fieldErrors.nombre)}
                           onChange={(event) =>
@@ -285,6 +287,8 @@ export default function Register() {
                           type="text"
                           placeholder="Apellido"
                           className="ml-input"
+                          minLength={3}
+                          maxLength={50}
                           value={formValues.apellido}
                           isInvalid={Boolean(touched.apellido && fieldErrors.apellido)}
                           onChange={(event) =>
@@ -305,6 +309,8 @@ export default function Register() {
                           placeholder="Email"
                           className="ml-input"
                           autoComplete="email"
+                          minLength={6}
+                          maxLength={120}
                           value={formValues.email}
                           isInvalid={Boolean(touched.email && fieldErrors.email)}
                           onChange={(event) =>
@@ -330,6 +336,8 @@ export default function Register() {
                           inputMode="numeric"
                           placeholder="Ej: 11"
                           className="ml-input"
+                          minLength={2}
+                          maxLength={5}
                           value={formValues.codigoArea}
                           isInvalid={Boolean(
                             touched.codigoArea && fieldErrors.codigoArea,
@@ -353,6 +361,8 @@ export default function Register() {
                           inputMode="numeric"
                           placeholder="Ej: 23456789 (sin 0 ni 15)"
                           className="ml-input"
+                          minLength={6}
+                          maxLength={10}
                           value={formValues.telefono}
                           isInvalid={Boolean(
                             touched.telefono && fieldErrors.telefono,
@@ -375,6 +385,8 @@ export default function Register() {
                           placeholder="Contraseña"
                           className="ml-input"
                           autoComplete="new-password"
+                          minLength={8}
+                          maxLength={16}
                           value={formValues.password}
                           isInvalid={Boolean(
                             touched.password && fieldErrors.password,
@@ -397,6 +409,8 @@ export default function Register() {
                           placeholder="Repetir contraseña"
                           className="ml-input"
                           autoComplete="new-password"
+                          minLength={8}
+                          maxLength={16}
                           value={formValues.passwordConfirm}
                           isInvalid={Boolean(
                             touched.passwordConfirm &&

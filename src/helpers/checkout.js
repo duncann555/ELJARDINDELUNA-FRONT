@@ -25,6 +25,14 @@ export const guardarStorageJson = (key, value) => {
   }
 };
 
+export const eliminarStorageItem = (key) => {
+  try {
+    localStorage.removeItem(key);
+  } catch (error) {
+    console.error(`No se pudo eliminar ${key}:`, error);
+  }
+};
+
 export const obtenerProductoId = (producto) => producto?._id ?? producto?.id;
 
 const debeUsarSandboxMercadoPago = () => {

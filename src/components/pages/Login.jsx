@@ -140,6 +140,8 @@ export default function Login({ show, onClose }) {
                 placeholder=" "
                 className="ml-input"
                 autoComplete="email"
+                minLength={6}
+                maxLength={120}
                 value={email}
                 isInvalid={Boolean(touched.email && fieldErrors.email)}
                 onChange={(event) => handleFieldChange("email", event.target.value)}
@@ -158,6 +160,8 @@ export default function Login({ show, onClose }) {
                 placeholder="Contraseña"
                 className="ml-input pe-5"
                 autoComplete="current-password"
+                minLength={8}
+                maxLength={16}
                 value={password}
                 isInvalid={Boolean(touched.password && fieldErrors.password)}
                 onChange={(event) => handleFieldChange("password", event.target.value)}
