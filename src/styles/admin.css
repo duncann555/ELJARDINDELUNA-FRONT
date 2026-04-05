@@ -1,0 +1,155 @@
+:root {
+  --admin-brand: #53B852;
+  --admin-brand-dark: #2D643F;
+  --admin-bg: #f8f9fa;
+  --admin-card-bg: #ffffff;
+}
+
+body {
+  background-color: var(--admin-bg);
+}
+
+/* =======================================
+   STATUS CARDS
+======================================= */
+.status-card {
+  border: none;
+  border-radius: 1rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+}
+
+.status-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+}
+
+.status-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+/* =======================================
+   TABS PERSONALIZADOS
+======================================= */
+.admin-tabs .nav-link {
+  color: #6c757d;
+  font-weight: 500;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 1rem 1.5rem;
+  transition: all 0.2s;
+}
+
+.admin-tabs .nav-link:hover {
+  color: var(--admin-brand);
+  background: transparent;
+}
+
+.admin-tabs .nav-link.active {
+  color: var(--admin-brand) !important;
+  background-color: transparent !important;
+  border-bottom: 3px solid var(--admin-brand) !important;
+  font-weight: 700;
+}
+
+/* =======================================
+   TABLA & CARDS CONTENEDORAS
+======================================= */
+.admin-table-card {
+  border: none;
+  border-radius: 1rem;
+  background: var(--admin-card-bg);
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f0fdf4; /* Verde muy suave */
+}
+
+.table thead th {
+  background-color: #f1f5f9;
+  border-bottom: 2px solid #e2e8f0;
+  color: #475569;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  padding: 1rem;
+}
+
+.table td {
+  padding: 1rem;
+  vertical-align: middle;
+}
+
+/* =======================================
+   BOTONES
+======================================= */
+.btn-admin-primary {
+  background-color: var(--admin-brand) !important;
+  border-color: var(--admin-brand) !important;
+  color: white;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s;
+}
+
+.btn-admin-primary:hover {
+  background-color: var(--admin-brand-dark) !important;
+  border-color: var(--admin-brand-dark) !important;
+  box-shadow: 0 4px 12px rgba(83, 184, 82, 0.3);
+}
+
+/* Badges custom */
+.badge-stock-ok { background-color: #d1fae5; color: #065f46; } /* Verde claro */
+.badge-stock-low { background-color: #fef3c7; color: #92400e; } /* Amarillo */
+.badge-stock-out { background-color: #fee2e2; color: #991b1b; } /* Rojo */
+
+@media (max-width: 991px) {
+  .admin-tabs .nav-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+  }
+
+  .admin-tabs .nav-link {
+    white-space: nowrap;
+    padding: 0.85rem 1rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .status-card .card-body {
+    padding: 1rem;
+  }
+
+  .status-icon-wrapper {
+    width: 42px;
+    height: 42px;
+    font-size: 1.25rem;
+  }
+
+  .table td,
+  .table thead th {
+    padding: 0.75rem;
+    font-size: 0.92rem;
+  }
+
+  .modal-body,
+  .modal-header,
+  .modal-footer {
+    padding-inline: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .admin-tabs .nav-link {
+    font-size: 0.9rem;
+  }
+}

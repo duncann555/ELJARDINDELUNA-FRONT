@@ -1,0 +1,27 @@
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+.swal2-popup {
+  width: min(32rem, calc(100vw - 1.5rem));
+}
+
+@media (max-width: 576px) {
+  main {
+    overflow-x: clip;
+  }
+}

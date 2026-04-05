@@ -1,0 +1,115 @@
+:root {
+  --color-brand: #53B852;
+  --color-brand-dark: #2D643F;
+  --color-bg-soft: #f4f9f4;
+}
+
+.font-playfair {
+  font-family: 'Playfair Display', serif;
+}
+
+/* Fondo general */
+.error-page-wrapper {
+  background-color: var(--color-bg-soft);
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Tarjeta Central */
+.error-card {
+  background: white;
+  padding: 4rem 2rem;
+  border-radius: 2rem;
+  box-shadow: 0 20px 40px rgba(83, 184, 82, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  max-width: 600px;
+  width: 100%;
+  position: relative;
+  z-index: 10;
+}
+
+/* El número 404 */
+.error-visual h1 {
+  font-size: 8rem;
+  line-height: 1;
+  color: var(--color-brand);
+  text-shadow: 4px 4px 0px rgba(83, 184, 82, 0.15);
+  margin: 0;
+}
+
+/* Decoración de hoja */
+.leaf-decoration {
+  font-size: 4rem;
+  position: absolute;
+  top: 15%;
+  right: 25%;
+  opacity: 0.6;
+  animation: floatLeaf 4s ease-in-out infinite;
+}
+
+/* Botones Personalizados */
+.btn-brand {
+  background-color: var(--color-brand);
+  border: 1px solid var(--color-brand);
+  color: white;
+  transition: all 0.2s;
+}
+
+.btn-brand:hover {
+  background-color: var(--color-brand-dark);
+  border-color: var(--color-brand-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(83, 184, 82, 0.3);
+}
+
+.btn-brand-outline {
+  background-color: transparent;
+  border: 2px solid #d1d5db;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.btn-brand-outline:hover {
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+  background-color: white;
+}
+
+/* Animaciones */
+.floating-anim {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes floatLeaf {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(10px, -10px) rotate(10deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+/* Ajuste responsive para que el 404 no rompa en celulares muy chicos */
+@media (max-width: 576px) {
+  .error-visual h1 {
+    font-size: 5rem;
+  }
+  
+  .error-card {
+    padding: 2rem 1.5rem;
+    margin: 1rem;
+  }
+  
+  .leaf-decoration {
+    font-size: 2.5rem;
+    right: 20%;
+  }
+
+  .error-card .btn {
+    width: 100%;
+  }
+}

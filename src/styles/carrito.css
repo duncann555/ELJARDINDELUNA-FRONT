@@ -1,0 +1,580 @@
+:root {
+  --color-brand: #53B852;
+  --color-brand-dark: #2D643F;
+  --color-bg-page: #f4f9f4;
+}
+
+/* Wrapper */
+.page-wrapper {
+  background-color: var(--color-bg-page);
+  min-height: 100vh;
+}
+
+.carrito-container {
+  max-width: 1100px;
+}
+
+/* Botón Volver */
+.btn-back {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-weight: 500;
+  padding: 0;
+  transition: color 0.2s;
+}
+.btn-back:hover { color: var(--color-brand-dark); }
+
+/* Items del Carrito */
+.carrito-item-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.carrito-item-row:last-child {
+  border-bottom: none;
+}
+
+.carrito-item-img-wrapper {
+  width: 80px;
+  height: 80px;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  border: 1px solid #e5e7eb;
+}
+
+.carrito-item-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.carrito-item-info {
+  flex-grow: 1;
+}
+
+.carrito-item-name {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: #111827;
+}
+
+.carrito-item-price {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--color-brand-dark);
+  min-width: 100px;
+}
+
+/* --- AQUÍ EMPIEZA LA CORRECCIÓN DE LOS BOTONES --- */
+
+/* 1. Contenedor Cápsula */
+.carrito-qty-group {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 50rem; /* Forma redonda completa */
+  padding: 3px;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+/* 2. Botones circulares internos (+ y -) */
+.btn-qty-mini {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding-bottom: 2px; /* Ajuste visual */
+}
+
+/* Hover: Se pone verde Esenzia */
+.btn-qty-mini:hover:not(:disabled) {
+  background-color: var(--color-brand);
+  color: white;
+  transform: scale(1.05);
+}
+
+.btn-qty-mini:disabled {
+  color: #d1d5db;
+  cursor: not-allowed;
+}
+
+/* 3. Botón Eliminar (Estilo mejorado) */
+.btn-trash {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  margin-left: 8px; /* Separación del contador */
+}
+
+.btn-trash:hover {
+  background-color: #fef2f2; /* Fondo rojo suave */
+  color: #ef4444;            /* Icono rojo */
+  transform: translateY(-1px);
+}
+
+/* --- FIN DE LA CORRECCIÓN --- */
+
+/* Botón Principal (Brand) */
+.btn-brand {
+  background-color: var(--color-brand) !important;
+  border-color: var(--color-brand) !important;
+  color: white;
+  transition: all 0.2s;
+}
+
+.btn-brand:hover {
+  background-color: var(--color-brand-dark) !important;
+  border-color: var(--color-brand-dark) !important;
+  transform: translateY(-1px);
+}
+
+/* --- BOTÓN VACIAR CARRITO --- */
+.btn-empty {
+  color: #e11d48;            /* Rojo elegante, no chillón */
+  background-color: #fff1f2; /* Fondo rosa muy pálido */
+  border: 1px solid #fda4af; /* Borde sutil */
+  padding: 8px 20px;
+  border-radius: 50rem;      /* Píldora completa */
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;                  /* Espacio entre icono y texto */
+  margin-top: 10px;
+}
+
+.btn-empty:hover {
+  background-color: #ffe4e6;
+  border-color: #f43f5e;
+  color: #be123c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.15); /* Sombra roja suave */
+}
+
+.btn-empty:active {
+  transform: translateY(0);
+}
+
+.checkout-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.checkout-summary-card {
+  position: static;
+}
+
+.checkout-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+}
+
+.checkout-step-badge {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #62745c 0%, #44563f 100%);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.92rem;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(68, 86, 63, 0.18);
+}
+
+.checkout-payment-method {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #f9fbf8 0%, #ffffff 100%);
+}
+
+.checkout-payment-icon {
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: 1rem;
+  background: rgba(83, 184, 82, 0.12);
+  color: var(--color-brand-dark);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.checkout-payment-note {
+  line-height: 1.6;
+}
+
+:root[data-theme="light"] .carrito-page .card {
+  border: 1px solid rgba(45, 68, 93, 0.2) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(248, 242, 232, 0.99) 100%) !important;
+  box-shadow:
+    0 24px 48px rgba(29, 48, 70, 0.1),
+    0 2px 0 rgba(217, 200, 162, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.76) !important;
+}
+
+:root[data-theme="light"] .carrito-page .alert-secondary,
+:root[data-theme="light"] .carrito-page .alert-success,
+:root[data-theme="light"] .carrito-page .alert-warning {
+  border-width: 1px;
+  border-style: solid;
+  box-shadow:
+    0 14px 28px rgba(29, 48, 70, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.62);
+}
+
+:root[data-theme="light"] .carrito-page .alert-secondary {
+  background: linear-gradient(180deg, rgba(243, 246, 250, 0.98) 0%, rgba(232, 237, 243, 0.99) 100%);
+  border-color: rgba(45, 68, 93, 0.14);
+}
+
+:root[data-theme="light"] .carrito-page .alert-success {
+  background: linear-gradient(180deg, rgba(204, 229, 217, 0.98) 0%, rgba(187, 218, 202, 0.99) 100%);
+  border-color: rgba(98, 115, 93, 0.24);
+}
+
+:root[data-theme="light"] .carrito-page .checkout-card-header {
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(45, 68, 93, 0.08);
+}
+
+:root[data-theme="light"] .carrito-page .checkout-summary-card {
+  border-color: rgba(45, 68, 93, 0.22) !important;
+}
+
+:root[data-theme="light"] .carrito-page .checkout-payment-method {
+  border: 1px solid rgba(45, 68, 93, 0.18);
+  background: linear-gradient(180deg, rgba(252, 253, 251, 1) 0%, rgba(244, 247, 242, 0.99) 100%);
+  box-shadow:
+    0 12px 24px rgba(29, 48, 70, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+}
+
+:root[data-theme="light"] .carrito-page .carrito-item-row {
+  border-bottom-color: rgba(45, 68, 93, 0.12);
+}
+
+:root[data-theme="light"] .carrito-page .carrito-item-img-wrapper {
+  border-color: rgba(45, 68, 93, 0.16);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(239, 243, 247, 0.99) 100%);
+  box-shadow:
+    0 10px 20px rgba(29, 48, 70, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+}
+
+:root[data-theme="light"] .carrito-page .carrito-qty-group {
+  border-color: rgba(45, 68, 93, 0.18);
+  box-shadow:
+    0 8px 18px rgba(29, 48, 70, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.76);
+}
+
+:root[data-theme="light"] .carrito-page .form-control,
+:root[data-theme="light"] .carrito-page .form-select,
+:root[data-theme="light"] .carrito-page textarea.form-control {
+  border-color: rgba(45, 68, 93, 0.18);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(246, 248, 250, 0.98) 100%);
+  box-shadow:
+    0 4px 10px rgba(29, 48, 70, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+:root[data-theme="light"] .carrito-page .form-control:focus,
+:root[data-theme="light"] .carrito-page .form-select:focus,
+:root[data-theme="light"] .carrito-page textarea.form-control:focus {
+  border-color: rgba(217, 200, 162, 0.95);
+  box-shadow:
+    0 0 0 0.25rem rgba(217, 200, 162, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+:root[data-theme="dark"] .carrito-page {
+  background:
+    radial-gradient(circle at top, rgba(217, 200, 162, 0.08), transparent 28%),
+    radial-gradient(circle at 82% 16%, rgba(123, 141, 120, 0.08), transparent 22%),
+    linear-gradient(180deg, rgba(11, 18, 28, 0.98) 0%, rgba(15, 23, 36, 0.98) 100%) !important;
+  color: var(--theme-text);
+}
+
+:root[data-theme="dark"] .carrito-page .card {
+  border: 1px solid rgba(217, 200, 162, 0.08) !important;
+  background:
+    linear-gradient(180deg, rgba(18, 26, 38, 0.96) 0%, rgba(11, 18, 28, 0.98) 100%) !important;
+  box-shadow: 0 24px 48px rgba(2, 6, 23, 0.3) !important;
+}
+
+:root[data-theme="dark"] .carrito-page h1,
+:root[data-theme="dark"] .carrito-page h4,
+:root[data-theme="dark"] .carrito-page h5,
+:root[data-theme="dark"] .carrito-page .fw-semibold,
+:root[data-theme="dark"] .carrito-page .form-label {
+  color: #f5efdf;
+}
+
+:root[data-theme="dark"] .carrito-page .text-muted,
+:root[data-theme="dark"] .carrito-page .checkout-payment-note,
+:root[data-theme="dark"] .carrito-page .small.text-muted {
+  color: #aeb9c8 !important;
+}
+
+:root[data-theme="dark"] .btn-back {
+  color: #aeb9c8;
+}
+
+:root[data-theme="dark"] .btn-back:hover {
+  color: var(--theme-moon);
+}
+
+:root[data-theme="dark"] .carrito-item-row {
+  border-bottom-color: rgba(217, 200, 162, 0.08);
+}
+
+:root[data-theme="dark"] .carrito-item-img-wrapper {
+  background-color: rgba(11, 18, 28, 0.92);
+  border-color: rgba(217, 200, 162, 0.1);
+}
+
+:root[data-theme="dark"] .carrito-item-name {
+  color: #f5efdf;
+}
+
+:root[data-theme="dark"] .carrito-item-price,
+:root[data-theme="dark"] .carrito-page .text-success {
+  color: #cfe1b8 !important;
+}
+
+:root[data-theme="dark"] .carrito-qty-group {
+  background-color: rgba(245, 247, 250, 0.04);
+  border-color: rgba(217, 200, 162, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+:root[data-theme="dark"] .btn-qty-mini {
+  color: #edf2f7;
+}
+
+:root[data-theme="dark"] .btn-qty-mini:disabled {
+  color: rgba(166, 179, 194, 0.42);
+}
+
+:root[data-theme="dark"] .btn-trash {
+  color: #aeb9c8;
+}
+
+:root[data-theme="dark"] .btn-trash:hover {
+  background-color: rgba(190, 24, 93, 0.16);
+  color: #fda4af;
+}
+
+:root[data-theme="dark"] .btn-empty {
+  color: #fecdd3;
+  background-color: rgba(190, 24, 93, 0.08);
+  border-color: rgba(251, 113, 133, 0.28);
+}
+
+:root[data-theme="dark"] .btn-empty:hover {
+  background-color: rgba(190, 24, 93, 0.14);
+  border-color: rgba(251, 113, 133, 0.44);
+  color: #ffe4e6;
+  box-shadow: 0 4px 14px rgba(190, 24, 93, 0.18);
+}
+
+:root[data-theme="dark"] .checkout-payment-method {
+  border-color: rgba(217, 200, 162, 0.1);
+  background: linear-gradient(180deg, rgba(18, 26, 38, 0.98) 0%, rgba(11, 18, 28, 0.98) 100%);
+}
+
+:root[data-theme="dark"] .checkout-payment-icon {
+  background: rgba(217, 200, 162, 0.1);
+  color: var(--theme-moon);
+  box-shadow: inset 0 0 0 1px rgba(217, 200, 162, 0.12);
+}
+
+:root[data-theme="dark"] .checkout-card-header h5,
+:root[data-theme="dark"] .checkout-payment-method .text-dark {
+  color: #f5efdf !important;
+}
+
+:root[data-theme="dark"] .checkout-step-badge {
+  box-shadow: 0 10px 22px rgba(68, 86, 63, 0.34);
+}
+
+:root[data-theme="dark"] .carrito-page .alert-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  color: #d8e2ef;
+  border-color: rgba(217, 200, 162, 0.08);
+}
+
+:root[data-theme="dark"] .carrito-page .alert-success {
+  background: rgba(18, 94, 61, 0.2);
+  color: #d8f3dc;
+  border-color: rgba(74, 222, 128, 0.14);
+}
+
+:root[data-theme="dark"] .carrito-page .alert-warning {
+  background: rgba(180, 83, 9, 0.16);
+  color: #fcd9a7;
+  border-color: rgba(245, 158, 11, 0.18);
+}
+
+:root[data-theme="dark"] .carrito-page .progress {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .carrito-page hr {
+  border-color: rgba(217, 200, 162, 0.12);
+  opacity: 1;
+}
+@media (min-width: 992px) {
+  .checkout-sidebar {
+    position: sticky;
+    top: 2rem;
+  }
+}
+
+/* RESPONSIVE */
+/* RESPONSIVE MEJORADO */
+/* RESPONSIVE MEJORADO (CORRECCIÓN DE SUPERPOSICIÓN) */
+@media (max-width: 991px) {
+  .carrito-container {
+    max-width: 100%;
+  }
+
+  .btn-empty {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 767px) {
+  .carrito-item-row {
+    gap: 1rem;
+  }
+
+  .carrito-item-info > div.d-flex {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .checkout-card-header {
+    gap: 0.75rem;
+  }
+
+  .checkout-step-badge {
+    width: 1.8rem;
+    height: 1.8rem;
+    font-size: 0.85rem;
+  }
+
+  .checkout-payment-method {
+    padding: 0.9rem;
+  }
+
+  .carrito-item-row {
+    /* Permitimos que los elementos bajen si no hay espacio */
+    flex-wrap: wrap;
+    align-items: flex-start;
+    padding: 1.25rem 0;
+    /* Espacio entre la fila de arriba (img/info) y el precio abajo */
+    gap: 1rem; 
+  }
+  
+  .carrito-item-img-wrapper {
+    width: 70px;
+    height: 70px;
+    flex-shrink: 0; /* Evita que la imagen se aplaste */
+    margin-right: 0; /* Usamos el gap del padre en vez de margen */
+  }
+
+  .carrito-item-info {
+    /* Ocupa el espacio disponible al lado de la imagen */
+    flex: 1 1 auto;
+    min-width: 0; /* Evita desbordes de texto */
+  }
+
+  .carrito-item-name {
+    font-size: 0.95rem;
+    line-height: 1.3;
+  }
+
+  /* Contenedor de Controles (+/-) y Tacho */
+  .carrito-item-info > div.d-flex {
+    margin-top: 0.75rem;
+    gap: 12px; /* Un poco más de aire entre contador y tacho */
+    flex-wrap: wrap; /* Seguridad para pantallas muy angostas */
+  }
+
+  /* EL PRECIO CORREGIDO */
+  .carrito-item-price {
+    /* AQUÍ ESTÁ LA CLAVE: Quitamos absolute */
+    position: static; 
+    
+    /* Forzamos que ocupe todo el ancho, lo que lo hace bajar a una nueva línea */
+    width: 100%;
+    
+    /* Lo alineamos a la derecha */
+    text-align: right !important;
+    
+    /* Estilos */
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--color-brand-dark);
+    
+    /* Aseguramos que visualmente quede al final */
+    order: 3; 
+    
+    /* Pequeño ajuste para que no quede tan separado de los controles */
+    margin-top: -0.5rem; 
+  }
+
+  .carrito-qty-group {
+    width: 100%;
+    justify-content: space-between;
+    max-width: 180px;
+  }
+
+  .btn-trash {
+    margin-left: 0;
+  }
+}
