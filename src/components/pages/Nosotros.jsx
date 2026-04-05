@@ -1,6 +1,6 @@
 import { Button, Card, Col, Container, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import logo from "../../assets/ESSENZIA.png";
+import logo from "../../assets/EL_JARDIN_DE_LUNA.png";
 import "../../styles/nosotros.css";
 
 const TAGS = ["Bienestar", "Herboristeria", "Cosmetica Natural", "Aromas"];

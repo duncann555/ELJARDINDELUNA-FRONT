@@ -11,19 +11,20 @@ import {
   validateTelefono,
 } from "../../helpers/validation";
 import {
+  CONTACTO_BRAND_NAME,
+  CONTACTO_EMAIL,
   CONTACTO_WHATSAPP_LABEL,
   CONTACTO_WHATSAPP_NUMBER,
   CONTACTO_WHATSAPP_URL,
 } from "../../helpers/contact";
 import "../../styles/contacto.css";
 
-const CONTACTO_EMAIL = "contacto@esenzia.com";
 const CONTACTO_MAPA_URL =
   "https://www.google.com/maps/search/?api=1&query=Tucuman%2C%20Argentina";
 
 const construirMensajeContacto = ({ nombre, email, telefono, mensaje }) =>
   [
-    "Hola El Jardin de Luna, les escribo desde la web.",
+    `Hola ${CONTACTO_BRAND_NAME}, les escribo desde la web.`,
     `Nombre: ${nombre}`,
     `Email: ${email}`,
     telefono ? `Telefono: ${telefono}` : null,

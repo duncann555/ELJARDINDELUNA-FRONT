@@ -23,11 +23,6 @@ const STORAGE_KEYS = {
   authUser: "eljardinluna_auth_user",
   adminToken: "eljardinluna_admin_token",
   adminUser: "eljardinluna_admin_user",
-  legacyAdminToken: "admin_token",
-  legacyAdminUser: "admin_user",
-  legacyToken: "token",
-  legacyUser: "usuario",
-  legacyEssenziaUser: "user_esenzia",
 };
 
 const leerJson = (storageKey) => {
@@ -117,6 +112,7 @@ export const AuthProvider = ({ children }) => {
     const session = leerSesionPersistida();
 
     if (session) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       aplicarSesion(session.user, session.token);
     } else {
       limpiarPersistenciaCompleta();
@@ -133,6 +129,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     if (isTokenExpired(normalizedToken)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       limpiarSesionLocal();
       return undefined;
     }

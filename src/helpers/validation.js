@@ -236,14 +236,3 @@ export const validateProductImageFile = (file) => {
 
   return "";
 };
-
-export const validateTrackingId = (value) => {
-  const text = normalizeText(value);
-
-  if (!text) return "";
-  if (text.length < 3 || text.length > 120) {
-    return "Tracking no valido";
-  }
-
-  return "";
-};

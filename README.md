@@ -1,4 +1,4 @@
-# Essenzia Frontend
+# EL JARDIN DE LUNA Frontend
 
 Frontend en React + Vite preparado para desplegarse en Vercel.
 

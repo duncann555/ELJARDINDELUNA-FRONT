@@ -1,8 +1,9 @@
 import { Col, Container, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import "../../styles/footer.css";
-import LOGO from "../../assets/ESSENZIA2.png";
+import LOGO from "../../assets/EL_JARDIN_DE_LUNA_FOOTER.png";
 import {
+  CONTACTO_EMAIL,
   CONTACTO_WHATSAPP_LABEL,
   CONTACTO_WHATSAPP_URL,
 } from "../../helpers/contact";
@@ -46,7 +47,7 @@ const Footer = () => {
             </p>
             <p className="mb-3 d-flex align-items-center justify-content-center justify-content-md-start">
               <i className="bi bi-envelope-fill me-2 icon-brand"></i>
-              contacto@esenzia.com
+              {CONTACTO_EMAIL}
             </p>
             <p className="mb-3 d-flex align-items-center justify-content-center justify-content-md-start">
               <i className="bi bi-geo-alt-fill me-2 icon-brand"></i>

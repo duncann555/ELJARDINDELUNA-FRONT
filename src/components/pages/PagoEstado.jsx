@@ -24,7 +24,7 @@ const ESTADOS = {
     badgeClass: "success",
     title: "Pago confirmado",
     description:
-      "Tu pedido fue enviado a Mercado Pago correctamente y ya registramos la compra en Essenzia.",
+      "Tu pedido fue enviado a Mercado Pago correctamente y ya registramos la compra en EL JARDIN DE LUNA.",
   },
   "/pago-pendiente": {
     icon: "bi-hourglass-split",

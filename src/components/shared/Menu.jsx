@@ -12,7 +12,7 @@ import {
 } from "react-bootstrap";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import "../../styles/menu.css";
-import LOGO from "../../assets/ESSENZIA.png";
+import LOGO from "../../assets/EL_JARDIN_DE_LUNA.png";
 import { useAuth } from "../../context/AuthContext";
 import { useCarrito } from "../../context/CarritoContext";
 import { useTheme } from "../../context/ThemeContext";

@@ -36,7 +36,6 @@ import {
   validateProductoNombre,
   validateProductoPrecio,
   validateProductoStock,
-  validateTrackingId,
 } from "../../helpers/validation";
 import "../../styles/admin.css";
 
@@ -95,17 +94,6 @@ const getPagoStatusVariant = (status) => {
       return "danger";
     default:
       return "warning";
-  }
-};
-
-const getEnvioStatusVariant = (status) => {
-  switch (status) {
-    case "Entregado":
-      return "success";
-    case "Despachado":
-      return "primary";
-    default:
-      return "secondary";
   }
 };
 
@@ -443,16 +431,12 @@ function PedidoModal({
 }) {
   const [formulario, setFormulario] = useState({
     estadoPedido: "En espera de pago",
-    trackingId: "",
   });
-  const [errores, setErrores] = useState({});
 
   const resetFormulario = (pedidoActual) => {
     setFormulario({
       estadoPedido: pedidoActual.estadoPedido || "En espera de pago",
-      trackingId: pedidoActual.envio?.trackingId || "",
     });
-    setErrores({});
   };
 
   useEffect(() => {
@@ -468,30 +452,11 @@ function PedidoModal({
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormulario((prev) => ({ ...prev, [name]: value }));
-
-    if (name === "trackingId") {
-      setErrores((prev) => ({
-        ...prev,
-        trackingId: validateTrackingId(value),
-      }));
-    }
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-
-    const trackingId = normalizeText(formulario.trackingId);
-    const trackingError = validateTrackingId(trackingId);
-
-    if (trackingError) {
-      setErrores({ trackingId: trackingError });
-      return;
-    }
-
-    guardarPedido({
-      ...formulario,
-      trackingId,
-    });
+    guardarPedido(formulario);
   };
 
   const cliente =
@@ -502,7 +467,7 @@ function PedidoModal({
   return (
     <Modal show={show} onHide={cerrarModalPedido} size="lg" centered>
       <Modal.Header closeButton>
-        <Modal.Title>Seguimiento del pedido</Modal.Title>
+        <Modal.Title>Gestion del pedido</Modal.Title>
       </Modal.Header>
 
       <Modal.Body>
@@ -538,11 +503,12 @@ function PedidoModal({
           <Col md={6}>
             <div className="p-3 rounded border bg-light h-100">
               <small className="text-muted d-block mb-1">Envio</small>
-              <Badge bg={getEnvioStatusVariant(pedido.envio?.estado)}>
-                {pedido.envio?.estado || "Pendiente"}
-              </Badge>
+              <div className="fw-bold">{pedido.envio?.proveedor || "Envio nacional"}</div>
               <div className="text-muted small mt-2">
-                Tracking: {pedido.envio?.trackingId || "Sin asignar"}
+                Direccion: {pedido.envio?.domicilio || "-"}
+              </div>
+              <div className="text-muted small">
+                {pedido.envio?.ciudad || "-"}, {pedido.envio?.provincia || "-"}
               </div>
               <div className="text-muted small">
                 Costo: {formatCurrency(getPedidoEnvioCosto(pedido))}
@@ -594,22 +560,6 @@ function PedidoModal({
                 </Form.Select>
               </FloatingLabel>
             </Col>
-
-            <Col md={6}>
-              <FloatingLabel label="Tracking">
-                <Form.Control
-                  type="text"
-                  name="trackingId"
-                  value={formulario.trackingId}
-                  onChange={handleChange}
-                  placeholder="Codigo de seguimiento"
-                  isInvalid={!!errores.trackingId}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errores.trackingId}
-                </Form.Control.Feedback>
-              </FloatingLabel>
-            </Col>
           </Row>
 
           <div className="d-flex justify-content-between align-items-center mt-4">
@@ -625,7 +575,7 @@ function PedidoModal({
               </div>
             </div>
             <Button type="submit" variant="success" disabled={guardandoPedido}>
-              {guardandoPedido ? "Guardando..." : "Guardar seguimiento"}
+              {guardandoPedido ? "Guardando..." : "Guardar estado"}
             </Button>
           </div>
         </Form>
@@ -820,13 +770,9 @@ function Admin() {
   const guardarPedido = async (formulario) => {
     if (!pedidoSeleccionado) return;
 
-    try {
-      setGuardandoPedido(true);
+      try {
+        setGuardandoPedido(true);
       const payload = { estadoPedido: formulario.estadoPedido };
-
-      if (formulario.trackingId.trim()) {
-        payload.trackingId = formulario.trackingId.trim();
-      }
 
       const response = await fetch(`${API_URL}/pedidos/${pedidoSeleccionado._id}`, {
         method: "PATCH",
@@ -856,7 +802,7 @@ function Admin() {
       await cargarPedidos();
       setShowPedidoModal(false);
       setPedidoSeleccionado(null);
-      Swal.fire("Exito", "Seguimiento del pedido actualizado", "success");
+      Swal.fire("Exito", "Estado del pedido actualizado", "success");
     } catch (error) {
       Swal.fire("Error", error.message, "error");
     } finally {
@@ -1026,7 +972,7 @@ function Admin() {
 
   return (
     <Container fluid className="py-5 px-lg-5 bg-light min-vh-100">
-      <h2 className="fw-bold mb-4 font-playfair">Panel de Control - ESSENZIA</h2>
+      <h2 className="fw-bold mb-4 font-playfair">Panel de Control - EL JARDIN DE LUNA</h2>
 
       <AdminStatus
         productosTotales={productos.length}
@@ -1282,9 +1228,9 @@ function Admin() {
           <div className="bg-white p-4 rounded shadow-sm">
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
               <div>
-                <h5 className="fw-bold mb-1">Seguimiento de pedidos</h5>
+                <h5 className="fw-bold mb-1">Gestion de pedidos</h5>
                 <p className="text-muted mb-0">
-                  Revisa estados, pagos y codigos de tracking.
+                  Revisa estados, pagos y resumenes de compra.
                 </p>
               </div>
 
@@ -1308,7 +1254,6 @@ function Admin() {
                     <th>Total</th>
                     <th>Pago</th>
                     <th>Estado</th>
-                    <th>Tracking</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -1350,14 +1295,6 @@ function Admin() {
                         <Badge bg={getPedidoStatusVariant(pedido.estadoPedido)}>
                           {pedido.estadoPedido}
                         </Badge>
-                      </td>
-
-                      <td>
-                        {pedido.envio?.trackingId ? (
-                          <span className="fw-semibold">{pedido.envio.trackingId}</span>
-                        ) : (
-                          <span className="text-muted">Sin asignar</span>
-                        )}
                       </td>
 
                       <td>

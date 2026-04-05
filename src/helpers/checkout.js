@@ -2,11 +2,10 @@ import { safeJson } from "./app";
 
 export { safeJson };
 
-export const CHECKOUT_ENVIO_STORAGE_KEY = "checkout_envio_essenzia";
-export const CHECKOUT_PEDIDO_STORAGE_KEY = "ultimo_pedido_essenzia";
-export const FREE_SHIPPING_THRESHOLD = Number(
-  import.meta.env.VITE_FREE_SHIPPING_THRESHOLD || 60000,
-);
+export const CHECKOUT_ENVIO_STORAGE_KEY =
+  "checkout_envio_el_jardin_de_luna";
+export const CHECKOUT_PEDIDO_STORAGE_KEY =
+  "ultimo_pedido_el_jardin_de_luna";
 
 export const leerStorageJson = (key, fallback) => {
   try {
@@ -27,9 +26,6 @@ export const guardarStorageJson = (key, value) => {
 };
 
 export const obtenerProductoId = (producto) => producto?._id ?? producto?.id;
-
-export const tieneEnvioGratisPorMonto = (subtotal) =>
-  Number(subtotal || 0) >= FREE_SHIPPING_THRESHOLD;
 
 const debeUsarSandboxMercadoPago = () => {
   const modoConfigurado = import.meta.env.VITE_MP_CHECKOUT_MODE?.toLowerCase();

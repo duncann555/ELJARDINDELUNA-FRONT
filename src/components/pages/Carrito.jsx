@@ -404,7 +404,7 @@ const Carrito = () => {
         ),
         envio: pedidoData?.envio || {
           ...pedidoPayload.envio,
-          proveedor: "Andreani",
+          proveedor: "Envio nacional",
           costo: costoEnvio,
           esGratis: false,
         },
@@ -791,7 +791,7 @@ const Carrito = () => {
 
                   <p className="text-muted small text-center mt-3 mb-0 checkout-payment-note">
                     El pago se procesa en Checkout Pro de Mercado Pago y el pedido
-                    queda registrado con un envio fijo nacional de{" "}
+                    queda registrado con envio fijo nacional de{" "}
                     {formatCurrency(ENVIO_FIJO)}.
                   </p>
                 </Card.Body>

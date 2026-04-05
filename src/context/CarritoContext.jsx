@@ -10,7 +10,6 @@ import { useAuth } from "./AuthContext";
 
 const CarritoContext = createContext();
 const STORAGE_KEY_PREFIX = "eljardinluna_carrito";
-const LEGACY_STORAGE_KEY = "carrito_esenzia";
 
 const obtenerProductoId = (producto) => producto?._id ?? producto?.id ?? producto?.productoId;
 const obtenerStorageKeyUsuario = (userId) => `${STORAGE_KEY_PREFIX}:${userId}`;
@@ -148,31 +147,6 @@ const limpiarPersistenciaCarrito = (userId) => {
   localStorage.removeItem(obtenerStorageKeyUsuario(userId));
 };
 
-const migrarCarritoLegacy = (userId) => {
-  if (!userId) return [];
-
-  const carritoActual = leerCarritoPersistido(userId);
-  if (carritoActual.length > 0) {
-    return carritoActual;
-  }
-
-  try {
-    const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
-    const legacyCart = normalizarCarrito(legacyRaw ? JSON.parse(legacyRaw) : []);
-
-    if (legacyCart.length === 0) {
-      return [];
-    }
-
-    guardarCarritoPersistido(userId, legacyCart);
-    localStorage.removeItem(LEGACY_STORAGE_KEY);
-    return legacyCart;
-  } catch (error) {
-    console.error("No se pudo migrar el carrito legacy:", error);
-    return [];
-  }
-};
-
 const obtenerCarritoBaseUsuario = (user) => {
   const remoteCart = normalizarCarrito(user?.carrito);
 
@@ -180,7 +154,7 @@ const obtenerCarritoBaseUsuario = (user) => {
     return remoteCart;
   }
 
-  return migrarCarritoLegacy(user?.uid);
+  return leerCarritoPersistido(user?.uid);
 };
 
 const obtenerCatalogoProductos = async ({ signal } = {}) => {
@@ -213,7 +187,6 @@ export const CarritoProvider = ({ children }) => {
       if (previousUserId) {
         // Cuando la sesion termina, ocultamos el carrito en la UI pero lo mantenemos
         // persistido en la cuenta para restaurarlo al volver a ingresar.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCarrito([]);
       }
 
@@ -224,7 +197,6 @@ export const CarritoProvider = ({ children }) => {
     }
 
     const carritoBase = obtenerCarritoBaseUsuario(user);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCarrito(carritoBase);
     hidratacionCompletaRef.current = false;
     previousUserIdRef.current = currentUserId;
@@ -247,7 +219,7 @@ export const CarritoProvider = ({ children }) => {
         }
 
         const carritoRemoto = normalizarCarrito(data?.carrito);
-        const carritoLocal = migrarCarritoLegacy(currentUserId);
+        const carritoLocal = leerCarritoPersistido(currentUserId);
         const carritoBaseFinal = carritoRemoto.length > 0 ? carritoRemoto : carritoLocal;
         const catalogo = await obtenerCatalogoProductos({ signal: controller.signal });
         const carritoFinal = reconciliarCarritoConCatalogo(carritoBaseFinal, catalogo);
