@@ -12,17 +12,10 @@ import {
 const AuthContext = createContext();
 
 const ADMIN_ROLE = "Administrador";
-const AUTH_MODE = {
-  NONE: "none",
-  USER: "user",
-  ADMIN: "admin",
-};
 
 const STORAGE_KEYS = {
   authToken: "eljardinluna_auth_token",
   authUser: "eljardinluna_auth_user",
-  adminToken: "eljardinluna_admin_token",
-  adminUser: "eljardinluna_admin_user",
 };
 
 const leerJson = (storageKey) => {
@@ -252,7 +245,6 @@ export const AuthProvider = ({ children }) => {
     limpiarSesionLocal();
   };
 
-  const authMode = user?.rol === ADMIN_ROLE ? AUTH_MODE.ADMIN : AUTH_MODE.USER;
   const isAuthenticated = Boolean(user && token);
 
   return (
@@ -261,9 +253,7 @@ export const AuthProvider = ({ children }) => {
         user,
         token,
         loading,
-        authMode,
         loginConEmailYPassword,
-        loginAdmin: loginConEmailYPassword,
         registrarUsuario,
         solicitarRecuperacionPassword,
         restablecerPassword,

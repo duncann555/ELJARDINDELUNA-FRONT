@@ -9,15 +9,21 @@ import {
   Offcanvas,
   Row,
 } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../../styles/productos.css";
 
 import { useCarrito } from "../../context/CarritoContext";
-import { API_URL, formatCurrency } from "../../helpers/app";
+import {
+  API_URL,
+  formatCurrency,
+  getApiErrorMessage,
+  safeJson,
+} from "../../helpers/app";
 import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
 
 const PRODUCTOS_URL = `${API_URL}/productos`;
+const PRODUCTOS_BUSQUEDA_URL = `${API_URL}/productos/buscar`;
 
 const IMG_PLACEHOLDER = (text) =>
   `https://placehold.co/800x800/png?text=${encodeURIComponent(text || "Sin Imagen")}`;
@@ -157,26 +163,62 @@ export default function Productos() {
   const [loading, setLoading] = useState(true);
   const [categoriaActiva, setCategoriaActiva] = useState("todas");
   const [showOffcanvas, setShowOffcanvas] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  const terminoBusqueda = String(searchParams.get("nombre") || "").trim();
 
   const handleCloseOffcanvas = () => setShowOffcanvas(false);
   const handleShowOffcanvas = () => setShowOffcanvas(true);
 
   useEffect(() => {
-    obtenerProductos();
-  }, []);
+    setCategoriaActiva("todas");
+  }, [terminoBusqueda]);
 
-  const obtenerProductos = async () => {
-    try {
-      const response = await fetch(PRODUCTOS_URL);
-      if (!response.ok) throw new Error("Error server");
-      const data = await response.json();
-      setProductos(data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    let activo = true;
+    const controller = new AbortController();
+
+    const obtenerProductos = async () => {
+      setLoading(true);
+
+      try {
+        const endpoint = terminoBusqueda
+          ? `${PRODUCTOS_BUSQUEDA_URL}?nombre=${encodeURIComponent(terminoBusqueda)}`
+          : PRODUCTOS_URL;
+
+        const response = await fetch(endpoint, { signal: controller.signal });
+        const data = await safeJson(response);
+
+        if (!response.ok) {
+          throw new Error(
+            getApiErrorMessage(data, "No se pudieron cargar los productos."),
+          );
+        }
+
+        if (activo) {
+          setProductos(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        if (!activo || error.name === "AbortError") {
+          return;
+        }
+
+        console.error("Error cargando productos:", error);
+        setProductos([]);
+      } finally {
+        if (activo) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void obtenerProductos();
+
+    return () => {
+      activo = false;
+      controller.abort();
+    };
+  }, [terminoBusqueda]);
 
   const categorias = useMemo(() => {
     const nombres = productos.map((producto) => producto.categoria);
@@ -202,7 +244,11 @@ export default function Productos() {
         <div className="d-md-none mb-4">
           <div className="text-center mb-3 productos-mobile-header">
             <h2 className="fw-bold text-success">Nuestros Productos</h2>
-            <p className="text-muted">Explora nuestro catalogo natural</p>
+            <p className="text-muted">
+              {terminoBusqueda
+                ? `Resultados para "${terminoBusqueda}"`
+                : "Explora nuestro catalogo natural"}
+            </p>
           </div>
 
           <Button
@@ -230,15 +276,36 @@ export default function Productos() {
           </Col>
 
           <Col xs={12} md={9} lg={10}>
+            {terminoBusqueda && (
+              <div className="mb-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+                <p className="mb-0 text-muted">
+                  Buscando por: <strong>{terminoBusqueda}</strong>
+                </p>
+                <small className="text-muted">
+                  {productos.length} resultado(s) encontrado(s)
+                </small>
+              </div>
+            )}
+
             <div className="mb-4 d-none d-md-block">
               <BannerCategoria
-                texto={categoriaActiva === "todas" ? "Catalogo Completo" : categoriaActiva}
+                texto={
+                  categoriaActiva === "todas"
+                    ? terminoBusqueda
+                      ? `Resultados de busqueda`
+                      : "Catalogo Completo"
+                    : categoriaActiva
+                }
               />
             </div>
 
             {productosFiltrados.length === 0 ? (
               <div className="text-center py-5 text-muted">
-                <h4>No se encontraron productos en esta categoria.</h4>
+                <h4>
+                  {terminoBusqueda
+                    ? "No se encontraron productos para tu busqueda."
+                    : "No se encontraron productos en esta categoria."}
+                </h4>
               </div>
             ) : (
               <Row className="g-3 g-md-4">

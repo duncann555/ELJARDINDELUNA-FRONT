@@ -7,7 +7,6 @@ import {
   Col,
   Container,
   Form,
-  ProgressBar,
   Row,
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -50,6 +49,7 @@ const ENVIO_INICIAL = {
   codigoPostal: "",
 };
 const ENVIO_FIJO = 15000;
+const ENVIO_GRATIS_DESDE = 60000;
 const normalizePhone = (value) => String(value || "").replace(/\D/g, "");
 
 const validateDomicilioCompleto = (value) => {
@@ -190,15 +190,10 @@ const Carrito = () => {
       ].some(Boolean),
     [envio],
   );
-  const costoEnvio = carrito.length > 0 ? ENVIO_FIJO : 0;
+  const envioEsGratis = carrito.length > 0 && subtotal >= ENVIO_GRATIS_DESDE;
+  const costoEnvio = carrito.length > 0 ? (envioEsGratis ? 0 : ENVIO_FIJO) : 0;
   const totalFinal = subtotal + costoEnvio;
-
-  const progresoCheckout = useMemo(() => {
-    if (!token) return 25;
-    if (!envioCompleto || !envioValido) return 50;
-    if (procesandoPago) return 90;
-    return 75;
-  }, [envioCompleto, envioValido, procesandoPago, token]);
+  const faltanteEnvioGratis = Math.max(ENVIO_GRATIS_DESDE - subtotal, 0);
 
   function validarCampoEnvio(name, value) {
     switch (name) {
@@ -406,7 +401,7 @@ const Carrito = () => {
           ...pedidoPayload.envio,
           proveedor: "Envio nacional",
           costo: costoEnvio,
-          esGratis: false,
+          esGratis: envioEsGratis,
         },
         productos: carritoCheckout.map((item) => ({
           id: obtenerProductoId(item),
@@ -461,22 +456,47 @@ const Carrito = () => {
               </p>
             </div>
 
-            <div className="w-100" style={{ maxWidth: "320px" }}>
-              <div className="d-flex justify-content-between small text-muted mb-2">
-                <span>Progreso checkout</span>
-                <span>{Math.round(progresoCheckout)}%</span>
-              </div>
-              <ProgressBar now={progresoCheckout} variant="success" />
-            </div>
           </div>
         </div>
 
-        <Alert variant="secondary" className="rounded-4 border-0 shadow-sm">
-          <strong>Envios a todo el pais.</strong> El costo de envio es fijo:
-          {" "}
-          {formatCurrency(ENVIO_FIJO)}
-          {" "}
-          por compra.
+        <Alert
+          variant={envioEsGratis ? "success" : "secondary"}
+          className="rounded-4 border-0 shadow-sm"
+        >
+          {envioEsGratis ? (
+            <>
+              <strong>Ya tienes envio gratis.</strong>
+              {" "}
+              Superaste los
+              {" "}
+              {formatCurrency(ENVIO_GRATIS_DESDE)}
+              {" "}
+              en tu compra.
+            </>
+          ) : (
+            <>
+              <strong>Envios a todo el pais.</strong>
+              {" "}
+              El envio cuesta
+              {" "}
+              {formatCurrency(ENVIO_FIJO)}
+              {" "}
+              o es gratis desde
+              {" "}
+              {formatCurrency(ENVIO_GRATIS_DESDE)}
+              .
+              {carrito.length > 0 && (
+                <>
+                  {" "}
+                  Te faltan
+                  {" "}
+                  <strong>{formatCurrency(faltanteEnvioGratis)}</strong>
+                  {" "}
+                  para bonificarlo.
+                </>
+              )}
+            </>
+          )}
         </Alert>
 
         <Row className="g-4">
@@ -540,7 +560,7 @@ const Carrito = () => {
                     <h5 className="fw-bold mb-1">Direccion de entrega</h5>
                     <p className="text-muted mb-0">
                       Usaremos estos datos para registrar tu pedido y coordinar
-                      el envio a todo el pais con tarifa fija.
+                      el envio a todo el pais con tarifa fija o gratis segun el total.
                     </p>
                   </div>
                 </div>
@@ -559,8 +579,20 @@ const Carrito = () => {
                   </Alert>
                 )}
 
-                <Alert variant="success" className="rounded-4">
-                  Envio fijo nacional: <strong>{formatCurrency(ENVIO_FIJO)}</strong>
+                <Alert variant={envioEsGratis ? "success" : "secondary"} className="rounded-4">
+                  {envioEsGratis ? (
+                    <>
+                      Envio nacional bonificado por superar
+                      {" "}
+                      <strong>{formatCurrency(ENVIO_GRATIS_DESDE)}</strong>
+                    </>
+                  ) : (
+                    <>
+                      Envio fijo nacional:
+                      {" "}
+                      <strong>{formatCurrency(ENVIO_FIJO)}</strong>
+                    </>
+                  )}
                 </Alert>
 
                 <Row className="g-3">
@@ -712,7 +744,7 @@ const Carrito = () => {
                     <div>
                       <h5 className="fw-bold mb-1">Resumen de compra</h5>
                       <p className="text-muted mb-0">
-                        Este es el total final con el envio fijo incluido.
+                        Este es el total final con el envio actualizado segun tu compra.
                       </p>
                     </div>
                   </div>
@@ -724,7 +756,7 @@ const Carrito = () => {
 
                   <div className="d-flex justify-content-between mb-2">
                     <span className="text-muted">Envio</span>
-                    <span>{formatCurrency(costoEnvio)}</span>
+                    <span>{envioEsGratis ? "Gratis" : formatCurrency(costoEnvio)}</span>
                   </div>
 
                   <hr />
@@ -791,8 +823,11 @@ const Carrito = () => {
 
                   <p className="text-muted small text-center mt-3 mb-0 checkout-payment-note">
                     El pago se procesa en Checkout Pro de Mercado Pago y el pedido
-                    queda registrado con envio fijo nacional de{" "}
-                    {formatCurrency(ENVIO_FIJO)}.
+                    queda registrado con
+                    {" "}
+                    {envioEsGratis
+                      ? "envio gratis."
+                      : `envio nacional de ${formatCurrency(ENVIO_FIJO)}.`}
                   </p>
                 </Card.Body>
               </Card>

@@ -76,8 +76,11 @@ export const validateLoginPassword = (value) => {
   const text = String(value || "");
 
   if (!text) return "La contraseña es obligatoria";
-  if (text.length < 8 || text.length > 128) {
-    return "La contraseña debe contener entre 8 y 128 caracteres";
+  if (text.length < 8) {
+    return "La contraseña debe contener al menos 8 caracteres";
+  }
+  if (text.length > 128) {
+    return "La contraseña no puede superar los 128 caracteres";
   }
 
   return "";
@@ -87,11 +90,11 @@ export const validatePassword = (value) => {
   const text = String(value || "");
 
   if (!text) return "La contraseña es obligatoria";
-  if (text.length < 8 || text.length > 72) {
-    return "La contraseña debe contener entre 8 y 72 caracteres";
+  if (text.length < 8) {
+    return "La contraseña debe contener al menos 8 caracteres";
   }
-  if (!/^(?=.*[A-Za-z])(?=.*\d).+$/.test(text)) {
-    return "La contraseña debe contener al menos una letra y un numero";
+  if (text.length > 72) {
+    return "La contraseña no puede superar los 72 caracteres";
   }
 
   return "";

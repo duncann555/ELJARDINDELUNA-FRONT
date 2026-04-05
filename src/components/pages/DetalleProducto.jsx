@@ -4,7 +4,12 @@ import { Link, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../../styles/detalle.css";
 import { useCarrito } from "../../context/CarritoContext";
-import { API_URL, formatCurrency } from "../../helpers/app";
+import {
+  API_URL,
+  formatCurrency,
+  getApiErrorMessage,
+  safeJson,
+} from "../../helpers/app";
 import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
 
 const IMG_PLACEHOLDER = (text) =>
@@ -21,31 +26,33 @@ const DetalleProducto = () => {
 
   useEffect(() => {
     let activo = true;
+    const controller = new AbortController();
 
     const cargarProducto = async () => {
       setLoading(true);
       setError("");
 
       try {
-        const response = await fetch(`${API_URL}/productos`);
+        const response = await fetch(`${API_URL}/productos/${id}`, {
+          signal: controller.signal,
+        });
+        const data = await safeJson(response);
+
         if (!response.ok) {
-          throw new Error("No se pudo cargar el producto");
-        }
-
-        const productos = await response.json();
-        const encontrado = productos.find(
-          (item) => String(item._id ?? item.id) === String(id),
-        );
-
-        if (!encontrado) {
-          throw new Error("No encontramos el producto solicitado");
+          throw new Error(
+            getApiErrorMessage(data, "No se pudo cargar el producto."),
+          );
         }
 
         if (activo) {
-          setProducto(encontrado);
+          setProducto(data);
           setCantidad(1);
         }
       } catch (err) {
+        if (!activo || err.name === "AbortError") {
+          return;
+        }
+
         if (activo) {
           setProducto(null);
           setError(err.message || "No se pudo cargar el detalle");
@@ -61,6 +68,7 @@ const DetalleProducto = () => {
 
     return () => {
       activo = false;
+      controller.abort();
     };
   }, [id]);
 

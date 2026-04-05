@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "backend": "node --env-file=\"../CODIGO EL JARDIN DE LUNA - BACK/.env\" \"../CODIGO EL JARDIN DE LUNA - BACK/index.js\"",
+    "backend": "node --env-file=\"../ELJARDINDELUNA-BACK/.env\" \"../ELJARDINDELUNA-BACK/index.js\"",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -19,11 +19,8 @@
     "bootstrap-icons": "^1.13.1",
     "react": "^19.2.0",
     "react-bootstrap": "^2.10.10",
-    "react-bootstrap-icons": "^1.11.6",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.68.0",
-    "react-multi-carousel": "^2.8.6",
-    "react-router": "^7.10.0",
     "react-router-dom": "^7.10.1",
     "sweetalert2": "^11.26.3"
   },

@@ -2,9 +2,7 @@ export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/ap
 
 const INVALID_STORAGE_VALUES = new Set(["", "null", "undefined"]);
 const AUTH_ERROR_MESSAGES = [
-  "no hay token",
   "token no es valido",
-  "token no valido",
   "autenticacion no esta configurada",
 ];
 

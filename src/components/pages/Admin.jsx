@@ -54,7 +54,8 @@ const PRODUCTO_VACIO = {
 const CATEGORIAS = [
   "Tinturas Madres",
   "Esencias Aromaticas",
-  "Cosmética Natural",
+  "Hierbas Naturales",
+  "Aceites",
 ];
 
 const PEDIDO_ESTADOS = [

@@ -134,7 +134,7 @@ export default function ResetPassword() {
       subtitle="Define una nueva clave para seguir comprando con normalidad dentro del sitio."
       infoTitle="Tu enlace sigue un camino seguro"
       infoText="Cuando guardes la nueva contrasena, el enlace actual dejara de servir y podras ingresar otra vez."
-      infoNote="Usa una clave de al menos 8 caracteres con una letra y un numero."
+      infoNote="Usa una clave de al menos 8 caracteres."
       infoIcon="bi-shield-lock"
     >
       <div className="text-center mb-4">

@@ -10,7 +10,7 @@ import {
   Navbar,
   Row,
 } from "react-bootstrap";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import "../../styles/menu.css";
 import LOGO from "../../assets/EL_JARDIN_DE_LUNA.png";
 import { useAuth } from "../../context/AuthContext";
@@ -28,7 +28,12 @@ const NAV_LINKS = [
 const ROL_ADMIN = "Administrador";
 const MOBILE_CART_BADGE_STYLE = { fontSize: "0.6rem" };
 
-function CartShortcut({ cantidadTotal, className = "", onClick, compact = false }) {
+function CartShortcut({
+  cantidadTotal,
+  className = "",
+  onClick,
+  compact = false,
+}) {
   return (
     <Link
       to="/carrito"
@@ -54,7 +59,9 @@ function CartShortcut({ cantidadTotal, className = "", onClick, compact = false 
 
 function ThemeToggleSwitch({ mobile = false }) {
   const { isDarkMode, toggleTheme } = useTheme();
-  const nextLabel = isDarkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro";
+  const nextLabel = isDarkMode
+    ? "Cambiar a modo claro"
+    : "Cambiar a modo oscuro";
   const currentLabel = isDarkMode ? "Modo oscuro" : "Modo claro";
 
   return (
@@ -68,16 +75,18 @@ function ThemeToggleSwitch({ mobile = false }) {
     >
       <span className="theme-switch-track" aria-hidden="true">
         <span className="theme-switch-label theme-switch-label-day">Día</span>
-        <span className="theme-switch-label theme-switch-label-night">Noche</span>
+        <span className="theme-switch-label theme-switch-label-night">
+          Noche
+        </span>
 
         <span className="theme-switch-thumb">
-          <i className={`bi ${isDarkMode ? "bi-moon-fill" : "bi-sun-fill"}`}></i>
+          <i
+            className={`bi ${isDarkMode ? "bi-moon-fill" : "bi-sun-fill"}`}
+          ></i>
         </span>
       </span>
 
-      <span className="visually-hidden">
-        {nextLabel}
-      </span>
+      <span className="visually-hidden">{nextLabel}</span>
     </button>
   );
 }
@@ -88,6 +97,7 @@ function Menu() {
   const [showLogin, setShowLogin] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await logout();
@@ -96,6 +106,9 @@ function Menu() {
   };
 
   const esAdmin = user?.rol === ROL_ADMIN;
+  const searchParams = new URLSearchParams(location.search);
+  const terminoBusquedaActual =
+    location.pathname === "/productos" ? searchParams.get("nombre") || "" : "";
 
   return (
     <>
@@ -130,7 +143,11 @@ function Menu() {
             </Col>
 
             <Col className="navbar-search-col px-3">
-              <SearchBar />
+              <SearchBar
+                key={`desktop-${location.pathname}-${location.search}`}
+                initialValue={terminoBusquedaActual}
+                onSearch={() => setExpanded(false)}
+              />
             </Col>
 
             <Col
@@ -144,12 +161,18 @@ function Menu() {
                     className="btn-login-modern border-0 d-flex align-items-center gap-2 text-white"
                   >
                     <i className="bi bi-person-circle fs-5"></i>
-                    <span className="text-truncate" style={{ maxWidth: "150px" }}>
+                    <span
+                      className="text-truncate"
+                      style={{ maxWidth: "150px" }}
+                    >
                       {esAdmin ? "Administrador" : `Hola, ${user.nombre}`}
                     </span>
                   </Dropdown.Toggle>
 
-                  <Dropdown.Menu align="end" className="shadow border-0 rounded-3 mt-2">
+                  <Dropdown.Menu
+                    align="end"
+                    className="shadow border-0 rounded-3 mt-2"
+                  >
                     <Dropdown.Header>Mi Cuenta</Dropdown.Header>
 
                     {esAdmin && (
@@ -159,7 +182,10 @@ function Menu() {
                       </Dropdown.Item>
                     )}
 
-                    <Dropdown.Item onClick={handleLogout} className="text-danger">
+                    <Dropdown.Item
+                      onClick={handleLogout}
+                      className="text-danger"
+                    >
                       <i className="bi bi-box-arrow-right me-2"></i>
                       Cerrar sesion
                     </Dropdown.Item>
@@ -182,7 +208,11 @@ function Menu() {
 
           <Navbar.Collapse>
             <div className="d-lg-none pt-3 pb-2">
-              <SearchBar />
+              <SearchBar
+                key={`mobile-${location.pathname}-${location.search}`}
+                initialValue={terminoBusquedaActual}
+                onSearch={() => setExpanded(false)}
+              />
 
               <Nav className="flex-column gap-2 mb-3 mt-3">
                 {NAV_LINKS.map((link) => (
@@ -253,17 +283,36 @@ function Menu() {
   );
 }
 
-function SearchBar() {
+function SearchBar({ initialValue = "", onSearch }) {
+  const navigate = useNavigate();
+  const [termino, setTermino] = useState(initialValue);
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    const terminoNormalizado = termino.trim();
+    const destino = terminoNormalizado
+      ? `/productos?nombre=${encodeURIComponent(terminoNormalizado)}`
+      : "/productos";
+
+    navigate(destino);
+
+    if (onSearch) {
+      onSearch();
+    }
+  };
+
   return (
-    <Form
-      className="search-wrapper w-100"
-      onSubmit={(event) => event.preventDefault()}
-    >
+    <Form className="search-wrapper w-100" onSubmit={handleSubmit}>
       <i className="bi bi-search search-icon"></i>
       <input
         type="text"
         className="search-input w-100"
         placeholder="Buscar productos..."
+        value={termino}
+        onChange={(event) => setTermino(event.target.value)}
+        maxLength={80}
+        aria-label="Buscar productos"
       />
     </Form>
   );
