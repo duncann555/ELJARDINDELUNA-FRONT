@@ -3,6 +3,8 @@ export const PHONE_REGEX = /^\d{8,15}$/;
 export const CODIGO_POSTAL_REGEX = /^[A-Za-z0-9-]{3,10}$/;
 export const EMAIL_MIN_LENGTH = 6;
 export const EMAIL_MAX_LENGTH = 120;
+export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 40;
 export const DOMICILIO_MAX_LENGTH = 160;
 export const PRODUCT_STOCK_MAX = 9999;
 
@@ -26,8 +28,8 @@ export const validateNombre = (value, label = "El nombre") => {
   const text = normalizeText(value);
 
   if (!text) return `${label} es obligatorio`;
-  if (text.length < 3 || text.length > 50) {
-    return `${label} debe contener entre 3 y 50 caracteres`;
+  if (text.length < 2 || text.length > 50) {
+    return `${label} debe contener entre 2 y 50 caracteres`;
   }
 
   return "";
@@ -37,8 +39,8 @@ export const validateApellido = (value, label = "El apellido") => {
   const text = normalizeText(value);
 
   if (!text) return `${label} es obligatorio`;
-  if (text.length < 3 || text.length > 50) {
-    return `${label} debe contener entre 3 y 50 caracteres`;
+  if (text.length < 2 || text.length > 50) {
+    return `${label} debe contener entre 2 y 50 caracteres`;
   }
 
   return "";
@@ -83,12 +85,12 @@ export const validateTelefono = (value, { required = true } = {}) => {
 export const validateLoginPassword = (value) => {
   const text = String(value || "");
 
-  if (!text) return "La contraseña es obligatoria";
-  if (text.length < 8) {
-    return "La contraseña debe contener al menos 8 caracteres";
+  if (!text) return "La contrase\u00f1a es obligatoria";
+  if (text.length < PASSWORD_MIN_LENGTH) {
+    return `La contrase\u00f1a debe contener al menos ${PASSWORD_MIN_LENGTH} caracteres`;
   }
-  if (text.length > 16) {
-    return "La contraseña no puede superar los 16 caracteres";
+  if (text.length > PASSWORD_MAX_LENGTH) {
+    return `La contrase\u00f1a no puede superar los ${PASSWORD_MAX_LENGTH} caracteres`;
   }
 
   return "";
@@ -97,12 +99,12 @@ export const validateLoginPassword = (value) => {
 export const validatePassword = (value) => {
   const text = String(value || "");
 
-  if (!text) return "La contraseña es obligatoria";
-  if (text.length < 8) {
-    return "La contraseña debe contener al menos 8 caracteres";
+  if (!text) return "La contrase\u00f1a es obligatoria";
+  if (text.length < PASSWORD_MIN_LENGTH) {
+    return `La contrase\u00f1a debe contener al menos ${PASSWORD_MIN_LENGTH} caracteres`;
   }
-  if (text.length > 16) {
-    return "La contraseña no puede superar los 16 caracteres";
+  if (text.length > PASSWORD_MAX_LENGTH) {
+    return `La contrase\u00f1a no puede superar los ${PASSWORD_MAX_LENGTH} caracteres`;
   }
 
   return "";
@@ -111,9 +113,9 @@ export const validatePassword = (value) => {
 export const validatePasswordConfirmation = (value, password) => {
   const text = String(value || "");
 
-  if (!text) return "Debes repetir la contraseña";
+  if (!text) return "Debes repetir la contrase\u00f1a";
   if (text !== String(password || "")) {
-    return "Las contraseñas no coinciden";
+    return "Las contrase\u00f1as no coinciden";
   }
 
   return "";

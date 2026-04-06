@@ -9,6 +9,8 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import AuthRecoveryShell from "../shared/AuthRecoveryShell";
 import {
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
   validatePassword,
   validatePasswordConfirmation,
 } from "../../helpers/validation";
@@ -171,8 +173,8 @@ export default function ResetPassword() {
               placeholder="Nueva contrasena"
               className="ml-input"
               autoComplete="new-password"
-              minLength={8}
-              maxLength={16}
+              minLength={PASSWORD_MIN_LENGTH}
+              maxLength={PASSWORD_MAX_LENGTH}
               value={password}
               disabled={!token || Boolean(successMessage)}
               isInvalid={Boolean(touched.password && fieldErrors.password)}
@@ -194,8 +196,8 @@ export default function ResetPassword() {
               placeholder="Repetir contrasena"
               className="ml-input"
               autoComplete="new-password"
-              minLength={8}
-              maxLength={16}
+              minLength={PASSWORD_MIN_LENGTH}
+              maxLength={PASSWORD_MAX_LENGTH}
               value={passwordConfirm}
               disabled={!token || Boolean(successMessage)}
               isInvalid={Boolean(

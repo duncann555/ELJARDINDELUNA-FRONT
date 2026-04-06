@@ -66,6 +66,11 @@ const PEDIDO_ESTADOS = [
   "Cancelado",
 ];
 
+const PEDIDO_ESTADOS_SIN_PAGO_APROBADO = [
+  "En espera de pago",
+  "Cancelado",
+];
+
 const getPedidoSubtotal = (pedido) =>
   Number(pedido?.subtotal ?? pedido?.total ?? 0);
 
@@ -78,6 +83,8 @@ const getPedidoStatusVariant = (status) => {
       return "success";
     case "Despachado":
       return "primary";
+    case "Preparando env\u00edo":
+      return "info";
     case "Preparando envío":
       return "info";
     case "Cancelado":
@@ -96,6 +103,17 @@ const getPagoStatusVariant = (status) => {
     default:
       return "warning";
   }
+};
+
+const getEstadosPedidoDisponibles = (pedido) => {
+  const estadosBase =
+    pedido?.pago?.estado === "approved"
+      ? PEDIDO_ESTADOS
+      : PEDIDO_ESTADOS_SIN_PAGO_APROBADO;
+
+  return Array.from(
+    new Set([...(pedido?.estadoPedido ? [pedido.estadoPedido] : []), ...estadosBase]),
+  );
 };
 
 const getUsuarioId = (usuario) => usuario?._id || usuario?.uid;
@@ -464,6 +482,8 @@ function PedidoModal({
     typeof pedido.usuario === "object" && pedido.usuario !== null
       ? `${pedido.usuario.nombre || ""} ${pedido.usuario.apellido || ""}`.trim()
       : "Sin cliente";
+  const estadosDisponibles = getEstadosPedidoDisponibles(pedido);
+  const pagoAprobado = pedido.pago?.estado === "approved";
 
   return (
     <Modal show={show} onHide={cerrarModalPedido} size="lg" centered>
@@ -553,13 +573,18 @@ function PedidoModal({
                   value={formulario.estadoPedido}
                   onChange={handleChange}
                 >
-                  {PEDIDO_ESTADOS.map((estado) => (
+                  {estadosDisponibles.map((estado) => (
                     <option key={estado} value={estado}>
                       {estado}
                     </option>
                   ))}
                 </Form.Select>
               </FloatingLabel>
+              {!pagoAprobado && (
+                <div className="small text-muted mt-2">
+                  Mientras el pago siga pendiente, solo puedes dejarlo en espera o cancelarlo.
+                </div>
+              )}
             </Col>
           </Row>
 
@@ -627,9 +652,18 @@ function Admin() {
   }, [logout]);
 
   const cargarProductos = useCallback(async () => {
+    if (!token) return;
+
     try {
-      const response = await fetch(`${API_URL}/productos`);
+      const response = await fetch(`${API_URL}/productos/admin/todos`, {
+        headers: buildAuthHeaders(token),
+      });
       const data = await safeJson(response);
+
+      if (isAuthError(response, data)) {
+        await manejarSesionInvalida(data);
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(data?.mensaje || "No se pudieron cargar los productos");
@@ -639,7 +673,7 @@ function Admin() {
     } catch (error) {
       console.error("Error al cargar productos:", error);
     }
-  }, []);
+  }, [manejarSesionInvalida, token]);
 
   const cargarUsuarios = useCallback(async () => {
     if (!token) return;

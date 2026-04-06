@@ -12,6 +12,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
   normalizeEmail,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
   validateApellido,
   validateEmail,
   validateNombre,
@@ -19,6 +21,7 @@ import {
   validatePasswordConfirmation,
   validateTelefono,
 } from "../../helpers/validation";
+import SocialAuthSection from "../shared/SocialAuthSection.jsx";
 import "../../styles/login.css";
 import "../../styles/register.css";
 
@@ -258,6 +261,8 @@ export default function Register() {
                   </Alert>
                 )}
 
+                <SocialAuthSection />
+
                 <Form onSubmit={handleRegister} noValidate>
                   <Row className="g-3">
                     <Col md={6}>
@@ -266,7 +271,7 @@ export default function Register() {
                           type="text"
                           placeholder="Nombre"
                           className="ml-input"
-                          minLength={3}
+                          minLength={2}
                           maxLength={50}
                           value={formValues.nombre}
                           isInvalid={Boolean(touched.nombre && fieldErrors.nombre)}
@@ -287,7 +292,7 @@ export default function Register() {
                           type="text"
                           placeholder="Apellido"
                           className="ml-input"
-                          minLength={3}
+                          minLength={2}
                           maxLength={50}
                           value={formValues.apellido}
                           isInvalid={Boolean(touched.apellido && fieldErrors.apellido)}
@@ -385,8 +390,8 @@ export default function Register() {
                           placeholder="Contraseña"
                           className="ml-input"
                           autoComplete="new-password"
-                          minLength={8}
-                          maxLength={16}
+                          minLength={PASSWORD_MIN_LENGTH}
+                          maxLength={PASSWORD_MAX_LENGTH}
                           value={formValues.password}
                           isInvalid={Boolean(
                             touched.password && fieldErrors.password,
@@ -409,8 +414,8 @@ export default function Register() {
                           placeholder="Repetir contraseña"
                           className="ml-input"
                           autoComplete="new-password"
-                          minLength={8}
-                          maxLength={16}
+                          minLength={PASSWORD_MIN_LENGTH}
+                          maxLength={PASSWORD_MAX_LENGTH}
                           value={formValues.passwordConfirm}
                           isInvalid={Boolean(
                             touched.passwordConfirm &&

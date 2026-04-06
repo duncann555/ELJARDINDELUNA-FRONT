@@ -62,31 +62,29 @@ function ThemeToggleSwitch({ mobile = false }) {
   const nextLabel = isDarkMode
     ? "Cambiar a modo claro"
     : "Cambiar a modo oscuro";
-  const currentLabel = isDarkMode ? "Modo oscuro" : "Modo claro";
+  const currentLabel = isDarkMode ? "modo oscuro" : "modo claro";
+  const tooltipLabel = `Cambiar entre modo claro y oscuro (actualmente ${currentLabel})`;
 
   return (
     <button
       type="button"
-      className={`theme-switch-shell${mobile ? " mobile" : ""}${isDarkMode ? " is-dark" : " is-light"}`}
+      className={`theme-switch-shell${mobile ? " mobile" : ""}${
+        isDarkMode ? " is-dark" : " is-light"
+      }`}
       onClick={toggleTheme}
       aria-label={nextLabel}
       aria-pressed={isDarkMode}
-      title={currentLabel}
+      title={tooltipLabel}
     >
-      <span className="theme-switch-track" aria-hidden="true">
-        <span className="theme-switch-label theme-switch-label-day">Día</span>
-        <span className="theme-switch-label theme-switch-label-night">
-          Noche
-        </span>
-
-        <span className="theme-switch-thumb">
-          <i
-            className={`bi ${isDarkMode ? "bi-moon-fill" : "bi-sun-fill"}`}
-          ></i>
-        </span>
+      <span className="theme-toggle-orb" aria-hidden="true">
+        <i
+          className={`bi ${
+            isDarkMode ? "bi-moon-fill" : "bi-brightness-high-fill"
+          }`}
+        ></i>
       </span>
 
-      <span className="visually-hidden">{nextLabel}</span>
+      <span className="visually-hidden">{tooltipLabel}</span>
     </button>
   );
 }

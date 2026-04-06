@@ -145,6 +145,64 @@
   color: #b42318;
 }
 
+.social-auth-divider {
+  position: relative;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.social-auth-divider::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 1px solid rgba(100, 116, 139, 0.18);
+  transform: translateY(-50%);
+}
+
+.social-auth-divider span {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  padding: 0 0.8rem;
+  background: inherit;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.social-auth-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-height: 46px;
+  border-radius: 14px !important;
+  border: 1px solid rgba(36, 54, 74, 0.12) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: var(--theme-night) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 10px 22px rgba(36, 54, 74, 0.08);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.social-auth-btn:hover,
+.social-auth-btn:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(98, 115, 93, 0.45) !important;
+  box-shadow: 0 14px 28px rgba(36, 54, 74, 0.12);
+}
+
+.social-auth-btn i {
+  font-size: 1rem;
+}
+
 :root[data-theme="dark"] .ml-overlay {
   background: rgba(2, 6, 23, 0.72);
 }
@@ -231,6 +289,27 @@
   background: rgba(248, 113, 113, 0.16);
   border-color: rgba(248, 113, 113, 0.24);
   color: #fecaca;
+}
+
+:root[data-theme="dark"] .social-auth-divider::before {
+  border-top-color: rgba(166, 179, 194, 0.18);
+}
+
+:root[data-theme="dark"] .social-auth-divider span {
+  color: var(--theme-muted);
+}
+
+:root[data-theme="dark"] .social-auth-btn {
+  background: rgba(15, 23, 36, 0.94) !important;
+  border-color: rgba(166, 179, 194, 0.12) !important;
+  color: var(--theme-text) !important;
+  box-shadow: 0 12px 24px rgba(2, 6, 23, 0.24);
+}
+
+:root[data-theme="dark"] .social-auth-btn:hover,
+:root[data-theme="dark"] .social-auth-btn:focus-visible {
+  border-color: rgba(217, 200, 162, 0.24) !important;
+  box-shadow: 0 16px 30px rgba(2, 6, 23, 0.34);
 }
 
 .btn.ml-btn-primary,

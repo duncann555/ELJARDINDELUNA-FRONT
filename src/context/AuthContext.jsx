@@ -170,6 +170,59 @@ export const AuthProvider = ({ children }) => {
     };
   };
 
+  const loginConFirebaseSocial = async ({ provider, idToken, telefono = "" }) => {
+    limpiarPersistenciaCompleta();
+
+    const payload = {
+      provider,
+      idToken,
+    };
+
+    if (String(telefono || "").trim()) {
+      payload.telefono = String(telefono).replace(/\D/g, "");
+    }
+
+    const response = await fetch(`${API_URL}/usuarios/social-login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await safeJson(response);
+
+    if (response.status === 428 || data?.requiereTelefono) {
+      return {
+        requiresPhone: true,
+        message:
+          getApiErrorMessage(
+            data,
+            "Necesitamos tu numero de WhatsApp para completar el acceso.",
+          ),
+        profile: data?.perfil || {},
+      };
+    }
+
+    if (!response.ok) {
+      throw crearErrorAuth(
+        getApiErrorMessage(
+          data,
+          "No se pudo completar el acceso con tu cuenta social.",
+        ),
+      );
+    }
+
+    const loggedUser = normalizarUsuario(data?.usuario || data);
+    const loggedToken = normalizeToken(data?.token);
+
+    aplicarSesion(loggedUser, loggedToken);
+
+    return {
+      user: loggedUser,
+      token: loggedToken,
+      destination: loggedUser.rol === ADMIN_ROLE ? "/admin" : "/",
+    };
+  };
+
   const registrarUsuario = async (payload) => {
     limpiarPersistenciaCompleta();
 
@@ -254,6 +307,7 @@ export const AuthProvider = ({ children }) => {
         token,
         loading,
         loginConEmailYPassword,
+        loginConFirebaseSocial,
         registrarUsuario,
         solicitarRecuperacionPassword,
         restablecerPassword,
