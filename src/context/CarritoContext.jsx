@@ -1,11 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import {
-  API_URL,
-  buildAuthHeaders,
   getApiErrorMessage,
-  safeJson,
 } from "../helpers/app";
+import { solicitarApi } from "../helpers/clienteApi";
 import { useAuth } from "./AuthContext";
 
 const CarritoContext = createContext();
@@ -158,14 +156,15 @@ const obtenerCarritoBaseUsuario = (user) => {
 };
 
 const obtenerCatalogoProductos = async ({ signal } = {}) => {
-  const response = await fetch(`${API_URL}/productos`, { signal });
-  const data = await safeJson(response);
+  const { respuesta, datos } = await solicitarApi("/productos", { signal });
 
-  if (!response.ok) {
-    throw new Error(getApiErrorMessage(data, "No se pudo recuperar el catalogo."));
+  if (!respuesta.ok) {
+    throw new Error(
+      getApiErrorMessage(datos, "No se pudo recuperar el catalogo."),
+    );
   }
 
-  return Array.isArray(data) ? data : [];
+  return Array.isArray(datos) ? datos : [];
 };
 
 export const CarritoProvider = ({ children }) => {
@@ -205,20 +204,24 @@ export const CarritoProvider = ({ children }) => {
 
     const hidratarCarrito = async () => {
       try {
-        const response = await fetch(`${API_URL}/usuarios/${currentUserId}`, {
-          headers: buildAuthHeaders(token),
+        const { respuesta, datos } = await solicitarApi(
+          `/usuarios/${currentUserId}`,
+          {
+          token,
           signal: controller.signal,
-        });
+          },
+        );
 
-        const data = await safeJson(response);
-
-        if (!response.ok) {
+        if (!respuesta.ok) {
           throw new Error(
-            getApiErrorMessage(data, "No se pudo recuperar el carrito de la cuenta."),
+            getApiErrorMessage(
+              datos,
+              "No se pudo recuperar el carrito de la cuenta.",
+            ),
           );
         }
 
-        const carritoRemoto = normalizarCarrito(data?.carrito);
+        const carritoRemoto = normalizarCarrito(datos?.carrito);
         const carritoLocal = leerCarritoPersistido(currentUserId);
         const carritoBaseFinal = carritoRemoto.length > 0 ? carritoRemoto : carritoLocal;
         const catalogo = await obtenerCatalogoProductos({ signal: controller.signal });
@@ -272,25 +275,24 @@ export const CarritoProvider = ({ children }) => {
 
     const sincronizarCarrito = async () => {
       try {
-        const response = await fetch(`${API_URL}/usuarios/carrito/${userId}`, {
+        const { respuesta, datos } = await solicitarApi(
+          `/usuarios/carrito/${userId}`,
+          {
           method: "PUT",
-          headers: buildAuthHeaders(token, {
-            "Content-Type": "application/json",
-          }),
-          body: JSON.stringify({
+          token,
+          json: {
             carrito: serializarCarritoParaApi(carrito),
-          }),
-        });
+          },
+          },
+        );
 
-        const data = await safeJson(response);
-
-        if (!response.ok) {
+        if (!respuesta.ok) {
           throw new Error(
-            getApiErrorMessage(data, "No se pudo sincronizar el carrito."),
+            getApiErrorMessage(datos, "No se pudo sincronizar el carrito."),
           );
         }
 
-        const carritoNormalizado = normalizarCarrito(data?.carrito || carrito);
+        const carritoNormalizado = normalizarCarrito(datos?.carrito || carrito);
         ultimaFirmaRemotaRef.current = obtenerFirmaCarrito(carritoNormalizado);
 
         if (obtenerFirmaCarrito(carritoNormalizado) !== firmaActual) {

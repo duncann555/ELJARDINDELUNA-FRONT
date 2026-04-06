@@ -125,12 +125,12 @@ export const getApiErrorMessage = (data, fallbackMessage) => {
     return firstValidationError;
   }
 
-  if (typeof data?.detalle === "string" && data.detalle.trim()) {
-    return data.detalle;
-  }
-
   if (typeof data?.mensaje === "string" && data.mensaje.trim()) {
     return data.mensaje;
+  }
+
+  if (typeof data?.detalle === "string" && data.detalle.trim()) {
+    return data.detalle;
   }
 
   return fallbackMessage;

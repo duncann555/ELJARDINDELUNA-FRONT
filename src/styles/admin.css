@@ -58,15 +58,6 @@ body {
   font-weight: 700;
 }
 
-/* =======================================
-   TABLA & CARDS CONTENEDORAS
-======================================= */
-.admin-table-card {
-  border: none;
-  border-radius: 1rem;
-  background: var(--admin-card-bg);
-}
-
 .table-hover tbody tr:hover {
   background-color: #f0fdf4; /* Verde muy suave */
 }
@@ -104,11 +95,6 @@ body {
   border-color: var(--admin-brand-dark) !important;
   box-shadow: 0 4px 12px rgba(83, 184, 82, 0.3);
 }
-
-/* Badges custom */
-.badge-stock-ok { background-color: #d1fae5; color: #065f46; } /* Verde claro */
-.badge-stock-low { background-color: #fef3c7; color: #92400e; } /* Amarillo */
-.badge-stock-out { background-color: #fee2e2; color: #991b1b; } /* Rojo */
 
 @media (max-width: 991px) {
   .admin-tabs .nav-tabs {

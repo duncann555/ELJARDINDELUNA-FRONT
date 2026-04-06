@@ -14,13 +14,11 @@ import Swal from "sweetalert2";
 import { useAuth } from "../../context/AuthContext";
 import { useCarrito } from "../../context/CarritoContext";
 import {
-  API_URL,
-  buildAuthHeaders,
   formatCurrency,
   getApiErrorMessage,
   isAuthError,
-  safeJson,
 } from "../../helpers/app";
+import { solicitarApi } from "../../helpers/clienteApi";
 import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
 import {
   CHECKOUT_ENVIO_STORAGE_KEY,
@@ -403,21 +401,20 @@ const Carrito = () => {
       });
 
       const crearNuevoPedido = async () => {
-        const pedidoResponse = await fetch(`${API_URL}/pedidos`, {
+        const { respuesta: pedidoResponse, datos: pedidoData } = await solicitarApi(
+          "/pedidos",
+          {
           method: "POST",
-          headers: buildAuthHeaders(token, {
-            "Content-Type": "application/json",
-          }),
-          body: JSON.stringify({
+          token,
+          json: {
             productos: productosResumen.map((item) => ({
               producto: item.id,
               cantidad: item.cantidad,
             })),
             envio: envioPayload,
-          }),
-        });
-
-        const pedidoData = await safeJson(pedidoResponse);
+          },
+          },
+        );
 
         if (isAuthError(pedidoResponse, pedidoData)) {
           logout();
@@ -445,15 +442,14 @@ const Carrito = () => {
       };
 
       const iniciarCheckoutPedido = async (pedidoId) => {
-        const checkoutResponse = await fetch(`${API_URL}/pagos/checkout`, {
+        const {
+          respuesta: checkoutResponse,
+          datos: checkoutData,
+        } = await solicitarApi("/pagos/checkout", {
           method: "POST",
-          headers: buildAuthHeaders(token, {
-            "Content-Type": "application/json",
-          }),
-          body: JSON.stringify({ pedidoId }),
+          token,
+          json: { pedidoId },
         });
-
-        const checkoutData = await safeJson(checkoutResponse);
 
         if (isAuthError(checkoutResponse, checkoutData)) {
           logout();

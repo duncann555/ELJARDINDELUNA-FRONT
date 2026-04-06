@@ -7,7 +7,7 @@ import {
 } from "react-bootstrap";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import AuthRecoveryShell from "../shared/AuthRecoveryShell";
+import LayoutRecuperacion from "../layouts/LayoutRecuperacion";
 import {
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
@@ -16,7 +16,7 @@ import {
 } from "../../helpers/validation";
 import "../../styles/login.css";
 
-export default function ResetPassword() {
+export default function RestablecerPassword() {
   const { restablecerPassword } = useAuth();
   const [searchParams] = useSearchParams();
   const token = useMemo(
@@ -130,7 +130,7 @@ export default function ResetPassword() {
   };
 
   return (
-    <AuthRecoveryShell
+    <LayoutRecuperacion
       eyebrow="Nueva clave"
       title="Restablecer contrasena"
       subtitle="Define una nueva clave para seguir comprando con normalidad dentro del sitio."
@@ -238,6 +238,6 @@ export default function ResetPassword() {
           Volver al inicio
         </Link>
       </div>
-    </AuthRecoveryShell>
+    </LayoutRecuperacion>
   );
 }

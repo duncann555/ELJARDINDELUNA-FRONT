@@ -4,16 +4,17 @@ import Carrito from "./components/pages/Carrito";
 import Contacto from "./components/pages/Contacto";
 import DetalleProducto from "./components/pages/DetalleProducto";
 import Error404 from "./components/pages/Error404";
-import ForgotPassword from "./components/pages/ForgotPassword";
 import Inicio from "./components/pages/Inicio";
-import MainLayout from "./components/pages/MinLayout";
+import MisCompras from "./components/pages/MisCompras";
 import Nosotros from "./components/pages/Nosotros";
 import PagoEstado from "./components/pages/PagoEstado";
 import Productos from "./components/pages/Productos";
 import Register from "./components/pages/Register";
-import ResetPassword from "./components/pages/ResetPassword";
+import RecuperarPassword from "./components/pages/RecuperarPassword";
+import RestablecerPassword from "./components/pages/RestablecerPassword";
+import LayoutPrincipal from "./components/layouts/LayoutPrincipal";
 import ProtectorAdmin from "./components/routes/ProtectorAdmin";
-import ProtectorCarrito from "./components/routes/ProtectorCarrito";
+import ProtectorSesion from "./components/routes/ProtectorSesion";
 import { AuthProvider } from "./context/AuthContext";
 import { CarritoProvider } from "./context/CarritoContext";
 import "./styles/App.css";
@@ -25,7 +26,7 @@ function App() {
         <CarritoProvider>
           <div className="min-vh-100">
             <Routes>
-              <Route element={<MainLayout />}>
+              <Route element={<LayoutPrincipal />}>
                 <Route path="/" element={<Inicio />} />
                 <Route path="/productos" element={<Productos />} />
                 <Route path="/producto/:id" element={<DetalleProducto />} />
@@ -34,16 +35,36 @@ function App() {
                 <Route
                   path="/carrito"
                   element={
-                    <ProtectorCarrito>
+                    <ProtectorSesion
+                      titulo="Primero inicia sesion"
+                      mensaje="Necesitas iniciar sesion para ver tu carrito y continuar con la compra."
+                    >
                       <Carrito />
-                    </ProtectorCarrito>
+                    </ProtectorSesion>
+                  }
+                />
+                <Route
+                  path="/mis-compras"
+                  element={
+                    <ProtectorSesion
+                      titulo="Tu historial es privado"
+                      mensaje="Necesitas iniciar sesion para revisar las compras que realizaste."
+                    >
+                      <MisCompras />
+                    </ProtectorSesion>
                   }
                 />
                 <Route path="/pago-exitoso" element={<PagoEstado />} />
                 <Route path="/pago-pendiente" element={<PagoEstado />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/recuperar-password" element={<ForgotPassword />} />
-                <Route path="/restablecer-password" element={<ResetPassword />} />
+                <Route
+                  path="/recuperar-password"
+                  element={<RecuperarPassword />}
+                />
+                <Route
+                  path="/restablecer-password"
+                  element={<RestablecerPassword />}
+                />
                 <Route path="/login" element={<Navigate to="/" replace />} />
                 <Route
                   path="/admin"

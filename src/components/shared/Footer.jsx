@@ -56,7 +56,6 @@ const Footer = () => {
 
             <div className="footer-socials d-flex gap-3 mt-3 justify-content-center justify-content-md-start flex-wrap">
               <a href="#" aria-label="Instagram"><i className="bi bi-instagram"></i></a>
-              <a href="#" aria-label="Facebook"><i className="bi bi-facebook"></i></a>
               <a href={CONTACTO_WHATSAPP_URL} target="_blank" rel="noreferrer" aria-label="WhatsApp"><i className="bi bi-whatsapp"></i></a>
             </div>
           </Col>

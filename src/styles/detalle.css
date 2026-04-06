@@ -51,10 +51,21 @@
   min-height: 500px;
   
   /* Borde y sombra */
-  border: 1px solid #d1d5db; 
+  border: 1px solid rgba(29, 48, 70, 0.26);
   box-shadow: var(--shadow-card);
   position: relative;
   overflow: hidden;
+}
+
+.detalle-img-container::before,
+.detalle-info::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(29, 48, 70, 0.34);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
 }
 
 .detalle-img-container img {
@@ -72,11 +83,13 @@
   background-color: #ffffff;
   padding: 3rem;
   border-radius: 20px;
-  border: 1px solid #d1d5db;
+  border: 1px solid rgba(29, 48, 70, 0.26);
   box-shadow: var(--shadow-card);
   height: 100%;
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
 
 /* Títulos */
@@ -231,8 +244,8 @@ h1.font-playfair {
     align-items: center; /* Centra elementos flex verticales */
     padding: 1.5rem;
     background-color: transparent; /* Quitamos fondo blanco en mobile si se prefiere */
-    border: none;
-    box-shadow: none;
+    border: 1px solid rgba(29, 48, 70, 0.24);
+    box-shadow: var(--shadow-card);
   }
 
   /* El precio necesita centrarse explícitamente */
@@ -250,7 +263,7 @@ h1.font-playfair {
   .compra-actions {
     width: 100%;
     background-color: #f8fafc;
-    border: 1px solid #d1d5db;
+    border: 1px solid rgba(29, 48, 70, 0.2);
   }
   
   .btn-qty {

@@ -26,6 +26,7 @@
 .navbar-modern .container {
   position: relative;
   z-index: 1;
+  max-width: 1400px;
 }
 
 .navbar-modern .navbar-brand img {
@@ -37,25 +38,36 @@
 }
 
 .navbar-brand-col {
-  flex: 0 0 auto;
-  padding-right: 1.25rem !important;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  min-width: max-content;
+  padding-right: 0 !important;
 }
 
 .navbar-search-col {
-  flex: 1 1 auto;
-  min-width: 340px;
-  max-width: 780px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  max-width: none;
+  padding-inline: 0 !important;
 }
 
 .navbar-actions-col {
-  flex: 0 0 auto;
+  width: auto;
+  min-width: max-content;
+  flex-wrap: nowrap;
   gap: 0.9rem !important;
-  padding-left: 1.25rem !important;
+  padding-left: 0 !important;
+  justify-self: end;
 }
 
 .search-wrapper {
   position: relative;
   width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
 }
 
 .search-input {
@@ -339,13 +351,13 @@
   position: relative;
   background: rgba(251, 248, 241, 0.88);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(45, 68, 93, 0.08);
+  border-bottom: 1px solid rgba(18, 31, 46, 0.24);
 }
 
 :root[data-theme="light"] .lower-navbar {
   background: linear-gradient(180deg, rgba(255, 252, 246, 0.96) 0%, rgba(248, 242, 232, 0.94) 100%);
   border-top: 1px solid rgba(255, 255, 255, 0.58);
-  border-bottom-color: rgba(45, 68, 93, 0.14);
+  border-bottom-color: rgba(18, 31, 46, 0.24);
   box-shadow:
     0 16px 34px rgba(29, 48, 70, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
@@ -361,7 +373,7 @@
 
 :root[data-theme="dark"] .lower-navbar {
   background: rgba(16, 24, 35, 0.9);
-  border-bottom-color: rgba(217, 200, 162, 0.08);
+  border-bottom-color: rgba(5, 10, 18, 0.68);
 }
 
 :root[data-theme="dark"] .lower-navbar::before {
@@ -462,6 +474,16 @@
   box-shadow: inset 0 0 0 1px rgba(217, 200, 162, 0.14);
 }
 
+@media (min-width: 992px) {
+  .navbar-desktop-row {
+    display: grid !important;
+    grid-template-columns: auto minmax(320px, 1fr) auto;
+    justify-content: center;
+    align-items: center;
+    column-gap: 1.35rem;
+  }
+}
+
 .navbar-toggler {
   border: none;
 }
@@ -502,17 +524,21 @@
 }
 
 @media (max-width: 1199px) {
-  .navbar-brand-col {
-    padding-right: 0.8rem !important;
+  .navbar-desktop-row {
+    grid-template-columns: auto minmax(260px, 1fr) auto;
+    column-gap: 0.95rem;
   }
 
   .navbar-search-col {
-    min-width: 280px;
+    min-width: 0;
   }
 
   .navbar-actions-col {
     gap: 0.7rem !important;
-    padding-left: 0.8rem !important;
+  }
+
+  .search-wrapper {
+    max-width: 640px;
   }
 }
 

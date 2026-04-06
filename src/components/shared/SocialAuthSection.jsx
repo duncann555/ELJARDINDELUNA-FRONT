@@ -11,11 +11,6 @@ const SOCIAL_OPTIONS = [
     label: "Continuar con Google",
     icon: "bi-google",
   },
-  {
-    key: "facebook",
-    label: "Continuar con Facebook",
-    icon: "bi-facebook",
-  },
 ];
 
 const normalizeDigits = (value) => String(value || "").replace(/\D/g, "");
@@ -34,8 +29,16 @@ export default function SocialAuthSection({ onSuccess, onPhoneStepChange }) {
     onPhoneStepChange?.(Boolean(pendingAuth));
   }, [onPhoneStepChange, pendingAuth]);
 
+  const resetPendingAuth = () => {
+    setPendingAuth(null);
+    setTelefono("");
+    setTelefonoError("");
+    setError("");
+  };
+
   const completarAccesoSocial = async ({
     provider,
+    requestedProvider = provider,
     idToken,
     telefonoValue = "",
   }) => {
@@ -48,16 +51,14 @@ export default function SocialAuthSection({ onSuccess, onPhoneStepChange }) {
     if (result?.requiresPhone) {
       setPendingAuth({
         provider,
+        requestedProvider,
         idToken,
         profile: result.profile || {},
       });
       return;
     }
 
-    setPendingAuth(null);
-    setTelefono("");
-    setTelefonoError("");
-    setError("");
+    resetPendingAuth();
 
     if (onSuccess) {
       await onSuccess(result);
@@ -74,7 +75,8 @@ export default function SocialAuthSection({ onSuccess, onPhoneStepChange }) {
     try {
       const authData = await autenticarConProveedorFirebase(providerKey);
       await completarAccesoSocial({
-        provider: providerKey,
+        provider: authData.provider || providerKey,
+        requestedProvider: authData.requestedProvider || providerKey,
         idToken: authData.idToken,
       });
     } catch (socialError) {
@@ -109,6 +111,7 @@ export default function SocialAuthSection({ onSuccess, onPhoneStepChange }) {
     try {
       await completarAccesoSocial({
         provider: pendingAuth.provider,
+        requestedProvider: pendingAuth.requestedProvider || pendingAuth.provider,
         idToken: pendingAuth.idToken,
         telefonoValue: normalizedPhone,
       });
@@ -123,78 +126,107 @@ export default function SocialAuthSection({ onSuccess, onPhoneStepChange }) {
   };
 
   return (
-    <div className="social-auth-shell mt-4">
-      <div className="social-auth-divider">
-        <span>o continua con</span>
-      </div>
+    <>
+      <div className="social-auth-shell mt-4">
+        <div className="social-auth-divider">
+          <span>o continua con</span>
+        </div>
 
-      {error && (
-        <Alert variant="danger" className="py-2 px-3 small text-center mb-3">
-          {error}
-        </Alert>
-      )}
+        {error && !pendingAuth && (
+          <Alert variant="danger" className="py-2 px-3 small text-center mb-3">
+            {error}
+          </Alert>
+        )}
 
-      <div className="d-grid gap-2">
-        {SOCIAL_OPTIONS.map((option) => (
-          <Button
-            key={option.key}
-            type="button"
-            variant="light"
-            className="social-auth-btn"
-            onClick={() => handleProviderLogin(option.key)}
-            disabled={Boolean(loadingProvider || savingPhone)}
-          >
-            {loadingProvider === option.key ? (
-              "Conectando..."
-            ) : (
-              <>
-                <i className={`bi ${option.icon}`}></i>
-                <span>{option.label}</span>
-              </>
-            )}
-          </Button>
-        ))}
+        <div className="d-grid gap-2">
+          {SOCIAL_OPTIONS.map((option) => (
+            <Button
+              key={option.key}
+              type="button"
+              variant="light"
+              className="social-auth-btn"
+              onClick={() => handleProviderLogin(option.key)}
+              disabled={Boolean(loadingProvider || savingPhone)}
+            >
+              {loadingProvider === option.key ? (
+                "Conectando..."
+              ) : (
+                <>
+                  <i className={`bi ${option.icon}`}></i>
+                  <span>{option.label}</span>
+                </>
+              )}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {pendingAuth && (
-        <Form className="mt-3" onSubmit={handlePhoneSubmit} noValidate>
-          <Alert variant="info" className="py-2 px-3 small">
-            {`Tu cuenta de ${
-              pendingAuth.provider === "google" ? "Google" : "Facebook"
-            } ya fue validada. Solo falta tu numero de WhatsApp para terminar.`}
-          </Alert>
-
-          <FloatingLabel label="Numero de WhatsApp">
-            <Form.Control
-              type="text"
-              inputMode="numeric"
-              placeholder="Numero de WhatsApp"
-              className="ml-input"
-              minLength={8}
-              maxLength={15}
-              value={telefono}
-              isInvalid={Boolean(telefonoError)}
-              onChange={(event) => {
-                setTelefono(normalizeDigits(event.target.value));
-                if (telefonoError) {
-                  setTelefonoError("");
-                }
-              }}
-            />
-            <Form.Control.Feedback type="invalid">
-              {telefonoError}
-            </Form.Control.Feedback>
-          </FloatingLabel>
-
-          <Button
-            type="submit"
-            className="ml-btn-primary w-100 mt-3"
-            disabled={savingPhone || Boolean(loadingProvider)}
+        <div className="social-phone-overlay" onClick={resetPendingAuth}>
+          <div
+            className="social-phone-modal"
+            onClick={(event) => event.stopPropagation()}
           >
-            {savingPhone ? "Guardando..." : "Guardar WhatsApp y continuar"}
-          </Button>
-        </Form>
+            <button
+              type="button"
+              className="ml-close"
+              onClick={resetPendingAuth}
+              aria-label="Cerrar carga de WhatsApp"
+            >
+              <i className="bi bi-x-lg"></i>
+            </button>
+
+            <div className="text-center mb-4">
+              <div className="ml-brand-badge mb-3">WhatsApp</div>
+              <h3 className="font-playfair fw-bold mb-2 ml-title">
+                Falta un paso mas
+              </h3>
+              <p className="small mb-0 ml-subtitle">
+                Tu cuenta de Google ya fue validada. Solo falta tu numero de
+                WhatsApp para terminar.
+              </p>
+            </div>
+
+            {error && (
+              <Alert variant="danger" className="py-2 px-3 small text-center mb-3">
+                {error}
+              </Alert>
+            )}
+
+            <Form onSubmit={handlePhoneSubmit} noValidate>
+              <FloatingLabel label="Numero de WhatsApp">
+                <Form.Control
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Numero de WhatsApp"
+                  className="ml-input"
+                  minLength={8}
+                  maxLength={15}
+                  value={telefono}
+                  isInvalid={Boolean(telefonoError)}
+                  onChange={(event) => {
+                    setTelefono(normalizeDigits(event.target.value));
+                    if (telefonoError) {
+                      setTelefonoError("");
+                    }
+                  }}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {telefonoError}
+                </Form.Control.Feedback>
+              </FloatingLabel>
+
+              <Button
+                type="submit"
+                className="ml-btn-primary w-100 mt-3"
+                disabled={savingPhone || Boolean(loadingProvider)}
+              >
+                {savingPhone ? "Guardando..." : "Guardar WhatsApp y continuar"}
+              </Button>
+            </Form>
+          </div>
+        </div>
       )}
-    </div>
+    </>
   );
 }

@@ -2,7 +2,7 @@ import { Col, Container, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import "../../styles/authRecovery.css";
 
-export default function AuthRecoveryShell({
+export default function LayoutRecuperacion({
   eyebrow,
   title,
   subtitle,

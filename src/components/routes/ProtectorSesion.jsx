@@ -1,9 +1,13 @@
 import { useEffect, useRef } from "react";
+import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
 
-const ProtectorCarrito = ({ children }) => {
+const ProtectorSesion = ({
+  children,
+  titulo = "Primero inicia sesion",
+  mensaje = "Necesitas una cuenta activa para continuar.",
+}) => {
   const navigate = useNavigate();
   const { loading, token, isAuthenticated } = useAuth();
   const redireccionRealizadaRef = useRef(false);
@@ -15,9 +19,16 @@ const ProtectorCarrito = ({ children }) => {
     }
 
     redireccionRealizadaRef.current = true;
-    void mostrarLoginRequeridoCarrito();
+
+    void Swal.fire({
+      icon: "info",
+      title: titulo,
+      text: mensaje,
+      confirmButtonText: "Entendido",
+    });
+
     navigate("/", { replace: true });
-  }, [loading, navigate, tieneSesionActiva]);
+  }, [loading, mensaje, navigate, tieneSesionActiva, titulo]);
 
   if (loading || !tieneSesionActiva) {
     return null;
@@ -26,4 +37,4 @@ const ProtectorCarrito = ({ children }) => {
   return children;
 };
 
-export default ProtectorCarrito;
+export default ProtectorSesion;

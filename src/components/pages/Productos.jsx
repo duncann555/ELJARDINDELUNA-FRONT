@@ -14,16 +14,9 @@ import Swal from "sweetalert2";
 import "../../styles/productos.css";
 
 import { useCarrito } from "../../context/CarritoContext";
-import {
-  API_URL,
-  formatCurrency,
-  getApiErrorMessage,
-  safeJson,
-} from "../../helpers/app";
+import { formatCurrency } from "../../helpers/app";
+import { solicitarJsonApi } from "../../helpers/clienteApi";
 import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
-
-const PRODUCTOS_URL = `${API_URL}/productos`;
-const PRODUCTOS_BUSQUEDA_URL = `${API_URL}/productos/buscar`;
 
 const IMG_PLACEHOLDER = (text) =>
   `https://placehold.co/800x800/png?text=${encodeURIComponent(text || "Sin Imagen")}`;
@@ -183,20 +176,15 @@ export default function Productos() {
 
       try {
         const endpoint = terminoBusqueda
-          ? `${PRODUCTOS_BUSQUEDA_URL}?nombre=${encodeURIComponent(terminoBusqueda)}`
-          : PRODUCTOS_URL;
-
-        const response = await fetch(endpoint, { signal: controller.signal });
-        const data = await safeJson(response);
-
-        if (!response.ok) {
-          throw new Error(
-            getApiErrorMessage(data, "No se pudieron cargar los productos."),
-          );
-        }
+          ? `/productos/buscar?nombre=${encodeURIComponent(terminoBusqueda)}`
+          : "/productos";
+        const datos = await solicitarJsonApi(endpoint, {
+          signal: controller.signal,
+          mensajeError: "No se pudieron cargar los productos.",
+        });
 
         if (activo) {
-          setProductos(Array.isArray(data) ? data : []);
+          setProductos(Array.isArray(datos) ? datos : []);
         }
       } catch (error) {
         if (!activo || error.name === "AbortError") {

@@ -3,7 +3,7 @@ import Footer from "../shared/Footer";
 import FloatingButtons from "../shared/FloatingButtons";
 import { Outlet } from "react-router-dom";
 
-const MainLayout = () => {
+const LayoutPrincipal = () => {
   return (
     <>
       <Menu />
@@ -16,4 +16,4 @@ const MainLayout = () => {
   );
 };
 
-export default MainLayout;
+export default LayoutPrincipal;

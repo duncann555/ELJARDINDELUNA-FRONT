@@ -4,18 +4,16 @@ import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useCarrito } from "../../context/CarritoContext";
 import {
-  API_URL,
-  buildAuthHeaders,
   formatCurrency,
   formatDate,
   isAuthError,
-  safeJson,
 } from "../../helpers/app";
 import {
   CHECKOUT_PEDIDO_STORAGE_KEY,
   guardarStorageJson,
   leerStorageJson,
 } from "../../helpers/checkout";
+import { solicitarApi } from "../../helpers/clienteApi";
 
 const ESTADOS = {
   "/pago-exitoso": {
@@ -88,27 +86,23 @@ function PagoEstado() {
       try {
         setEstadoSincronizacion("loading");
 
-        const response = await fetch(`${API_URL}/pagos/resultado`, {
+        const { respuesta, datos } = await solicitarApi("/pagos/resultado", {
           method: "PATCH",
-          headers: buildAuthHeaders(token, {
-            "Content-Type": "application/json",
-          }),
-          body: JSON.stringify({
+          token,
+          json: {
             preferenceId,
             paymentId: paymentId || undefined,
             status: paymentStatus,
-          }),
+          },
         });
 
-        const data = await safeJson(response);
-
-        if (isAuthError(response, data)) {
+        if (isAuthError(respuesta, datos)) {
           logout();
-          throw new Error(data?.mensaje || "La sesion ya no es valida.");
+          throw new Error(datos?.mensaje || "La sesion ya no es valida.");
         }
 
-        if (!response.ok) {
-          throw new Error(data?.mensaje || "No se pudo sincronizar el pago.");
+        if (!respuesta.ok) {
+          throw new Error(datos?.mensaje || "No se pudo sincronizar el pago.");
         }
 
         if (!desmontado) {
@@ -226,6 +220,14 @@ function PagoEstado() {
                 </div>
 
                 <div className="d-flex flex-column flex-md-row gap-3 justify-content-center mt-4">
+                  <Button
+                    as={Link}
+                    to="/mis-compras"
+                    variant="outline-success"
+                    className="rounded-pill px-4"
+                  >
+                    Ver mis compras
+                  </Button>
                   <Button as={Link} to="/productos" variant="success" className="rounded-pill px-4">
                     Seguir comprando
                   </Button>

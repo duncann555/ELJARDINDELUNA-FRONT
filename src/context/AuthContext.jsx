@@ -1,13 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from "react";
 import {
-  API_URL,
   getApiErrorMessage,
   getJwtPayload,
   isTokenExpired,
   normalizeToken,
-  safeJson,
 } from "../helpers/app";
+import { solicitarApi } from "../helpers/clienteApi";
 
 const AuthContext = createContext();
 
@@ -37,6 +36,7 @@ const normalizarUsuario = (userData) => {
     email: source.email || "",
     telefono: source.telefono || "",
     rol: source.rol || "Usuario",
+    estado: source.estado || "Activo",
     carrito: Array.isArray(source.carrito) ? source.carrito : [],
   };
 };
@@ -146,20 +146,19 @@ export const AuthProvider = ({ children }) => {
   const loginConEmailYPassword = async (email, password) => {
     limpiarPersistenciaCompleta();
 
-    const response = await fetch(`${API_URL}/usuarios/login`, {
+    const { respuesta, datos } = await solicitarApi("/usuarios/iniciar-sesion", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      json: { email, password },
     });
 
-    const data = await safeJson(response);
-
-    if (!response.ok) {
-      throw crearErrorAuth(getApiErrorMessage(data, "Error al iniciar sesion."));
+    if (!respuesta.ok) {
+      throw crearErrorAuth(
+        getApiErrorMessage(datos, "Error al iniciar sesion."),
+      );
     }
 
-    const loggedUser = normalizarUsuario(data?.usuario || data);
-    const loggedToken = normalizeToken(data?.token);
+    const loggedUser = normalizarUsuario(datos?.usuario || datos);
+    const loggedToken = normalizeToken(datos?.token);
 
     aplicarSesion(loggedUser, loggedToken);
 
@@ -182,37 +181,37 @@ export const AuthProvider = ({ children }) => {
       payload.telefono = String(telefono).replace(/\D/g, "");
     }
 
-    const response = await fetch(`${API_URL}/usuarios/social-login`, {
+    const { respuesta, datos } = await solicitarApi(
+      "/usuarios/iniciar-sesion-social",
+      {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+      json: payload,
+      },
+    );
 
-    const data = await safeJson(response);
-
-    if (response.status === 428 || data?.requiereTelefono) {
+    if (respuesta.status === 428 || datos?.requiereTelefono) {
       return {
         requiresPhone: true,
         message:
           getApiErrorMessage(
-            data,
+            datos,
             "Necesitamos tu numero de WhatsApp para completar el acceso.",
           ),
-        profile: data?.perfil || {},
+        profile: datos?.perfil || {},
       };
     }
 
-    if (!response.ok) {
+    if (!respuesta.ok) {
       throw crearErrorAuth(
         getApiErrorMessage(
-          data,
+          datos,
           "No se pudo completar el acceso con tu cuenta social.",
         ),
       );
     }
 
-    const loggedUser = normalizarUsuario(data?.usuario || data);
-    const loggedToken = normalizeToken(data?.token);
+    const loggedUser = normalizarUsuario(datos?.usuario || datos);
+    const loggedToken = normalizeToken(datos?.token);
 
     aplicarSesion(loggedUser, loggedToken);
 
@@ -226,20 +225,19 @@ export const AuthProvider = ({ children }) => {
   const registrarUsuario = async (payload) => {
     limpiarPersistenciaCompleta();
 
-    const response = await fetch(`${API_URL}/usuarios`, {
+    const { respuesta, datos } = await solicitarApi("/usuarios", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      json: payload,
     });
 
-    const data = await safeJson(response);
-
-    if (!response.ok) {
-      throw crearErrorAuth(getApiErrorMessage(data, "No se pudo crear la cuenta."));
+    if (!respuesta.ok) {
+      throw crearErrorAuth(
+        getApiErrorMessage(datos, "No se pudo crear la cuenta."),
+      );
     }
 
-    const createdUser = normalizarUsuario(data?.usuario || data);
-    const createdToken = normalizeToken(data?.token);
+    const createdUser = normalizarUsuario(datos?.usuario || datos);
+    const createdToken = normalizeToken(datos?.token);
 
     aplicarSesion(createdUser, createdToken);
 
@@ -251,45 +249,45 @@ export const AuthProvider = ({ children }) => {
   };
 
   const solicitarRecuperacionPassword = async (email) => {
-    const response = await fetch(`${API_URL}/usuarios/forgot-password`, {
+    const { respuesta, datos } = await solicitarApi(
+      "/usuarios/recuperar-password",
+      {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
+      json: { email },
+      },
+    );
 
-    const data = await safeJson(response);
-
-    if (!response.ok) {
+    if (!respuesta.ok) {
       throw crearErrorAuth(
         getApiErrorMessage(
-          data,
+          datos,
           "No se pudo iniciar la recuperacion de contrasena.",
         ),
       );
     }
 
-    return data || {
+    return datos || {
       mensaje:
         "Si el email existe, te enviaremos un enlace para restablecer tu contrasena.",
     };
   };
 
   const restablecerPassword = async (tokenValue, password) => {
-    const response = await fetch(`${API_URL}/usuarios/reset-password`, {
+    const { respuesta, datos } = await solicitarApi(
+      "/usuarios/restablecer-password",
+      {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: tokenValue, password }),
-    });
+      json: { token: tokenValue, password },
+      },
+    );
 
-    const data = await safeJson(response);
-
-    if (!response.ok) {
+    if (!respuesta.ok) {
       throw crearErrorAuth(
-        getApiErrorMessage(data, "No se pudo restablecer la contrasena."),
+        getApiErrorMessage(datos, "No se pudo restablecer la contrasena."),
       );
     }
 
-    return data || {
+    return datos || {
       mensaje: "La contrasena se actualizo correctamente",
     };
   };

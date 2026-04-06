@@ -4,12 +4,8 @@ import { Link, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../../styles/detalle.css";
 import { useCarrito } from "../../context/CarritoContext";
-import {
-  API_URL,
-  formatCurrency,
-  getApiErrorMessage,
-  safeJson,
-} from "../../helpers/app";
+import { formatCurrency } from "../../helpers/app";
+import { solicitarJsonApi } from "../../helpers/clienteApi";
 import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
 
 const IMG_PLACEHOLDER = (text) =>
@@ -33,19 +29,13 @@ const DetalleProducto = () => {
       setError("");
 
       try {
-        const response = await fetch(`${API_URL}/productos/${id}`, {
+        const datos = await solicitarJsonApi(`/productos/${id}`, {
           signal: controller.signal,
+          mensajeError: "No se pudo cargar el producto.",
         });
-        const data = await safeJson(response);
-
-        if (!response.ok) {
-          throw new Error(
-            getApiErrorMessage(data, "No se pudo cargar el producto."),
-          );
-        }
 
         if (activo) {
-          setProducto(data);
+          setProducto(datos);
           setCantidad(1);
         }
       } catch (err) {

@@ -6,7 +6,8 @@ import "../../styles/inicio.css";
 
 import { useCarrito } from "../../context/CarritoContext";
 import { useTheme } from "../../context/ThemeContext";
-import { API_URL, formatCurrency } from "../../helpers/app";
+import { formatCurrency } from "../../helpers/app";
+import { solicitarJsonApi } from "../../helpers/clienteApi";
 import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
 
 import carousel1 from "../../assets/carousel1.png";
@@ -15,8 +16,6 @@ import carousel3 from "../../assets/carousel3.png";
 import oferta1 from "../../assets/oferta1.png";
 import oferta2 from "../../assets/oferta2.jpg";
 import oferta3 from "../../assets/oferta3.jpg";
-
-const PRODUCTOS_URL = `${API_URL}/productos`;
 
 const IMG_PLACEHOLDER = (text) =>
   `https://placehold.co/800x800/png?text=${encodeURIComponent(text || "Sin Imagen")}`;
@@ -124,12 +123,13 @@ export default function Inicio() {
 
   const obtenerProductos = async () => {
     try {
-      const response = await fetch(PRODUCTOS_URL);
-      if (!response.ok) throw new Error("No se pudo conectar al servidor");
-      const data = await response.json();
-      setProductos(data);
+      const datos = await solicitarJsonApi("/productos", {
+        mensajeError: "No se pudieron cargar los productos destacados.",
+      });
+      setProductos(Array.isArray(datos) ? datos : []);
     } catch (error) {
       console.error("Error cargando productos:", error);
+      setProductos([]);
     } finally {
       setLoading(false);
     }

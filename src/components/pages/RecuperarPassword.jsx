@@ -7,11 +7,11 @@ import {
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import AuthRecoveryShell from "../shared/AuthRecoveryShell";
+import LayoutRecuperacion from "../layouts/LayoutRecuperacion";
 import { normalizeEmail, validateEmail } from "../../helpers/validation";
 import "../../styles/login.css";
 
-export default function ForgotPassword() {
+export default function RecuperarPassword() {
   const { solicitarRecuperacionPassword } = useAuth();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
@@ -55,7 +55,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <AuthRecoveryShell
+    <LayoutRecuperacion
       eyebrow="Acceso seguro"
       title="Recuperar contrasena"
       subtitle="Te ayudamos a volver a entrar sin salir del estilo natural y calido de la tienda."
@@ -132,6 +132,6 @@ export default function ForgotPassword() {
           Volver al inicio para ingresar
         </Link>
       </div>
-    </AuthRecoveryShell>
+    </LayoutRecuperacion>
   );
 }

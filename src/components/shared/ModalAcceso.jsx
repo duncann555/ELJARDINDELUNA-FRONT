@@ -17,7 +17,7 @@ const triggerShake = (setShake) => {
   window.setTimeout(() => setShake(false), 500);
 };
 
-export default function Login({ show, onClose }) {
+export default function ModalAcceso({ show, onClose }) {
   const navigate = useNavigate();
   const { loginConEmailYPassword } = useAuth();
 
@@ -35,7 +35,6 @@ export default function Login({ show, onClose }) {
   });
   const [shake, setShake] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
-  const [socialPhoneStepActive, setSocialPhoneStepActive] = useState(false);
 
   if (!show) return null;
 
@@ -126,9 +125,7 @@ export default function Login({ show, onClose }) {
           <div className="ml-brand-badge mb-3">Acceso</div>
           <h2 className="font-playfair fw-bold mb-0 ml-title">Bienvenido</h2>
           <p className="small mb-0 ml-subtitle">
-            {socialPhoneStepActive
-              ? "Completa tu numero de WhatsApp para terminar el acceso."
-              : "Ingresa con tu email y contrasena para continuar."}
+            Ingresa con tu email y contrasena para continuar.
           </p>
         </div>
 
@@ -138,91 +135,86 @@ export default function Login({ show, onClose }) {
           </div>
         )}
 
-        <SocialAuthSection
-          onSuccess={() => onClose?.()}
-          onPhoneStepChange={setSocialPhoneStepActive}
-        />
+        <SocialAuthSection onSuccess={() => onClose?.()} />
 
-        {!socialPhoneStepActive && (
-          <Form onSubmit={handleLogin} noValidate>
-            <div className="mb-3">
-              <FloatingLabel label="Email">
-                <Form.Control
-                  type="email"
-                  placeholder=" "
-                  className="ml-input"
-                  autoComplete="email"
-                  minLength={6}
-                  maxLength={120}
-                  value={email}
-                  isInvalid={Boolean(touched.email && fieldErrors.email)}
-                  onChange={(event) => handleFieldChange("email", event.target.value)}
-                  onBlur={(event) => handleFieldBlur("email", event.target.value)}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {fieldErrors.email}
-                </Form.Control.Feedback>
-              </FloatingLabel>
-            </div>
+        <Form onSubmit={handleLogin} noValidate>
+          <div className="mb-3">
+            <FloatingLabel label="Email">
+              <Form.Control
+                type="email"
+                placeholder=" "
+                className="ml-input"
+                autoComplete="email"
+                minLength={6}
+                maxLength={120}
+                value={email}
+                isInvalid={Boolean(touched.email && fieldErrors.email)}
+                onChange={(event) => handleFieldChange("email", event.target.value)}
+                onBlur={(event) => handleFieldBlur("email", event.target.value)}
+              />
+              <Form.Control.Feedback type="invalid">
+                {fieldErrors.email}
+              </Form.Control.Feedback>
+            </FloatingLabel>
+          </div>
 
-            <div className="mb-3 position-relative">
-              <FloatingLabel label="Contrasena">
-                <Form.Control
-                  type={showPass ? "text" : "password"}
-                  placeholder="Contrasena"
-                  className="ml-input pe-5"
-                  autoComplete="current-password"
-                  minLength={PASSWORD_MIN_LENGTH}
-                  maxLength={PASSWORD_MAX_LENGTH}
-                  value={password}
-                  isInvalid={Boolean(touched.password && fieldErrors.password)}
-                  onChange={(event) => handleFieldChange("password", event.target.value)}
-                  onBlur={(event) => handleFieldBlur("password", event.target.value)}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {fieldErrors.password}
-                </Form.Control.Feedback>
-              </FloatingLabel>
-              <button
-                type="button"
-                className="ml-eye-icon"
-                onClick={() => setShowPass((prev) => !prev)}
-                aria-label={showPass ? "Ocultar contrasena" : "Mostrar contrasena"}
-              >
-                <i className={`bi ${showPass ? "bi-eye-slash" : "bi-eye"}`}></i>
-              </button>
-            </div>
-
-            <div className="text-end mb-3">
-              <Link
-                to="/recuperar-password"
-                className="small text-decoration-none fw-semibold ml-link"
-                onClick={onClose}
-              >
-                Olvide mi contrasena
-              </Link>
-            </div>
-
-            <Button
-              type="submit"
-              className="ml-btn-primary w-100"
-              disabled={loginLoading}
+          <div className="mb-3 position-relative">
+            <FloatingLabel label="Contrasena">
+              <Form.Control
+                type={showPass ? "text" : "password"}
+                placeholder="Contrasena"
+                className="ml-input pe-5"
+                autoComplete="current-password"
+                minLength={PASSWORD_MIN_LENGTH}
+                maxLength={PASSWORD_MAX_LENGTH}
+                value={password}
+                isInvalid={Boolean(touched.password && fieldErrors.password)}
+                onChange={(event) => handleFieldChange("password", event.target.value)}
+                onBlur={(event) => handleFieldBlur("password", event.target.value)}
+              />
+              <Form.Control.Feedback type="invalid">
+                {fieldErrors.password}
+              </Form.Control.Feedback>
+            </FloatingLabel>
+            <button
+              type="button"
+              className="ml-eye-icon"
+              onClick={() => setShowPass((prev) => !prev)}
+              aria-label={showPass ? "Ocultar contrasena" : "Mostrar contrasena"}
             >
-              {loginLoading ? "Ingresando..." : "Iniciar sesion"}
-            </Button>
+              <i className={`bi ${showPass ? "bi-eye-slash" : "bi-eye"}`}></i>
+            </button>
+          </div>
 
-            <div className="text-center mt-3">
-              <span className="small ml-subtitle">No tenes cuenta? </span>
-              <Link
-                to="/register"
-                className="text-decoration-none fw-semibold ml-link"
-                onClick={onClose}
-              >
-                Registrarse
-              </Link>
-            </div>
-          </Form>
-        )}
+          <div className="text-end mb-3">
+            <Link
+              to="/recuperar-password"
+              className="small text-decoration-none fw-semibold ml-link"
+              onClick={onClose}
+            >
+              Olvide mi contrasena
+            </Link>
+          </div>
+
+          <Button
+            type="submit"
+            className="ml-btn-primary w-100"
+            disabled={loginLoading}
+          >
+            {loginLoading ? "Ingresando..." : "Iniciar sesion"}
+          </Button>
+
+          <div className="text-center mt-3">
+            <span className="small ml-subtitle">No tenes cuenta? </span>
+            <Link
+              to="/register"
+              className="text-decoration-none fw-semibold ml-link"
+              onClick={onClose}
+            >
+              Registrarse
+            </Link>
+          </div>
+        </Form>
       </div>
     </div>
   );

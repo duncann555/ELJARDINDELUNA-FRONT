@@ -1,8 +1,9 @@
 import { getApps, initializeApp } from "firebase/app";
 import {
-  FacebookAuthProvider,
   GoogleAuthProvider,
+  fetchSignInMethodsForEmail,
   getAuth,
+  linkWithCredential,
   signInWithPopup,
   signOut,
 } from "firebase/auth";
@@ -14,15 +15,19 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
 };
 
-const isFirebaseClientConfigured = () =>
+const PROVIDER_METHOD_TO_KEY = {
+  "google.com": "google",
+};
+
+const estaConfiguradoFirebaseCliente = () =>
   Object.values(firebaseConfig).every(
     (value) => typeof value === "string" && value.trim(),
   );
 
-const getFirebaseApp = () => {
-  if (!isFirebaseClientConfigured()) {
+const obtenerAppFirebase = () => {
+  if (!estaConfiguradoFirebaseCliente()) {
     throw new Error(
-      "Falta configurar Firebase en el frontend para usar Google o Facebook.",
+      "Falta configurar Firebase en el frontend para usar Google.",
     );
   }
 
@@ -33,17 +38,11 @@ const getFirebaseApp = () => {
   return initializeApp(firebaseConfig);
 };
 
-const createProvider = (providerKey) => {
+const crearProveedor = (providerKey) => {
   switch (providerKey) {
     case "google": {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
-      return provider;
-    }
-    case "facebook": {
-      const provider = new FacebookAuthProvider();
-      provider.addScope("email");
-      provider.setCustomParameters({ display: "popup" });
       return provider;
     }
     default:
@@ -51,7 +50,91 @@ const createProvider = (providerKey) => {
   }
 };
 
-const normalizeFirebaseAuthError = (error) => {
+const obtenerClaveProveedorDesdeMetodo = (method) =>
+  PROVIDER_METHOD_TO_KEY[String(method || "").trim()] || "";
+
+const obtenerCredencialDesdeError = (providerKey, error) => {
+  switch (providerKey) {
+    case "google":
+      return GoogleAuthProvider.credentialFromError(error);
+    default:
+      return null;
+  }
+};
+
+const construirPayloadAutenticacionSocial = async ({
+  auth,
+  user,
+  provider,
+  requestedProvider = provider,
+  linked = false,
+}) => {
+  const idToken = await user.getIdToken(true);
+
+  await signOut(auth);
+
+  return {
+    idToken,
+    email: user.email || "",
+    displayName: user.displayName || "",
+    provider,
+    requestedProvider,
+    linked,
+  };
+};
+
+const resolverProveedorVinculacion = (methods, attemptedProviderKey) =>
+  methods
+    .map(obtenerClaveProveedorDesdeMetodo)
+    .find((providerKey) => providerKey && providerKey !== attemptedProviderKey);
+
+const vincularCuentasPorEmailExistente = async ({
+  auth,
+  attemptedProviderKey,
+  error,
+}) => {
+  const email = String(error?.customData?.email || "").trim().toLowerCase();
+  const pendingCredential =
+    obtenerCredencialDesdeError(attemptedProviderKey, error) ||
+    error?.credential ||
+    null;
+
+  if (!email || !pendingCredential) {
+    throw error;
+  }
+
+  const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+  const existingProviderKey = resolverProveedorVinculacion(
+    signInMethods,
+    attemptedProviderKey,
+  );
+
+  if (!existingProviderKey) {
+    throw new Error(
+      "Ese email ya esta asociado a otro metodo de acceso. Inicia sesion primero con el metodo original para vincular la cuenta.",
+    );
+  }
+
+  const existingProviderResult = await signInWithPopup(
+    auth,
+    crearProveedor(existingProviderKey),
+  );
+
+  const linkedResult = await linkWithCredential(
+    existingProviderResult.user,
+    pendingCredential,
+  );
+
+  return construirPayloadAutenticacionSocial({
+    auth,
+    user: linkedResult.user,
+    provider: existingProviderKey,
+    requestedProvider: attemptedProviderKey,
+    linked: true,
+  });
+};
+
+const normalizarErrorAutenticacionFirebase = (error) => {
   const code = String(error?.code || "");
 
   if (
@@ -69,20 +152,30 @@ const normalizeFirebaseAuthError = (error) => {
 };
 
 export const autenticarConProveedorFirebase = async (providerKey) => {
+  const auth = getAuth(obtenerAppFirebase());
+
   try {
-    const auth = getAuth(getFirebaseApp());
-    const provider = createProvider(providerKey);
+    const provider = crearProveedor(providerKey);
     const result = await signInWithPopup(auth, provider);
-    const idToken = await result.user.getIdToken();
 
-    await signOut(auth);
-
-    return {
-      idToken,
-      email: result.user.email || "",
-      displayName: result.user.displayName || "",
-    };
+    return construirPayloadAutenticacionSocial({
+      auth,
+      user: result.user,
+      provider: providerKey,
+    });
   } catch (error) {
-    throw new Error(normalizeFirebaseAuthError(error));
+    if (String(error?.code || "") === "auth/account-exists-with-different-credential") {
+      try {
+        return await vincularCuentasPorEmailExistente({
+          auth,
+          attemptedProviderKey: providerKey,
+          error,
+        });
+      } catch (linkingError) {
+        throw new Error(normalizarErrorAutenticacionFirebase(linkingError));
+      }
+    }
+
+    throw new Error(normalizarErrorAutenticacionFirebase(error));
   }
 };

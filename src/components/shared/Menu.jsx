@@ -16,7 +16,7 @@ import LOGO from "../../assets/EL_JARDIN_DE_LUNA.png";
 import { useAuth } from "../../context/AuthContext";
 import { useCarrito } from "../../context/CarritoContext";
 import { useTheme } from "../../context/ThemeContext";
-import Login from "../pages/Login.jsx";
+import ModalAcceso from "./ModalAcceso.jsx";
 
 const NAV_LINKS = [
   { to: "/", text: "Inicio" },
@@ -180,6 +180,11 @@ function Menu() {
                       </Dropdown.Item>
                     )}
 
+                    <Dropdown.Item as={Link} to="/mis-compras">
+                      <i className="bi bi-bag-check me-2"></i>
+                      Mis compras
+                    </Dropdown.Item>
+
                     <Dropdown.Item
                       onClick={handleLogout}
                       className="text-danger"
@@ -234,6 +239,17 @@ function Menu() {
                     Panel de administracion
                   </NavLink>
                 )}
+
+                {user && (
+                  <NavLink
+                    to="/mis-compras"
+                    className="nav-link-mobile"
+                    onClick={() => setExpanded(false)}
+                  >
+                    <i className="bi bi-bag-check me-2"></i>
+                    Mis compras
+                  </NavLink>
+                )}
               </Nav>
 
               <ThemeToggleSwitch mobile />
@@ -276,7 +292,7 @@ function Menu() {
         </Container>
       </div>
 
-      <Login show={showLogin} onClose={() => setShowLogin(false)} />
+      <ModalAcceso show={showLogin} onClose={() => setShowLogin(false)} />
     </>
   );
 }
