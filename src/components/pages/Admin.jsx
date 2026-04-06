@@ -50,6 +50,7 @@ export default function Admin() {
   const [showPedidoModal, setShowPedidoModal] = useState(false);
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
   const [guardandoPedido, setGuardandoPedido] = useState(false);
+  const [eliminandoPedido, setEliminandoPedido] = useState(false);
   const [cargandoPedidos, setCargandoPedidos] = useState(false);
 
   const [busquedaProd, setBusquedaProd] = useState("");
@@ -281,6 +282,51 @@ export default function Admin() {
       await mostrarError(error.message);
     } finally {
       setGuardandoPedido(false);
+    }
+  };
+
+  const eliminarPedido = async () => {
+    if (!pedidoSeleccionado?._id) return;
+
+    const result = await Swal.fire({
+      title: "Eliminar pedido?",
+      text: "Se eliminara el pedido y, si corresponde, se restaurara el stock. Esta accion no se puede deshacer.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Si, eliminar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#d33",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setEliminandoPedido(true);
+
+      const { respuesta, datos, sesionInvalida } = await solicitarConAuthAdmin(
+        `/pedidos/${pedidoSeleccionado._id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (sesionInvalida) {
+        return;
+      }
+
+      if (!respuesta.ok) {
+        throw new Error(
+          getApiErrorMessage(datos, "No se pudo eliminar el pedido."),
+        );
+      }
+
+      await cargarPedidos();
+      cerrarModalPedido();
+      await mostrarExito("Pedido eliminado correctamente");
+    } catch (error) {
+      await mostrarError(error.message);
+    } finally {
+      setEliminandoPedido(false);
     }
   };
 
@@ -527,6 +573,8 @@ export default function Admin() {
         cerrarModalPedido={cerrarModalPedido}
         guardarPedido={guardarPedido}
         guardandoPedido={guardandoPedido}
+        eliminarPedido={eliminarPedido}
+        eliminandoPedido={eliminandoPedido}
       />
     </Container>
   );

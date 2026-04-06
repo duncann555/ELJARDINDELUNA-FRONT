@@ -1,6 +1,7 @@
 import { Button, Card, Col, Container, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import logo from "../../assets/EL_JARDIN_DE_LUNA.png";
+import { CONTACTO_WHATSAPP_URL } from "../../helpers/contact";
 import "../../styles/nosotros.css";
 
 const TAGS = ["Bienestar", "Herboristeria", "Cosmetica Natural", "Aromas"];
@@ -48,8 +49,15 @@ export default function Nosotros() {
                 <Button as={Link} to="/productos" className="px-4">
                   Ver catalogo
                 </Button>
-                <Button as={Link} to="/contacto" variant="outline-secondary" className="px-4">
-                  Contactanos
+                <Button
+                  as="a"
+                  href={CONTACTO_WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="outline-secondary"
+                  className="px-4"
+                >
+                  Escribinos por WhatsApp
                 </Button>
               </div>
             </Col>

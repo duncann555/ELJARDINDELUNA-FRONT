@@ -74,6 +74,11 @@
   line-height: 0.96;
 }
 
+:root[data-theme="dark"] .inicio-title {
+  color: #f5efdf;
+  text-shadow: 0 8px 24px rgba(2, 6, 23, 0.28);
+}
+
 .inicio-subtitle {
   max-width: 620px;
   margin-inline: auto;

@@ -14,6 +14,8 @@ export default function ModalPedidoAdmin({
   cerrarModalPedido,
   guardarPedido,
   guardandoPedido,
+  eliminarPedido,
+  eliminandoPedido,
 }) {
   const [formulario, setFormulario] = useState({
     estadoPedido: "En espera de pago",
@@ -149,7 +151,7 @@ export default function ModalPedidoAdmin({
             </Col>
           </Row>
 
-          <div className="d-flex justify-content-between align-items-center mt-4">
+          <div className="d-flex justify-content-between align-items-center gap-3 flex-wrap mt-4">
             <div>
               <div className="fw-bold">
                 Subtotal: {formatCurrency(obtenerSubtotalPedido(pedido))}
@@ -161,9 +163,23 @@ export default function ModalPedidoAdmin({
                 Total: {formatCurrency(pedido.total)}
               </div>
             </div>
-            <Button type="submit" variant="success" disabled={guardandoPedido}>
-              {guardandoPedido ? "Guardando..." : "Guardar estado"}
-            </Button>
+            <div className="d-flex gap-2">
+              <Button
+                type="button"
+                variant="outline-danger"
+                onClick={eliminarPedido}
+                disabled={guardandoPedido || eliminandoPedido}
+              >
+                {eliminandoPedido ? "Eliminando..." : "Eliminar pedido"}
+              </Button>
+              <Button
+                type="submit"
+                variant="success"
+                disabled={guardandoPedido || eliminandoPedido}
+              >
+                {guardandoPedido ? "Guardando..." : "Guardar estado"}
+              </Button>
+            </div>
           </div>
         </Form>
       </Modal.Body>

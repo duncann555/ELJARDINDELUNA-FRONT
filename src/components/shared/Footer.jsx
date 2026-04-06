@@ -33,7 +33,11 @@ const Footer = () => {
             <ul className="list-unstyled d-grid gap-2 mb-0 footer-links">
               <li><Link to="/productos">Tienda Online</Link></li>
               <li><Link to="/nosotros">Nuestra Historia</Link></li>
-              <li><Link to="/contacto">Contacto</Link></li>
+              <li>
+                <a href={CONTACTO_WHATSAPP_URL} target="_blank" rel="noreferrer">
+                  WhatsApp
+                </a>
+              </li>
               <li><Link to="/register">Acceso Clientes</Link></li>
             </ul>
           </Col>

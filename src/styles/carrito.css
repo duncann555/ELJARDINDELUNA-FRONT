@@ -11,7 +11,8 @@
 }
 
 .carrito-container {
-  max-width: 1100px;
+  max-width: 1240px;
+  padding-inline: clamp(0.95rem, 2vw, 1.5rem);
 }
 
 /* Botón Volver */
@@ -30,7 +31,7 @@
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  padding: 1.5rem 0;
+  padding: 1.5rem 1.5rem;
   border-bottom: 1px solid #f3f4f6;
 }
 
@@ -72,6 +73,7 @@
   font-size: 1.1rem;
   color: var(--color-brand-dark);
   min-width: 100px;
+  padding-right: 0.25rem;
 }
 
 /* --- AQUÍ EMPIEZA LA CORRECCIÓN DE LOS BOTONES --- */
@@ -185,7 +187,7 @@
 .checkout-sidebar {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.75rem;
 }
 
 .checkout-summary-card {
@@ -241,6 +243,8 @@
 }
 
 :root[data-theme="light"] .carrito-page .card {
+  position: relative;
+  overflow: hidden;
   border: 1px solid rgba(45, 68, 93, 0.2) !important;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(248, 242, 232, 0.99) 100%) !important;
@@ -248,6 +252,16 @@
     0 24px 48px rgba(29, 48, 70, 0.1),
     0 2px 0 rgba(217, 200, 162, 0.18),
     inset 0 0 0 1px rgba(255, 255, 255, 0.76) !important;
+}
+
+:root[data-theme="light"] .carrito-page .card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(29, 48, 70, 0.34);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
 }
 
 :root[data-theme="light"] .carrito-page .alert-secondary,
@@ -277,15 +291,26 @@
 }
 
 :root[data-theme="light"] .carrito-page .checkout-summary-card {
-  border-color: rgba(45, 68, 93, 0.22) !important;
+  border-color: rgba(29, 48, 70, 0.3) !important;
 }
 
 :root[data-theme="light"] .carrito-page .checkout-payment-method {
-  border: 1px solid rgba(45, 68, 93, 0.18);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(29, 48, 70, 0.24);
   background: linear-gradient(180deg, rgba(252, 253, 251, 1) 0%, rgba(244, 247, 242, 0.99) 100%);
   box-shadow:
     0 12px 24px rgba(29, 48, 70, 0.06),
     inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+}
+
+:root[data-theme="light"] .carrito-page .checkout-payment-method::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(29, 48, 70, 0.3);
+  border-radius: inherit;
+  pointer-events: none;
 }
 
 :root[data-theme="light"] .carrito-page .carrito-item-row {
@@ -293,7 +318,7 @@
 }
 
 :root[data-theme="light"] .carrito-page .carrito-item-img-wrapper {
-  border-color: rgba(45, 68, 93, 0.16);
+  border-color: rgba(29, 48, 70, 0.24);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(239, 243, 247, 0.99) 100%);
   box-shadow:
@@ -302,7 +327,7 @@
 }
 
 :root[data-theme="light"] .carrito-page .carrito-qty-group {
-  border-color: rgba(45, 68, 93, 0.18);
+  border-color: rgba(29, 48, 70, 0.24);
   box-shadow:
     0 8px 18px rgba(29, 48, 70, 0.08),
     inset 0 0 0 1px rgba(255, 255, 255, 0.76);
@@ -336,10 +361,22 @@
 }
 
 :root[data-theme="dark"] .carrito-page .card {
+  position: relative;
+  overflow: hidden;
   border: 1px solid rgba(217, 200, 162, 0.08) !important;
   background:
     linear-gradient(180deg, rgba(18, 26, 38, 0.96) 0%, rgba(11, 18, 28, 0.98) 100%) !important;
   box-shadow: 0 24px 48px rgba(2, 6, 23, 0.3) !important;
+}
+
+:root[data-theme="dark"] .carrito-page .card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(217, 200, 162, 0.18);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
 }
 
 :root[data-theme="dark"] .carrito-page h1,
@@ -419,8 +456,19 @@
 }
 
 :root[data-theme="dark"] .checkout-payment-method {
+  position: relative;
+  overflow: hidden;
   border-color: rgba(217, 200, 162, 0.1);
   background: linear-gradient(180deg, rgba(18, 26, 38, 0.98) 0%, rgba(11, 18, 28, 0.98) 100%);
+}
+
+:root[data-theme="dark"] .checkout-payment-method::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(217, 200, 162, 0.18);
+  border-radius: inherit;
+  pointer-events: none;
 }
 
 :root[data-theme="dark"] .checkout-payment-icon {
@@ -479,6 +527,10 @@
     max-width: 100%;
   }
 
+  .checkout-sidebar {
+    gap: 1.5rem;
+  }
+
   .btn-empty {
     width: 100%;
     justify-content: center;
@@ -515,7 +567,7 @@
     /* Permitimos que los elementos bajen si no hay espacio */
     flex-wrap: wrap;
     align-items: flex-start;
-    padding: 1.25rem 0;
+    padding: 1.25rem 1rem;
     /* Espacio entre la fila de arriba (img/info) y el precio abajo */
     gap: 1rem; 
   }

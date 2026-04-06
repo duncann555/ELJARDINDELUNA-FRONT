@@ -235,25 +235,7 @@ export default function Register() {
 
         <div className="reg-card shadow-lg overflow-hidden rounded-4 mt-4">
           <Row className="g-0">
-            <Col
-              lg={4}
-              className="reg-info-col reg-brand-gradient d-none d-lg-flex flex-column justify-content-center p-5 text-white"
-            >
-              <h2 className="font-playfair fw-bold mb-4">Tu cuenta en la tienda</h2>
-              <p className="opacity-75">
-                Registrate una sola vez y despues compra mas rapido, guarda tu sesion y
-                segui tus pedidos con comodidad.
-              </p>
-              <div className="mt-4 d-flex align-items-center">
-                <i className="bi bi-shield-check fs-4 me-2"></i>
-                <small>Tus datos se guardan de forma segura en la tienda.</small>
-              </div>
-              <Link to="/" className="btn reg-back-btn rounded-pill mt-auto">
-                Volver al Inicio
-              </Link>
-            </Col>
-
-            <Col lg={8} className="reg-content-col p-4 p-md-5 d-flex align-items-center">
+            <Col lg={12} className="reg-content-col p-4 p-md-5 d-flex align-items-center">
               <div className="w-100 reg-form-shell">
                 {error && (
                   <Alert variant="danger" className="py-2 px-3 small text-center">

@@ -121,17 +121,6 @@ export const validatePasswordConfirmation = (value, password) => {
   return "";
 };
 
-export const validateMensajeContacto = (value) => {
-  const text = normalizeText(value);
-
-  if (!text) return "La consulta es obligatoria";
-  if (text.length < 10 || text.length > 1000) {
-    return "La consulta debe contener entre 10 y 1000 caracteres";
-  }
-
-  return "";
-};
-
 export const validateProvincia = (value) => {
   const text = normalizeText(value);
 

@@ -11,6 +11,7 @@ import {
   Row,
 } from "react-bootstrap";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { CONTACTO_WHATSAPP_URL } from "../../helpers/contact";
 import "../../styles/menu.css";
 import LOGO from "../../assets/EL_JARDIN_DE_LUNA.png";
 import { useAuth } from "../../context/AuthContext";
@@ -22,7 +23,7 @@ const NAV_LINKS = [
   { to: "/", text: "Inicio" },
   { to: "/productos", text: "Productos" },
   { to: "/nosotros", text: "Nosotros" },
-  { to: "/contacto", text: "Consultanos" },
+  { href: CONTACTO_WHATSAPP_URL, text: "WhatsApp" },
 ];
 
 const ROL_ADMIN = "Administrador";
@@ -219,14 +220,27 @@ function Menu() {
 
               <Nav className="flex-column gap-2 mb-3 mt-3">
                 {NAV_LINKS.map((link) => (
-                  <NavLink
-                    key={link.to}
-                    to={link.to}
-                    className="nav-link-mobile"
-                    onClick={() => setExpanded(false)}
-                  >
-                    {link.text}
-                  </NavLink>
+                  link.to ? (
+                    <NavLink
+                      key={link.to}
+                      to={link.to}
+                      className="nav-link-mobile"
+                      onClick={() => setExpanded(false)}
+                    >
+                      {link.text}
+                    </NavLink>
+                  ) : (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="nav-link-mobile"
+                      onClick={() => setExpanded(false)}
+                    >
+                      {link.text}
+                    </a>
+                  )
                 ))}
 
                 {esAdmin && (
@@ -284,9 +298,21 @@ function Menu() {
         <Container>
           <Nav className="justify-content-center gap-5">
             {NAV_LINKS.map((link) => (
-              <NavLink key={link.to} to={link.to} className="nav-link-custom">
-                {link.text}
-              </NavLink>
+              link.to ? (
+                <NavLink key={link.to} to={link.to} className="nav-link-custom">
+                  {link.text}
+                </NavLink>
+              ) : (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="nav-link-custom"
+                >
+                  {link.text}
+                </a>
+              )
             ))}
           </Nav>
         </Container>

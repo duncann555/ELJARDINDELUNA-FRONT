@@ -192,7 +192,7 @@ export default function ModalAcceso({ show, onClose }) {
               className="small text-decoration-none fw-semibold ml-link"
               onClick={onClose}
             >
-              Olvide mi contrasena
+              Olvidé mi contraseña
             </Link>
           </div>
 

@@ -1,7 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import Admin from "./components/pages/Admin";
 import Carrito from "./components/pages/Carrito";
-import Contacto from "./components/pages/Contacto";
 import DetalleProducto from "./components/pages/DetalleProducto";
 import Error404 from "./components/pages/Error404";
 import Inicio from "./components/pages/Inicio";
@@ -31,7 +30,7 @@ function App() {
                 <Route path="/productos" element={<Productos />} />
                 <Route path="/producto/:id" element={<DetalleProducto />} />
                 <Route path="/nosotros" element={<Nosotros />} />
-                <Route path="/contacto" element={<Contacto />} />
+                <Route path="/contacto" element={<Navigate to="/" replace />} />
                 <Route
                   path="/carrito"
                   element={
