@@ -11,7 +11,6 @@ import {
   Row,
 } from "react-bootstrap";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { CONTACTO_WHATSAPP_URL } from "../../helpers/contact";
 import "../../styles/menu.css";
 import LOGO from "../../assets/EL_JARDIN_DE_LUNA.png";
 import { useAuth } from "../../context/AuthContext";
@@ -23,7 +22,6 @@ const NAV_LINKS = [
   { to: "/", text: "Inicio" },
   { to: "/productos", text: "Productos" },
   { to: "/nosotros", text: "Nosotros" },
-  { href: CONTACTO_WHATSAPP_URL, text: "WhatsApp" },
 ];
 
 const ROL_ADMIN = "Administrador";

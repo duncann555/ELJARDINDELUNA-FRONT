@@ -11,9 +11,9 @@
 
 .btn-float {
   position: relative;
-  width: 58px;
-  min-width: 58px;
-  height: 58px;
+  width: 64px;
+  min-width: 64px;
+  height: 64px;
   padding: 0;
   border-radius: 999px;
   display: inline-flex;
@@ -48,12 +48,15 @@
 }
 
 .btn-float i {
-  font-size: 1.35rem;
+  font-size: 1.48rem;
   line-height: 1;
 }
 
 .btn-float.whatsapp {
-  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+  background: linear-gradient(135deg, #34e97a 0%, #16c45b 48%, #0f8f43 100%);
+  box-shadow:
+    0 22px 40px rgba(22, 196, 91, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .btn-float.cart {
@@ -94,13 +97,13 @@
   }
 
   .btn-float {
-    width: 56px;
-    min-width: 56px;
-    height: 56px;
+    width: 60px;
+    min-width: 60px;
+    height: 60px;
   }
 
   .btn-float i {
-    font-size: 1.45rem;
+    font-size: 1.5rem;
   }
 }
 
@@ -111,9 +114,9 @@
   }
 
   .btn-float {
-    width: 52px;
-    min-width: 52px;
-    height: 52px;
+    width: 56px;
+    min-width: 56px;
+    height: 56px;
   }
 
   .float-badge {
