@@ -144,7 +144,7 @@ export default function SocialAuthSection({ onSuccess, onPhoneStepChange }) {
               key={option.key}
               type="button"
               variant="light"
-              className="social-auth-btn"
+              className={`social-auth-btn social-auth-btn--${option.key}`}
               onClick={() => handleProviderLogin(option.key)}
               disabled={Boolean(loadingProvider || savingPhone)}
             >
@@ -152,8 +152,10 @@ export default function SocialAuthSection({ onSuccess, onPhoneStepChange }) {
                 "Conectando..."
               ) : (
                 <>
-                  <i className={`bi ${option.icon}`}></i>
-                  <span>{option.label}</span>
+                  <span className="social-auth-btn__icon" aria-hidden="true">
+                    <i className={`bi ${option.icon}`}></i>
+                  </span>
+                  <span className="social-auth-btn__label">{option.label}</span>
                 </>
               )}
             </Button>

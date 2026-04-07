@@ -125,7 +125,7 @@ export default function ModalAcceso({ show, onClose }) {
           <div className="ml-brand-badge mb-3">Acceso</div>
           <h2 className="font-playfair fw-bold mb-0 ml-title">Bienvenido</h2>
           <p className="small mb-0 ml-subtitle">
-            Ingresa con tu email y contrasena para continuar.
+            Ingresa con tu email y contraseña para continuar.
           </p>
         </div>
 
@@ -159,10 +159,10 @@ export default function ModalAcceso({ show, onClose }) {
           </div>
 
           <div className="mb-3 position-relative">
-            <FloatingLabel label="Contrasena">
+            <FloatingLabel label="Contraseña">
               <Form.Control
                 type={showPass ? "text" : "password"}
-                placeholder="Contrasena"
+                placeholder="Contraseña"
                 className="ml-input pe-5"
                 autoComplete="current-password"
                 minLength={PASSWORD_MIN_LENGTH}
@@ -180,7 +180,7 @@ export default function ModalAcceso({ show, onClose }) {
               type="button"
               className="ml-eye-icon"
               onClick={() => setShowPass((prev) => !prev)}
-              aria-label={showPass ? "Ocultar contrasena" : "Mostrar contrasena"}
+              aria-label={showPass ? "Ocultar contraseña" : "Mostrar contraseña"}
             >
               <i className={`bi ${showPass ? "bi-eye-slash" : "bi-eye"}`}></i>
             </button>

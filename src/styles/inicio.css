@@ -119,6 +119,14 @@
   box-shadow: 0 28px 50px rgba(29, 48, 70, 0.14) !important;
 }
 
+.producto-card--sin-stock {
+  border-color: rgba(159, 61, 73, 0.42) !important;
+}
+
+.producto-card--sin-stock::before {
+  border-color: rgba(159, 61, 73, 0.38);
+}
+
 :root[data-theme="light"] .producto-card:hover {
   border-color: rgba(29, 48, 70, 0.52) !important;
   box-shadow:
@@ -189,6 +197,12 @@
   color: var(--theme-sage-deep);
 }
 
+.producto-stock-note {
+  color: var(--theme-muted);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
 :root[data-theme="dark"] .producto-card-body {
   background: linear-gradient(180deg, rgba(13, 20, 31, 0.18) 0%, rgba(8, 14, 23, 0.9) 100%);
 }
@@ -200,6 +214,10 @@
 
 :root[data-theme="dark"] .producto-price {
   color: #cfe1b8;
+}
+
+:root[data-theme="dark"] .producto-stock-note {
+  color: #b9c7d6;
 }
 
 /* Card actions */
@@ -265,12 +283,34 @@
   -webkit-text-fill-color: #ffffff !important;
 }
 
+.inicio-card-action--add:disabled,
+.inicio-card-action--disabled {
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #9ba6b3 0%, #778394 100%) !important;
+  background-color: #8a96a5 !important;
+  border: 1px solid #7c8897 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: none;
+  transform: none !important;
+}
+
 .producto-oferta-badge {
   background: linear-gradient(135deg, #b75861 0%, #9f3d49 100%) !important;
   color: #ffffff;
   border-radius: 999px;
   letter-spacing: 0.12em;
   font-size: 0.7rem;
+}
+
+.producto-stock-badge {
+  background: linear-gradient(135deg, #b75861 0%, #9f3d49 100%) !important;
+  color: #ffffff;
+  border-radius: 999px;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.22);
 }
 
 .producto-categoria-badge {

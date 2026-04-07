@@ -44,7 +44,13 @@ export default function ModalPedidoAdmin({
   };
 
   return (
-    <Modal show={show} onHide={cerrarModalPedido} size="lg" centered>
+    <Modal
+      show={show}
+      onHide={cerrarModalPedido}
+      size="lg"
+      centered
+      dialogClassName="admin-modal-dialog"
+    >
       <Modal.Header closeButton>
         <Modal.Title>Gestion del pedido</Modal.Title>
       </Modal.Header>
@@ -52,7 +58,7 @@ export default function ModalPedidoAdmin({
       <Modal.Body>
         <Row className="g-3 mb-4">
           <Col md={6}>
-            <div className="p-3 rounded border bg-light h-100">
+            <div className="admin-modal-card p-3 rounded border bg-light h-100">
               <small className="text-muted d-block mb-1">Cliente</small>
               <div className="fw-bold">{cliente || "Sin nombre"}</div>
               <div className="text-muted small">{pedido.usuario?.email || "-"}</div>
@@ -60,7 +66,7 @@ export default function ModalPedidoAdmin({
           </Col>
 
           <Col md={6}>
-            <div className="p-3 rounded border bg-light h-100">
+            <div className="admin-modal-card p-3 rounded border bg-light h-100">
               <small className="text-muted d-block mb-1">Pedido</small>
               <div className="fw-bold">#{String(pedido._id).slice(-6).toUpperCase()}</div>
               <div className="text-muted small">{formatDate(pedido.createdAt)}</div>
@@ -68,7 +74,7 @@ export default function ModalPedidoAdmin({
           </Col>
 
           <Col md={6}>
-            <div className="p-3 rounded border bg-light h-100">
+            <div className="admin-modal-card p-3 rounded border bg-light h-100">
               <small className="text-muted d-block mb-1">Pago</small>
               <Badge bg={obtenerVarianteEstadoPago(pedido.pago?.estado)}>
                 {pedido.pago?.estado || "pending"}
@@ -80,7 +86,7 @@ export default function ModalPedidoAdmin({
           </Col>
 
           <Col md={6}>
-            <div className="p-3 rounded border bg-light h-100">
+            <div className="admin-modal-card p-3 rounded border bg-light h-100">
               <small className="text-muted d-block mb-1">Envio</small>
               <div className="fw-bold">{pedido.envio?.proveedor || "Envio nacional"}</div>
               <div className="text-muted small mt-2">
@@ -98,8 +104,8 @@ export default function ModalPedidoAdmin({
 
         <div className="mb-4">
           <h6 className="fw-bold mb-3">Productos del pedido</h6>
-          <div className="border rounded overflow-hidden">
-            <Table responsive className="mb-0">
+          <div className="admin-modal-table-wrap border rounded overflow-hidden">
+            <Table responsive className="mb-0 admin-table">
               <thead>
                 <tr>
                   <th>Producto</th>
@@ -167,6 +173,7 @@ export default function ModalPedidoAdmin({
               <Button
                 type="button"
                 variant="outline-danger"
+                className="admin-action-btn"
                 onClick={eliminarPedido}
                 disabled={guardandoPedido || eliminandoPedido}
               >
@@ -175,6 +182,7 @@ export default function ModalPedidoAdmin({
               <Button
                 type="submit"
                 variant="success"
+                className="admin-action-btn"
                 disabled={guardandoPedido || eliminandoPedido}
               >
                 {guardandoPedido ? "Guardando..." : "Guardar estado"}

@@ -55,6 +55,7 @@ export default function Admin() {
 
   const [busquedaProd, setBusquedaProd] = useState("");
   const [busquedaUsuario, setBusquedaUsuario] = useState("");
+  const [productoProcesandoId, setProductoProcesandoId] = useState(null);
   const [usuarioProcesandoId, setUsuarioProcesandoId] = useState(null);
 
   const manejarSesionInvalida = useCallback(
@@ -366,6 +367,59 @@ export default function Admin() {
     }
   };
 
+  const cambiarEstadoProducto = async (producto) => {
+    const estadoActual = producto.estado === "Inactivo" ? "Inactivo" : "Activo";
+    const nuevoEstado = estadoActual === "Activo" ? "Inactivo" : "Activo";
+    const accion = nuevoEstado === "Inactivo" ? "Suspender" : "Mostrar";
+
+    const result = await Swal.fire({
+      title: `${accion} producto?`,
+      text:
+        nuevoEstado === "Inactivo"
+          ? `${producto.nombre} dejara de verse en Inicio y en Productos.`
+          : `${producto.nombre} volvera a mostrarse en Inicio y en Productos.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: `Si, ${accion.toLowerCase()}`,
+      cancelButtonText: "Cancelar",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setProductoProcesandoId(producto._id);
+
+      const { respuesta, datos, sesionInvalida } = await solicitarConAuthAdmin(
+        `/productos/${producto._id}/estado`,
+        {
+          method: "PATCH",
+          json: { estado: nuevoEstado },
+        },
+      );
+
+      if (sesionInvalida) {
+        return;
+      }
+
+      if (!respuesta.ok) {
+        throw new Error(
+          getApiErrorMessage(datos, "No se pudo actualizar el estado del producto."),
+        );
+      }
+
+      await cargarProductos();
+      await mostrarExito(
+        nuevoEstado === "Inactivo"
+          ? "Producto suspendido correctamente"
+          : "Producto visible nuevamente",
+      );
+    } catch (error) {
+      await mostrarError(error.message);
+    } finally {
+      setProductoProcesandoId(null);
+    }
+  };
+
   const cambiarEstadoUsuario = async (usuario) => {
     const usuarioId = obtenerIdUsuario(usuario);
     const nuevoEstado = usuario.estado === "Activo" ? "Suspendido" : "Activo";
@@ -510,7 +564,7 @@ export default function Admin() {
   );
 
   return (
-    <Container fluid className="py-5 px-lg-5 bg-light min-vh-100">
+    <Container fluid className="admin-panel py-5 px-lg-5 bg-light min-vh-100">
       <h2 className="fw-bold mb-4 font-playfair">
         Panel de Control - EL JARDIN DE LUNA
       </h2>
@@ -528,8 +582,10 @@ export default function Admin() {
             busqueda={busquedaProd}
             onBuscarChange={setBusquedaProd}
             productos={productosFiltrados}
+            productoProcesandoId={productoProcesandoId}
             onNuevoProducto={abrirModalProductoCrear}
             onEditarProducto={abrirModalProductoEditar}
+            onCambiarEstadoProducto={cambiarEstadoProducto}
             onEliminarProducto={eliminarProducto}
           />
         </Tab>

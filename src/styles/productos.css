@@ -160,6 +160,25 @@
   letter-spacing: -0.03em;
 }
 
+.productos-stock-note {
+  color: var(--theme-muted) !important;
+  font-weight: 700;
+  min-height: 1.3rem;
+}
+
+.productos-card--sin-stock {
+  border-color: rgba(159, 61, 73, 0.42) !important;
+}
+
+.productos-stock-badge {
+  background: linear-gradient(135deg, #b75861 0%, #9f3d49 100%) !important;
+  color: #fbf8f1 !important;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .productos-card-btn {
   --bs-btn-color: #ffffff;
   --bs-btn-bg: #566c4f;
@@ -189,6 +208,14 @@
   background-color: #24364a !important;
   background-image: linear-gradient(135deg, #3d536e 0%, #24364a 100%) !important;
   color: #ffffff !important;
+}
+
+.productos-card-btn:disabled {
+  border-color: #7c8897 !important;
+  background: linear-gradient(135deg, #9ba6b3 0%, #778394 100%) !important;
+  background-color: #8a96a5 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
 }
 
 .hover-scale .card-img-top {

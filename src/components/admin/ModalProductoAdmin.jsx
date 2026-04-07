@@ -88,6 +88,7 @@ export default function ModalProductoAdmin({
       centered
       size="lg"
       backdrop="static"
+      dialogClassName="admin-modal-dialog"
     >
       <Modal.Header closeButton>
         <Modal.Title>
@@ -205,7 +206,7 @@ export default function ModalProductoAdmin({
               <img
                 src={preview}
                 alt="Preview del producto"
-                className="img-fluid rounded shadow-sm"
+                className="admin-modal-preview img-fluid rounded shadow-sm"
                 style={{ maxHeight: "150px" }}
               />
             </div>
@@ -225,7 +226,7 @@ export default function ModalProductoAdmin({
             </Form.Control.Feedback>
           </FloatingLabel>
 
-          <Form.Group className="my-3 p-3 bg-light rounded border">
+          <Form.Group className="admin-modal-switchbox my-3 p-3 bg-light rounded border">
             <Form.Check
               type="switch"
               label="Mostrar en la seccion de destacados"

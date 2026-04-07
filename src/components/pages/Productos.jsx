@@ -68,9 +68,16 @@ function CardProducto({ producto }) {
   const navigate = useNavigate();
   const { agregarAlCarrito } = useCarrito();
   const { _id, nombre, precio, imagenUrl, categoria } = producto;
+  const stockDisponible = Number(producto?.stock || 0);
+  const sinStock = stockDisponible <= 0;
 
   const handleAgregar = (event) => {
     event.stopPropagation();
+
+    if (sinStock) {
+      return;
+    }
+
     const agregado = agregarAlCarrito(producto);
 
     if (!agregado) {
@@ -93,7 +100,9 @@ function CardProducto({ producto }) {
 
   return (
     <Card
-      className="h-100 border-0 shadow-sm hover-scale overflow-hidden cursor-pointer productos-card"
+      className={`h-100 border-0 shadow-sm hover-scale overflow-hidden cursor-pointer productos-card ${
+        sinStock ? "productos-card--sin-stock" : ""
+      }`}
       onClick={() => navigate(`/producto/${_id}`)}
     >
       <div
@@ -121,6 +130,12 @@ function CardProducto({ producto }) {
         <Badge className="position-absolute bottom-0 start-0 productos-categoria-badge">
           {categoria}
         </Badge>
+
+        {sinStock && (
+          <Badge className="position-absolute top-0 end-0 m-3 productos-stock-badge">
+            Sin stock
+          </Badge>
+        )}
       </div>
 
       <Card.Body className="d-flex flex-column text-center p-3 productos-card-body">
@@ -139,12 +154,19 @@ function CardProducto({ producto }) {
           {formatCurrency(precio)}
         </div>
 
+        <Card.Text className="small mb-3 productos-stock-note">
+          {sinStock
+            ? "Sin stock disponible"
+            : `Quedan ${stockDisponible} unidad${stockDisponible === 1 ? "" : "es"}`}
+        </Card.Text>
+
         <Button
           variant="success"
           className="mt-auto w-100 fw-medium productos-card-btn"
           onClick={handleAgregar}
+          disabled={sinStock}
         >
-          Agregar al carrito
+          {sinStock ? "Sin stock" : "Agregar al carrito"}
         </Button>
       </Card.Body>
     </Card>

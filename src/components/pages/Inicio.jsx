@@ -27,9 +27,16 @@ const CardProducto = ({ producto }) => {
   const { agregarAlCarrito } = useCarrito();
   const { isDarkMode } = useTheme();
   const { _id, nombre, precio, imagenUrl, categoria, oferta } = producto;
+  const stockDisponible = Number(producto?.stock || 0);
+  const sinStock = stockDisponible <= 0;
 
   const handleAgregar = (event) => {
     event.stopPropagation();
+
+    if (sinStock) {
+      return;
+    }
+
     const agregado = agregarAlCarrito(producto);
 
     if (!agregado) {
@@ -50,17 +57,25 @@ const CardProducto = ({ producto }) => {
     toast.fire({ icon: "success", title: "Agregado al carrito" });
   };
 
-  return (
-    <Card
-      className="h-100 border-0 shadow-sm rounded-4 producto-card cursor-pointer"
-      onClick={() => navigate(`/producto/${_id}`)}
-    >
-      <div className="producto-img-wrapper position-relative">
-        {oferta && (
-          <span className="badge producto-oferta-badge position-absolute top-0 start-0 m-3 px-3 py-2 z-1 shadow-sm">
-            OFERTA
-          </span>
-        )}
+    return (
+      <Card
+      className={`h-100 border-0 shadow-sm rounded-4 producto-card cursor-pointer ${
+        sinStock ? "producto-card--sin-stock" : ""
+      }`}
+        onClick={() => navigate(`/producto/${_id}`)}
+      >
+        <div className="producto-img-wrapper position-relative">
+          {oferta && (
+            <span className="badge producto-oferta-badge position-absolute top-0 start-0 m-3 px-3 py-2 z-1 shadow-sm">
+              OFERTA
+            </span>
+          )}
+
+          {sinStock && (
+            <span className="badge producto-stock-badge position-absolute top-0 end-0 m-3 px-3 py-2 z-1 shadow-sm">
+              Sin stock
+            </span>
+          )}
 
         <Card.Img
           src={imagenUrl || IMG_PLACEHOLDER(nombre)}
@@ -83,8 +98,14 @@ const CardProducto = ({ producto }) => {
           {nombre}
         </Card.Title>
 
-        <Card.Text className="fw-bold fs-5 producto-price mb-3">
+        <Card.Text className="fw-bold fs-5 producto-price mb-1">
           {formatCurrency(precio)}
+        </Card.Text>
+
+        <Card.Text className="small mb-3 producto-stock-note">
+          {sinStock
+            ? "Sin stock disponible"
+            : `Quedan ${stockDisponible} unidad${stockDisponible === 1 ? "" : "es"}`}
         </Card.Text>
 
         <div className="mt-auto d-flex flex-column flex-sm-row gap-2 inicio-card-actions">
@@ -101,11 +122,20 @@ const CardProducto = ({ producto }) => {
 
           <button
             type="button"
-            className="inicio-card-action inicio-card-action--add"
+            className={`inicio-card-action inicio-card-action--add ${
+              sinStock ? "inicio-card-action--disabled" : ""
+            }`}
             onClick={handleAgregar}
+            disabled={sinStock}
           >
-            <i className="bi bi-cart-plus"></i>
-            <span>Agregar</span>
+            {sinStock ? (
+              <span>Sin stock</span>
+            ) : (
+              <>
+                <i className="bi bi-cart-plus"></i>
+                <span>Agregar</span>
+              </>
+            )}
           </button>
         </div>
       </Card.Body>
