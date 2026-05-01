@@ -308,14 +308,21 @@ export default function Inicio() {
 
         <div className="mb-5 px-md-5">
           <Carousel interval={3000} className="main-carousel-ofertas mx-auto shadow-lg rounded-4 overflow-hidden">
-            {[oferta1, oferta3].map((imagen, index) => (
+            {[
+              {
+                imagen: oferta1,
+                alt: "Familia de tinturas madre artesanales",
+                imageClassName: "main-carousel-ofertas-image main-carousel-ofertas-image--top",
+              },
+              {
+                imagen: oferta3,
+                alt: "Ofertas de la semana",
+                imageClassName: "main-carousel-ofertas-image",
+              },
+            ].map(({ imagen, alt, imageClassName }, index) => (
               <Carousel.Item key={index}>
-                <div className="ratio ratio-21x9" style={{ maxHeight: "350px" }}>
-                  <img
-                    className="w-100 h-100 object-fit-cover"
-                    src={imagen}
-                    alt={`Oferta ${index + 1}`}
-                  />
+                <div className="main-carousel-ofertas-frame">
+                  <img className={imageClassName} src={imagen} alt={alt} />
                 </div>
               </Carousel.Item>
             ))}
