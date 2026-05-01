@@ -480,7 +480,7 @@
 }
 
 .main-carousel-ofertas-image--top {
-  object-position: center top;
+  object-position: center 72%;
 }
 
 :root[data-theme="light"] .main-carousel-ofertas {
@@ -607,6 +607,10 @@
 
   .main-carousel-ofertas-frame {
     aspect-ratio: 16 / 10;
+  }
+
+  .main-carousel-ofertas-image--top {
+    object-position: center 78%;
   }
 
   .beneficios-wrapper .container {
