@@ -25,13 +25,19 @@ const TARJETAS_RESUMEN = [
     icono: "bi-receipt-cutoff",
     claseColor: "bg-warning bg-opacity-10 text-warning",
   },
+  {
+    clave: "pedidosPendientesPago",
+    titulo: "Pendientes de Pago",
+    icono: "bi-hourglass-split",
+    claseColor: "bg-secondary bg-opacity-10 text-secondary",
+  },
 ];
 
 export default function ResumenAdmin(metricas) {
   return (
     <Row className="mb-4 g-4">
       {TARJETAS_RESUMEN.map((tarjeta) => (
-        <Col key={tarjeta.clave} md={6} lg={3}>
+        <Col key={tarjeta.clave} md={6} lg>
           <Card className="status-card shadow-sm h-100">
             <Card.Body className="d-flex align-items-center gap-3">
               <div className={`status-icon-wrapper p-3 rounded ${tarjeta.claseColor}`}>

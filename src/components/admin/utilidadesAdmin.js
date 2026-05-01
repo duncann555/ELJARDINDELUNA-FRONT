@@ -1,8 +1,11 @@
 import {
   obtenerCostoEnvioPedido,
   obtenerDescuentoPedido,
+  obtenerEstadoPagoPedido,
   obtenerMetodoPagoPedido,
   obtenerSubtotalPedido,
+  obtenerTextoEstadoPago,
+  obtenerTextoEstadoPedido,
   obtenerTextoMetodoPagoPedido,
   obtenerVarianteEstadoPago,
   obtenerVarianteEstadoPedido,
@@ -11,8 +14,11 @@ import {
 export {
   obtenerCostoEnvioPedido,
   obtenerDescuentoPedido,
+  obtenerEstadoPagoPedido,
   obtenerMetodoPagoPedido,
   obtenerSubtotalPedido,
+  obtenerTextoEstadoPago,
+  obtenerTextoEstadoPedido,
   obtenerTextoMetodoPagoPedido,
   obtenerVarianteEstadoPago,
   obtenerVarianteEstadoPedido,
@@ -50,15 +56,17 @@ const ESTADOS_PEDIDO_SIN_PAGO_APROBADO = [
   "Cancelado",
 ];
 
-export const obtenerEstadosPedidoDisponibles = (pedido) => {
-  const estadosBase =
-    pedido?.pago?.estado === "approved"
-      ? ESTADOS_PEDIDO
-      : ESTADOS_PEDIDO_SIN_PAGO_APROBADO;
+export const obtenerEstadosPedidoDisponibles = ({
+  estadoActual,
+  estadoPago,
+} = {}) => {
+  const estadosBase = estadoPago === "approved"
+    ? ESTADOS_PEDIDO
+    : ESTADOS_PEDIDO_SIN_PAGO_APROBADO;
 
   return Array.from(
     new Set([
-      ...(pedido?.estadoPedido ? [pedido.estadoPedido] : []),
+      ...(estadoActual && estadosBase.includes(estadoActual) ? [estadoActual] : []),
       ...estadosBase,
     ]),
   );
@@ -67,7 +75,29 @@ export const obtenerEstadosPedidoDisponibles = (pedido) => {
 export const obtenerEstadosPagoDisponibles = (pedido) =>
   obtenerMetodoPagoPedido(pedido) === "transferencia"
     ? ["pending", "approved", "rejected"]
-    : [pedido?.pago?.estado || "pending"];
+    : [obtenerEstadoPagoPedido(pedido)];
+
+export const obtenerEstadoPedidoSugerido = ({ estadoPago, estadoPedido }) => {
+  if (estadoPago === "rejected") {
+    return "Cancelado";
+  }
+
+  if (
+    estadoPago !== "approved" &&
+    !ESTADOS_PEDIDO_SIN_PAGO_APROBADO.includes(estadoPedido)
+  ) {
+    return "En espera de pago";
+  }
+
+  return estadoPedido || "En espera de pago";
+};
+
+export const pedidoCuentaComoGestion = (pedido) =>
+  obtenerEstadoPagoPedido(pedido) === "approved" &&
+  !["En espera de pago", "Entregado", "Cancelado"].includes(pedido?.estadoPedido);
+
+export const pedidoEstaPendienteDePago = (pedido) =>
+  obtenerEstadoPagoPedido(pedido) === "pending";
 
 export const obtenerIdUsuario = (usuario) => usuario?._id || usuario?.uid;
 

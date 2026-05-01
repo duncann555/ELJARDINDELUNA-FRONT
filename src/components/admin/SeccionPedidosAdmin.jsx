@@ -3,7 +3,10 @@ import { formatCurrency, formatDate } from "../../helpers/app";
 import {
   obtenerCostoEnvioPedido,
   obtenerDescuentoPedido,
+  obtenerEstadoPagoPedido,
   obtenerSubtotalPedido,
+  obtenerTextoEstadoPago,
+  obtenerTextoEstadoPedido,
   obtenerTextoMetodoPagoPedido,
   obtenerVarianteEstadoPago,
   obtenerVarianteEstadoPedido,
@@ -50,7 +53,10 @@ export default function SeccionPedidosAdmin({
               </tr>
             </thead>
             <tbody>
-              {pedidos.map((pedido) => (
+              {pedidos.map((pedido) => {
+                const estadoPago = obtenerEstadoPagoPedido(pedido);
+
+                return (
                 <tr key={pedido._id}>
                   <td>
                     <div className="fw-bold">
@@ -77,7 +83,7 @@ export default function SeccionPedidosAdmin({
                       {obtenerDescuentoPedido(pedido) > 0 && (
                         <>
                           {" "}
-                          - desc. {formatCurrency(obtenerDescuentoPedido(pedido))}
+                          - descuento transferencia 7% {formatCurrency(obtenerDescuentoPedido(pedido))}
                         </>
                       )}{" "}
                       + envio {formatCurrency(obtenerCostoEnvioPedido(pedido))}
@@ -85,14 +91,14 @@ export default function SeccionPedidosAdmin({
                   </td>
 
                   <td>
-                    <Badge bg={obtenerVarianteEstadoPago(pedido.pago?.estado)}>
-                      {pedido.pago?.estado || "pending"}
+                    <Badge bg={obtenerVarianteEstadoPago(estadoPago)}>
+                      {obtenerTextoEstadoPago(estadoPago)}
                     </Badge>
                   </td>
 
                   <td>
                     <Badge bg={obtenerVarianteEstadoPedido(pedido.estadoPedido)}>
-                      {pedido.estadoPedido}
+                      {obtenerTextoEstadoPedido(pedido.estadoPedido)}
                     </Badge>
                   </td>
 
@@ -107,7 +113,8 @@ export default function SeccionPedidosAdmin({
                     </Button>
                   </td>
                 </tr>
-              ))}
+              );
+              })}
             </tbody>
           </Table>
         </div>

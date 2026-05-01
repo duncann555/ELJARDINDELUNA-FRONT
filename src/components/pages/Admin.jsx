@@ -10,6 +10,8 @@ import SeccionUsuariosAdmin from "../admin/SeccionUsuariosAdmin";
 import {
   PRODUCTO_VACIO,
   obtenerIdUsuario,
+  pedidoCuentaComoGestion,
+  pedidoEstaPendienteDePago,
 } from "../admin/utilidadesAdmin";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -556,10 +558,12 @@ export default function Admin() {
   );
 
   const pedidosEnGestion = useMemo(
-    () =>
-      pedidos.filter(
-        (pedido) => !["Entregado", "Cancelado"].includes(pedido.estadoPedido),
-      ).length,
+    () => pedidos.filter(pedidoCuentaComoGestion).length,
+    [pedidos],
+  );
+
+  const pedidosPendientesPago = useMemo(
+    () => pedidos.filter(pedidoEstaPendienteDePago).length,
     [pedidos],
   );
 
@@ -579,6 +583,7 @@ export default function Admin() {
         productosSinStock={productosSinStock}
         usuariosActivos={usuariosActivos}
         pedidosEnGestion={pedidosEnGestion}
+        pedidosPendientesPago={pedidosPendientesPago}
       />
 
       <Tabs defaultActiveKey="productos" className="mb-4 admin-tabs">
@@ -629,6 +634,7 @@ export default function Admin() {
       />
 
       <ModalPedidoAdmin
+        key={pedidoSeleccionado?._id || "pedido-modal"}
         show={showPedidoModal}
         pedido={pedidoSeleccionado}
         cerrarModalPedido={cerrarModalPedido}

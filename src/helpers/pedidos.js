@@ -10,10 +10,30 @@ export const obtenerCostoEnvioPedido = (pedido) =>
 export const obtenerMetodoPagoPedido = (pedido) =>
   String(pedido?.metodoPago || "").trim().toLowerCase() || "mercado_pago";
 
+export const obtenerEstadoPagoPedido = (pedido) =>
+  String(pedido?.estadoPago || pedido?.pago?.estado || "pending")
+    .trim()
+    .toLowerCase();
+
 export const obtenerTextoMetodoPagoPedido = (pedido) =>
   obtenerMetodoPagoPedido(pedido) === "transferencia"
     ? "Transferencia bancaria"
     : "Mercado Pago";
+
+export const obtenerTextoEstadoPedido = (estado) => {
+  switch (estado) {
+    case "Preparando envÃ­o":
+    case "Preparando env\u00edo":
+      return "Preparando envio";
+    case "En espera de pago":
+    case "Despachado":
+    case "Entregado":
+    case "Cancelado":
+      return estado;
+    default:
+      return estado || "Sin estado";
+  }
+};
 
 export const obtenerVarianteEstadoPedido = (estado) => {
   switch (estado) {
@@ -45,7 +65,7 @@ export const obtenerVarianteEstadoPago = (estado) => {
 export const obtenerTextoEstadoPago = (estado) => {
   switch (estado) {
     case "approved":
-      return "Aprobado";
+      return "Pagado";
     case "rejected":
       return "Rechazado";
     default:

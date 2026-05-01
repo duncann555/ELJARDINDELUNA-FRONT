@@ -1,11 +1,16 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Badge, Button, Col, FloatingLabel, Form, Modal, Row, Table } from "react-bootstrap";
 import { formatCurrency, formatDate } from "../../helpers/app";
 import {
   obtenerCostoEnvioPedido,
   obtenerDescuentoPedido,
+  obtenerEstadoPagoPedido,
+  obtenerEstadoPedidoSugerido,
   obtenerEstadosPagoDisponibles,
   obtenerEstadosPedidoDisponibles,
+  obtenerMetodoPagoPedido,
+  obtenerTextoEstadoPago,
+  obtenerTextoEstadoPedido,
   obtenerTextoMetodoPagoPedido,
   obtenerSubtotalPedido,
   obtenerVarianteEstadoPago,
@@ -20,19 +25,17 @@ export default function ModalPedidoAdmin({
   eliminarPedido,
   eliminandoPedido,
 }) {
-  const [formulario, setFormulario] = useState({
-    estadoPedido: "En espera de pago",
-    estadoPago: "pending",
+  const [formulario, setFormulario] = useState(() => {
+    const estadoPago = obtenerEstadoPagoPedido(pedido);
+
+    return {
+      estadoPago,
+      estadoPedido: obtenerEstadoPedidoSugerido({
+        estadoPago,
+        estadoPedido: pedido?.estadoPedido,
+      }),
+    };
   });
-
-  useEffect(() => {
-    if (!show || !pedido) return;
-
-    setFormulario({
-      estadoPedido: pedido.estadoPedido || "En espera de pago",
-      estadoPago: pedido.estadoPago || pedido.pago?.estado || "pending",
-    });
-  }, [show, pedido]);
 
   if (!pedido) return null;
 
@@ -40,14 +43,36 @@ export default function ModalPedidoAdmin({
     typeof pedido.usuario === "object" && pedido.usuario !== null
       ? `${pedido.usuario.nombre || ""} ${pedido.usuario.apellido || ""}`.trim()
       : "Sin cliente";
-  const estadosDisponibles = obtenerEstadosPedidoDisponibles(pedido);
   const estadosPagoDisponibles = obtenerEstadosPagoDisponibles(pedido);
-  const pagoAprobado = pedido.pago?.estado === "approved";
-  const esTransferencia = pedido.metodoPago === "transferencia";
+  const estadoPagoActual = obtenerEstadoPagoPedido(pedido);
+  const estadoPagoVisible = formulario.estadoPago || estadoPagoActual;
+  const estadosDisponibles = obtenerEstadosPedidoDisponibles({
+    estadoActual: formulario.estadoPedido,
+    estadoPago: formulario.estadoPago,
+  });
+  const pagoAprobado = formulario.estadoPago === "approved";
+  const esTransferencia = obtenerMetodoPagoPedido(pedido) === "transferencia";
+  const comprobanteUrl = String(pedido.comprobanteTransferencia?.url || "").trim();
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    guardarPedido(formulario);
+    guardarPedido({
+      ...formulario,
+      estadoPedido: obtenerEstadoPedidoSugerido(formulario),
+    });
+  };
+
+  const handleCambiarEstadoPago = (event) => {
+    const estadoPago = event.target.value;
+
+    setFormulario((prev) => ({
+      ...prev,
+      estadoPago,
+      estadoPedido: obtenerEstadoPedidoSugerido({
+        estadoPago,
+        estadoPedido: prev.estadoPedido,
+      }),
+    }));
   };
 
   return (
@@ -83,27 +108,35 @@ export default function ModalPedidoAdmin({
           <Col md={6}>
             <div className="admin-modal-card p-3 rounded border bg-light h-100">
               <small className="text-muted d-block mb-1">Pago</small>
-              <Badge bg={obtenerVarianteEstadoPago(pedido.pago?.estado)}>
-                {pedido.pago?.estado || "pending"}
+              <Badge bg={obtenerVarianteEstadoPago(estadoPagoVisible)}>
+                {obtenerTextoEstadoPago(estadoPagoVisible)}
               </Badge>
               <div className="fw-bold mt-2">
                 {obtenerTextoMetodoPagoPedido(pedido)}
               </div>
-              <div className="text-muted small mt-2">
-                Preference ID: {pedido.pago?.preferenceId || "-"}
-              </div>
-              {pedido.comprobanteTransferencia?.url && (
-                <Button
-                  as="a"
-                  href={pedido.comprobanteTransferencia.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  variant="outline-success"
-                  size="sm"
-                  className="mt-3"
-                >
-                  Ver comprobante
-                </Button>
+              {!esTransferencia && pedido.pago?.preferenceId && (
+                <div className="text-muted small mt-2">
+                  Preference ID: {pedido.pago.preferenceId}
+                </div>
+              )}
+              {esTransferencia && (
+                comprobanteUrl ? (
+                  <Button
+                    as="a"
+                    href={comprobanteUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    variant="outline-success"
+                    size="sm"
+                    className="mt-3"
+                  >
+                    Ver comprobante
+                  </Button>
+                ) : (
+                  <div className="text-muted small mt-3">
+                    Sin comprobante cargado
+                  </div>
+                )
               )}
             </div>
           </Col>
@@ -167,14 +200,14 @@ export default function ModalPedidoAdmin({
                 >
                   {estadosDisponibles.map((estado) => (
                     <option key={estado} value={estado}>
-                      {estado}
+                      {obtenerTextoEstadoPedido(estado)}
                     </option>
                   ))}
                 </Form.Select>
               </FloatingLabel>
               {!pagoAprobado && (
                 <div className="small text-muted mt-2">
-                  Mientras el pago siga pendiente, solo puedes dejarlo en espera o cancelarlo.
+                  Con pago pendiente o rechazado, el pedido solo puede quedar en espera de pago o cancelado.
                 </div>
               )}
             </Col>
@@ -185,16 +218,11 @@ export default function ModalPedidoAdmin({
                   <Form.Select
                     name="estadoPago"
                     value={formulario.estadoPago}
-                    onChange={(event) =>
-                      setFormulario((prev) => ({
-                        ...prev,
-                        estadoPago: event.target.value,
-                      }))
-                    }
+                    onChange={handleCambiarEstadoPago}
                   >
                     {estadosPagoDisponibles.map((estado) => (
                       <option key={estado} value={estado}>
-                        {estado}
+                        {obtenerTextoEstadoPago(estado)}
                       </option>
                     ))}
                   </Form.Select>
@@ -213,7 +241,7 @@ export default function ModalPedidoAdmin({
               </div>
               {obtenerDescuentoPedido(pedido) > 0 && (
                 <div className="small text-success">
-                  Descuento: -{formatCurrency(obtenerDescuentoPedido(pedido))}
+                  Descuento transferencia 7%: -{formatCurrency(obtenerDescuentoPedido(pedido))}
                 </div>
               )}
               <div className="small text-muted">
