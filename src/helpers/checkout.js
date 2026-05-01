@@ -35,18 +35,6 @@ export const eliminarStorageItem = (key) => {
 
 export const obtenerProductoId = (producto) => producto?._id ?? producto?.id;
 
-const debeUsarSandboxMercadoPago = () => {
-  const modoConfigurado = import.meta.env.VITE_MP_CHECKOUT_MODE?.toLowerCase();
-
-  if (modoConfigurado === "sandbox") return true;
-  if (modoConfigurado === "production") return false;
-
-  if (typeof window === "undefined") return false;
-
-  const { hostname } = window.location;
-  return hostname === "localhost" || hostname === "127.0.0.1";
-};
-
 const normalizarTextoError = (valor) => {
   if (typeof valor !== "string") return null;
 
@@ -99,18 +87,7 @@ export const construirMensajeError = (data, fallback) => {
 };
 
 export const obtenerCheckoutUrl = (checkoutData) => {
-  if (debeUsarSandboxMercadoPago() && checkoutData?.sandbox_init_point) {
-    return checkoutData.sandbox_init_point;
-  }
-
   if (checkoutData?.init_point) return checkoutData.init_point;
-  if (checkoutData?.sandbox_init_point) return checkoutData.sandbox_init_point;
-
-  if (checkoutData?.id) {
-    const redirectUrl = new URL("https://www.mercadopago.com.ar/checkout/v1/redirect");
-    redirectUrl.searchParams.set("pref_id", checkoutData.id);
-    return redirectUrl.toString();
-  }
 
   return null;
 };

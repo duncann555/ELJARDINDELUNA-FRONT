@@ -79,6 +79,9 @@ function App() {
                   />
                   <Route path="/pago-exitoso" element={<PagoEstado />} />
                   <Route path="/pago-pendiente" element={<PagoEstado />} />
+                  <Route path="/pago/success" element={<PagoEstado />} />
+                  <Route path="/pago/failure" element={<PagoEstado />} />
+                  <Route path="/pago/pending" element={<PagoEstado />} />
                   <Route path="/register" element={<Register />} />
                   <Route
                     path="/recuperar-password"

@@ -671,10 +671,7 @@ const Carrito = () => {
 
       guardarStorageJson(CHECKOUT_PEDIDO_STORAGE_KEY, {
         ...resumenPedido,
-        preferenceId:
-          checkoutResultado.checkoutData?.id ||
-          resumenPedido.preferenceId ||
-          null,
+        preferenceId: checkoutResultado.checkoutData?.id || null,
         esRecuperableCheckout: true,
         estadoPago: "pending",
         metodoPago: METODO_PAGO_MERCADO_PAGO,

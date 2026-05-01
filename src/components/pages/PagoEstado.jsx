@@ -17,6 +17,30 @@ import { solicitarApi } from "../../helpers/clienteApi";
 import EstadoBadge from "../shared/EstadoBadge";
 
 const ESTADOS = {
+  "/pago/success": {
+    icon: "bi-check2-circle",
+    iconClass: "text-success",
+    badgeValue: "approved",
+    title: "Pago confirmado",
+    description:
+      "Tu pedido fue enviado a Mercado Pago correctamente y ya registramos la compra en EL JARDIN DE LUNA.",
+  },
+  "/pago/failure": {
+    icon: "bi-x-circle",
+    iconClass: "text-danger",
+    badgeValue: "rejected",
+    title: "Pago no aprobado",
+    description:
+      "Mercado Pago no pudo aprobar el pago. Podes volver al carrito e intentar con otro medio.",
+  },
+  "/pago/pending": {
+    icon: "bi-hourglass-split",
+    iconClass: "text-warning",
+    badgeValue: "pending",
+    title: "Estamos esperando la acreditacion",
+    description:
+      "Tu pedido fue creado y el pago quedo pendiente. Te recomendamos guardar este resumen para seguirlo desde admin.",
+  },
   "/pago-exitoso": {
     icon: "bi-check2-circle",
     iconClass: "text-success",
@@ -43,7 +67,7 @@ function PagoEstado() {
   const sincronizadoRef = useRef(false);
   const [estadoSincronizacion, setEstadoSincronizacion] = useState("idle");
 
-  const estadoActual = ESTADOS[location.pathname] || ESTADOS["/pago-pendiente"];
+  const estadoActual = ESTADOS[location.pathname] || ESTADOS["/pago/pending"];
 
   const pedidoGuardado = useMemo(
     () => leerStorageJson(CHECKOUT_PEDIDO_STORAGE_KEY, null),
@@ -55,7 +79,11 @@ function PagoEstado() {
   const paymentStatus =
     searchParams.get("status") ||
     searchParams.get("collection_status") ||
-    (location.pathname === "/pago-exitoso" ? "approved" : "pending");
+    (["/pago/success", "/pago-exitoso"].includes(location.pathname)
+      ? "approved"
+      : location.pathname === "/pago/failure"
+        ? "rejected"
+        : "pending");
   const preferenceId =
     searchParams.get("preference_id") || pedidoGuardado?.preferenceId || "";
 
@@ -72,8 +100,10 @@ function PagoEstado() {
   }, [paymentId, paymentStatus, pedidoGuardado, preferenceId]);
 
   useEffect(() => {
+    if (location.pathname === "/pago/failure") return;
+
     vaciarCarrito();
-  }, [vaciarCarrito]);
+  }, [location.pathname, vaciarCarrito]);
 
   useEffect(() => {
     if (!token || !preferenceId || !paymentId || sincronizadoRef.current) return;
