@@ -301,11 +301,7 @@ export default function Inicio() {
         </Container>
       </section>
 
-      <Container className="py-5 pb-5">
-        <div className="d-flex justify-content-center mb-4">
-          <BannerCategoria texto="Ofertas Imperdibles" />
-        </div>
-
+      <Container className="pb-5">
         <div className="mb-5 px-md-5">
           <Carousel interval={3000} className="main-carousel-ofertas mx-auto shadow-lg rounded-4 overflow-hidden">
             {[
