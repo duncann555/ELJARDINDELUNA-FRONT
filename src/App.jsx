@@ -11,6 +11,7 @@ import Productos from "./components/pages/Productos";
 import Register from "./components/pages/Register";
 import RecuperarPassword from "./components/pages/RecuperarPassword";
 import RestablecerPassword from "./components/pages/RestablecerPassword";
+import TransferenciaConfirmada from "./components/pages/TransferenciaConfirmada";
 import LayoutPrincipal from "./components/layouts/LayoutPrincipal";
 import ProtectorAdmin from "./components/routes/ProtectorAdmin";
 import ProtectorSesion from "./components/routes/ProtectorSesion";
@@ -50,6 +51,17 @@ function App() {
                       mensaje="Necesitas iniciar sesion para revisar las compras que realizaste."
                     >
                       <MisCompras />
+                    </ProtectorSesion>
+                  }
+                />
+                <Route
+                  path="/transferencia-confirmada"
+                  element={
+                    <ProtectorSesion
+                      titulo="Primero inicia sesion"
+                      mensaje="Necesitas iniciar sesion para ver la confirmacion de tu pedido."
+                    >
+                      <TransferenciaConfirmada />
                     </ProtectorSesion>
                   }
                 />

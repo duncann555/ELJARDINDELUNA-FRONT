@@ -29,6 +29,7 @@ import {
   obtenerCheckoutUrl,
   obtenerProductoId,
 } from "../../helpers/checkout";
+import { DATOS_TRANSFERENCIA } from "../../helpers/transferencia";
 import {
   validateCiudad,
   validateCodigoPostal,
@@ -36,7 +37,6 @@ import {
   validateProvincia,
   validateTelefono,
 } from "../../helpers/validation";
-import { CONTACTO_WHATSAPP_NUMBER } from "../../helpers/contact";
 import "../../styles/carrito.css";
 
 const ENVIO_INICIAL = {
@@ -48,43 +48,16 @@ const ENVIO_INICIAL = {
   referencia: "",
   codigoPostal: "",
 };
-const ENVIO_FIJO = 8500;
+const ENVIO_FIJO = Number(import.meta.env.VITE_FIXED_SHIPPING_COST || 9500);
 const METODO_PAGO_MERCADO_PAGO = "mercado_pago";
 const METODO_PAGO_TRANSFERENCIA = "transferencia";
 const DESCUENTO_TRANSFERENCIA = 0.07;
-const DATOS_TRANSFERENCIA = {
-  alias: import.meta.env.VITE_TRANSFER_ALIAS || "ELJARDINDELUNA",
-  titular:
-    import.meta.env.VITE_TRANSFER_TITULAR || "Nombre del titular",
-  banco:
-    import.meta.env.VITE_TRANSFER_BANCO || "Mercado Pago / Banco X",
-  cuit:
-    import.meta.env.VITE_TRANSFER_CUIT || "XX-XXXXXXXX-X",
-};
 const normalizePhone = (value) => String(value || "").replace(/\D/g, "");
 const normalizeCheckoutText = (value) => String(value || "").trim();
 const calcularDescuentoTransferencia = (subtotal, metodoPago) =>
   metodoPago === METODO_PAGO_TRANSFERENCIA
     ? Number((subtotal * DESCUENTO_TRANSFERENCIA).toFixed(2))
     : 0;
-
-const construirMensajeWhatsAppTransferencia = ({ pedidoId, total, alias }) =>
-  [
-    `Hola, realice una transferencia para mi pedido #${String(pedidoId || "").slice(-6).toUpperCase()}.`,
-    `Total transferido: ${formatCurrency(total)}.`,
-    `Alias utilizado: ${alias}.`,
-    "Adjunto el comprobante de pago.",
-  ].join(" ");
-
-const construirUrlWhatsAppTransferencia = ({ pedidoId, total }) => {
-  const mensaje = construirMensajeWhatsAppTransferencia({
-    pedidoId,
-    total,
-    alias: DATOS_TRANSFERENCIA.alias,
-  });
-
-  return `https://wa.me/${CONTACTO_WHATSAPP_NUMBER}?text=${encodeURIComponent(mensaje)}`;
-};
 
 const construirEnvioPayload = (envio) => ({
   provincia: normalizeCheckoutText(envio.provincia),
@@ -728,40 +701,12 @@ const Carrito = () => {
       vaciarCarrito();
       Swal.close();
 
-      const totalTransferencia = Number(resumenFinal.total || totalFinal);
-      const resultado = await Swal.fire({
-        title: "Pedido por transferencia registrado",
-        html: `
-          <div class="text-start">
-            <p class="mb-2"><strong>Pedido:</strong> #${String(resumenFinal.pedidoId || "").slice(-6).toUpperCase()}</p>
-            <p class="mb-2"><strong>Alias:</strong> ${DATOS_TRANSFERENCIA.alias}</p>
-            <p class="mb-2"><strong>Total a transferir:</strong> ${formatCurrency(totalTransferencia)}</p>
-            <p class="mb-0">Cuando termines, envia el comprobante por WhatsApp.</p>
-            ${
-              advertenciaComprobante
-                ? `<p class="mt-3 mb-0 text-warning">${advertenciaComprobante}</p>`
-                : ""
-            }
-          </div>
-        `,
-        icon: "success",
-        confirmButtonText: "Ir a WhatsApp",
-        showCancelButton: true,
-        cancelButtonText: "Ver mis compras",
+      navigate("/transferencia-confirmada", {
+        state: {
+          pedido: resumenFinal,
+          advertenciaComprobante,
+        },
       });
-
-      if (resultado.isConfirmed) {
-        window.open(
-          construirUrlWhatsAppTransferencia({
-            pedidoId: resumenFinal.pedidoId,
-            total: totalTransferencia,
-          }),
-          "_blank",
-          "noopener,noreferrer",
-        );
-      }
-
-      navigate("/mis-compras");
     } catch (error) {
       console.error("Error al confirmar transferencia:", error);
       Swal.close();
@@ -1147,7 +1092,7 @@ const Carrito = () => {
                           }
                         />
                         <div className="small text-muted ms-4 mt-1">
-                          Abon\u00e1 por transferencia directa a nuestro alias y envi\u00e1 el comprobante.
+                          Transfer\u00ed a nuestro alias y envi\u00e1 el comprobante.
                         </div>
                       </Card.Body>
                     </Card>
@@ -1180,6 +1125,22 @@ const Carrito = () => {
                           <div>
                             <small className="text-muted d-block">CUIT/CUIL</small>
                             <div className="fw-semibold">{DATOS_TRANSFERENCIA.cuit}</div>
+                          </div>
+                          <div className="border-top pt-3 mt-1">
+                            <div className="d-flex justify-content-between mb-2">
+                              <small className="text-muted">Subtotal productos</small>
+                              <small className="fw-semibold">{formatCurrency(subtotal)}</small>
+                            </div>
+                            <div className="d-flex justify-content-between mb-2 text-success">
+                              <small>Descuento transferencia 7%</small>
+                              <small className="fw-semibold">
+                                -{formatCurrency(descuentoTransferencia)}
+                              </small>
+                            </div>
+                            <div className="d-flex justify-content-between">
+                              <small className="text-muted">Envio nacional</small>
+                              <small className="fw-semibold">{formatCurrency(costoEnvio)}</small>
+                            </div>
                           </div>
                           <div className="pt-2">
                             <small className="text-muted d-block">Total a transferir</small>

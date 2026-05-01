@@ -24,11 +24,16 @@ import {
   obtenerCostoEnvioPedido,
   obtenerDescuentoPedido,
   obtenerSubtotalPedido,
+  obtenerMetodoPagoPedido,
   obtenerTextoMetodoPagoPedido,
   obtenerTextoEstadoPago,
   obtenerVarianteEstadoPago,
   obtenerVarianteEstadoPedido,
 } from "../../helpers/pedidos";
+import {
+  DATOS_TRANSFERENCIA,
+  construirUrlWhatsAppTransferencia,
+} from "../../helpers/transferencia";
 
 const obtenerIdentificadorPedido = (pedido) =>
   pedido?._id ? `#${String(pedido._id).slice(-6).toUpperCase()}` : "-";
@@ -50,6 +55,9 @@ const construirResumenEnvio = (pedido) => {
 };
 
 function TarjetaPedido({ pedido, index }) {
+  const estadoPago = pedido?.estadoPago || pedido?.pago?.estado;
+  const esTransferenciaPendiente =
+    obtenerMetodoPagoPedido(pedido) === "transferencia" && estadoPago !== "approved";
   const totalProductos = Array.isArray(pedido?.productos)
     ? pedido.productos.reduce(
         (acumulado, producto) => acumulado + Number(producto?.cantidad || 0),
@@ -87,9 +95,14 @@ function TarjetaPedido({ pedido, index }) {
             <Badge bg={obtenerVarianteEstadoPedido(pedido?.estadoPedido)}>
               {pedido?.estadoPedido || "Sin estado"}
             </Badge>
-            <Badge bg={obtenerVarianteEstadoPago(pedido?.pago?.estado)}>
-              Pago {obtenerTextoEstadoPago(pedido?.pago?.estado)}
+            <Badge bg={obtenerVarianteEstadoPago(estadoPago)}>
+              Pago {obtenerTextoEstadoPago(estadoPago)}
             </Badge>
+            {esTransferenciaPendiente && (
+              <Badge bg="warning" text="dark">
+                Pendiente de pago
+              </Badge>
+            )}
           </div>
         </div>
       </Accordion.Header>
@@ -169,7 +182,7 @@ function TarjetaPedido({ pedido, index }) {
                 <div className="mb-2">
                   <small className="text-muted d-block mb-1">Pago</small>
                   <div className="fw-semibold">
-                    {obtenerTextoEstadoPago(pedido?.pago?.estado)}
+                    {obtenerTextoEstadoPago(estadoPago)}
                   </div>
                 </div>
 
@@ -199,6 +212,31 @@ function TarjetaPedido({ pedido, index }) {
                       className="rounded-pill"
                     >
                       Ver comprobante
+                    </Button>
+                  </div>
+                )}
+
+                {esTransferenciaPendiente && (
+                  <div className="mt-3 border-top pt-3">
+                    <small className="text-muted d-block mb-1">Alias</small>
+                    <div className="fw-semibold mb-2">{DATOS_TRANSFERENCIA.alias}</div>
+                    <small className="text-muted d-block mb-1">Total a transferir</small>
+                    <div className="fw-bold text-success mb-3">
+                      {formatCurrency(pedido?.total || 0)}
+                    </div>
+                    <Button
+                      as="a"
+                      href={construirUrlWhatsAppTransferencia({
+                        pedidoId: pedido?._id,
+                        total: pedido?.total || 0,
+                      })}
+                      target="_blank"
+                      rel="noreferrer"
+                      variant="success"
+                      size="sm"
+                      className="rounded-pill"
+                    >
+                      Enviar comprobante por WhatsApp
                     </Button>
                   </div>
                 )}
