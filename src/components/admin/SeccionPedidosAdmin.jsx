@@ -2,7 +2,9 @@ import { Badge, Button, Table } from "react-bootstrap";
 import { formatCurrency, formatDate } from "../../helpers/app";
 import {
   obtenerCostoEnvioPedido,
+  obtenerDescuentoPedido,
   obtenerSubtotalPedido,
+  obtenerTextoMetodoPagoPedido,
   obtenerVarianteEstadoPago,
   obtenerVarianteEstadoPedido,
 } from "./utilidadesAdmin";
@@ -70,8 +72,15 @@ export default function SeccionPedidosAdmin({
                   <td>
                     <div className="fw-semibold">{formatCurrency(pedido.total)}</div>
                     <small className="text-muted">
-                      Subtotal {formatCurrency(obtenerSubtotalPedido(pedido))} + envio{" "}
-                      {formatCurrency(obtenerCostoEnvioPedido(pedido))}
+                      {obtenerTextoMetodoPagoPedido(pedido)} | Subtotal{" "}
+                      {formatCurrency(obtenerSubtotalPedido(pedido))}
+                      {obtenerDescuentoPedido(pedido) > 0 && (
+                        <>
+                          {" "}
+                          - desc. {formatCurrency(obtenerDescuentoPedido(pedido))}
+                        </>
+                      )}{" "}
+                      + envio {formatCurrency(obtenerCostoEnvioPedido(pedido))}
                     </small>
                   </td>
 

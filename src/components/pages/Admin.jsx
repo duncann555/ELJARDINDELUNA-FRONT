@@ -256,7 +256,12 @@ export default function Admin() {
         `/pedidos/${pedidoSeleccionado._id}`,
         {
           method: "PATCH",
-          json: { estadoPedido: formulario.estadoPedido },
+          json: {
+            estadoPedido: formulario.estadoPedido,
+            ...(pedidoSeleccionado?.metodoPago === "transferencia"
+              ? { estadoPago: formulario.estadoPago }
+              : {}),
+          },
         },
       );
 

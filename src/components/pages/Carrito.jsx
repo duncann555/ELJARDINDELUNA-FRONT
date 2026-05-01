@@ -36,6 +36,7 @@ import {
   validateProvincia,
   validateTelefono,
 } from "../../helpers/validation";
+import { CONTACTO_WHATSAPP_NUMBER } from "../../helpers/contact";
 import "../../styles/carrito.css";
 
 const ENVIO_INICIAL = {
@@ -48,8 +49,42 @@ const ENVIO_INICIAL = {
   codigoPostal: "",
 };
 const ENVIO_FIJO = 8500;
+const METODO_PAGO_MERCADO_PAGO = "mercado_pago";
+const METODO_PAGO_TRANSFERENCIA = "transferencia";
+const DESCUENTO_TRANSFERENCIA = 0.07;
+const DATOS_TRANSFERENCIA = {
+  alias: import.meta.env.VITE_TRANSFER_ALIAS || "ELJARDINDELUNA",
+  titular:
+    import.meta.env.VITE_TRANSFER_TITULAR || "Nombre del titular",
+  banco:
+    import.meta.env.VITE_TRANSFER_BANCO || "Mercado Pago / Banco X",
+  cuit:
+    import.meta.env.VITE_TRANSFER_CUIT || "XX-XXXXXXXX-X",
+};
 const normalizePhone = (value) => String(value || "").replace(/\D/g, "");
 const normalizeCheckoutText = (value) => String(value || "").trim();
+const calcularDescuentoTransferencia = (subtotal, metodoPago) =>
+  metodoPago === METODO_PAGO_TRANSFERENCIA
+    ? Number((subtotal * DESCUENTO_TRANSFERENCIA).toFixed(2))
+    : 0;
+
+const construirMensajeWhatsAppTransferencia = ({ pedidoId, total, alias }) =>
+  [
+    `Hola, realice una transferencia para mi pedido #${String(pedidoId || "").slice(-6).toUpperCase()}.`,
+    `Total transferido: ${formatCurrency(total)}.`,
+    `Alias utilizado: ${alias}.`,
+    "Adjunto el comprobante de pago.",
+  ].join(" ");
+
+const construirUrlWhatsAppTransferencia = ({ pedidoId, total }) => {
+  const mensaje = construirMensajeWhatsAppTransferencia({
+    pedidoId,
+    total,
+    alias: DATOS_TRANSFERENCIA.alias,
+  });
+
+  return `https://wa.me/${CONTACTO_WHATSAPP_NUMBER}?text=${encodeURIComponent(mensaje)}`;
+};
 
 const construirEnvioPayload = (envio) => ({
   provincia: normalizeCheckoutText(envio.provincia),
@@ -71,11 +106,12 @@ const construirProductosResumen = (carritoCheckout) =>
     }))
     .sort((a, b) => a.id.localeCompare(b.id));
 
-const construirCheckoutHash = ({ userId, productos, envio }) =>
+const construirCheckoutHash = ({ userId, productos, envio, metodoPago }) =>
   JSON.stringify({
     userId: String(userId || ""),
     productos: productos.map(({ id, cantidad }) => ({ id, cantidad })),
     envio,
+    metodoPago: String(metodoPago || ""),
   });
 
 const puedeReutilizarPedidoGuardado = ({ pedidoGuardado, userId, checkoutHash }) =>
@@ -198,6 +234,10 @@ const Carrito = () => {
   const [erroresEnvio, setErroresEnvio] = useState({});
   const [touchedEnvio, setTouchedEnvio] = useState({});
   const [procesandoPago, setProcesandoPago] = useState(false);
+  const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState(
+    METODO_PAGO_MERCADO_PAGO,
+  );
+  const [comprobanteTransferencia, setComprobanteTransferencia] = useState(null);
 
   useEffect(() => {
     guardarStorageJson(CHECKOUT_ENVIO_STORAGE_KEY, envio);
@@ -232,8 +272,12 @@ const Carrito = () => {
       ].some(Boolean),
     [envio],
   );
+  const descuentoTransferencia = useMemo(
+    () => calcularDescuentoTransferencia(subtotal, metodoPagoSeleccionado),
+    [metodoPagoSeleccionado, subtotal],
+  );
   const costoEnvio = carrito.length > 0 ? ENVIO_FIJO : 0;
-  const totalFinal = subtotal + costoEnvio;
+  const totalFinal = subtotal - descuentoTransferencia + costoEnvio;
 
   function validarCampoEnvio(name, value) {
     switch (name) {
@@ -314,182 +358,290 @@ const Carrito = () => {
     }));
   };
 
-  const handlePagar = async () => {
-    if (carrito.length === 0) return;
+  const solicitarDatosCheckout = async (metodoPago, mensajeProceso) => {
+    if (carrito.length === 0) return null;
 
     if (!token || !user) {
       await Swal.fire({
         title: "Inicia sesion para continuar",
-        text: "Necesitamos una cuenta activa para crear tu pedido y enviarte a Mercado Pago.",
+        text: "Necesitamos una cuenta activa para registrar tu pedido y continuar con el pago.",
         icon: "info",
         confirmButtonText: "Entendido",
       });
-      return;
+      return null;
     }
 
     if (!validarEnvio()) {
       await Swal.fire({
         title: "Faltan datos de envio",
-        text: "Completa provincia, ciudad, domicilio completo, celular y codigo postal antes de pagar.",
+        text: "Completa provincia, ciudad, domicilio completo, celular y codigo postal antes de continuar.",
         icon: "warning",
         confirmButtonText: "Revisar",
       });
-      return;
+      return null;
     }
 
+    const carritoCheckout = await normalizarCarritoConCatalogo(carrito);
+
+    if (carritoCheckout.length === 0) {
+      throw new Error(
+        "Los productos de tu carrito ya no estan disponibles. Agregalos nuevamente desde el catalogo.",
+      );
+    }
+
+    Swal.fire({
+      title: "Preparando tu pedido",
+      text: mensajeProceso,
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    const productosResumen = construirProductosResumen(carritoCheckout);
+    const envioPayload = construirEnvioPayload(envio);
+    const checkoutHash = construirCheckoutHash({
+      userId: user.uid,
+      productos: productosResumen,
+      envio: envioPayload,
+      metodoPago,
+    });
+
+    return {
+      productosResumen,
+      envioPayload,
+      checkoutHash,
+      pedidoGuardado: leerStorageJson(CHECKOUT_PEDIDO_STORAGE_KEY, null),
+    };
+  };
+
+  const construirResumenPedidoGuardado = ({
+    pedidoId,
+    pedidoData,
+    preferenceId = null,
+    baseResumen = {},
+    checkoutHash,
+    productosResumen,
+    envioPayload,
+    metodoPago,
+  }) => ({
+    ...baseResumen,
+    pedidoId,
+    userId: String(user.uid || ""),
+    checkoutHash,
+    esRecuperableCheckout: true,
+    preferenceId,
+    createdAt: baseResumen.createdAt || new Date().toISOString(),
+    subtotal: Number(pedidoData?.subtotal ?? baseResumen.subtotal ?? subtotal),
+    descuento: Number(
+      pedidoData?.descuento ??
+        baseResumen.descuento ??
+        calcularDescuentoTransferencia(subtotal, metodoPago),
+    ),
+    total: Number(pedidoData?.total ?? baseResumen.total ?? totalFinal),
+    metodoPago: pedidoData?.metodoPago || baseResumen.metodoPago || metodoPago,
+    estadoPago: pedidoData?.estadoPago || baseResumen.estadoPago || "pending",
+    cantidadTotal:
+      baseResumen.cantidadTotal ||
+      productosResumen.reduce(
+        (acumulado, item) => acumulado + Number(item.cantidad || 0),
+        0,
+      ),
+    comprobanteTransferencia:
+      pedidoData?.comprobanteTransferencia ||
+      baseResumen.comprobanteTransferencia ||
+      null,
+    envio: pedidoData?.envio || baseResumen.envio || {
+      ...envioPayload,
+      proveedor: "Envio nacional",
+      costo: costoEnvio,
+      esGratis: false,
+    },
+    productos: baseResumen.productos || productosResumen,
+  });
+
+  const crearNuevoPedido = async ({
+    productosResumen,
+    envioPayload,
+    checkoutHash,
+    metodoPago,
+  }) => {
+    const { respuesta: pedidoResponse, datos: pedidoData } = await solicitarApi(
+      "/pedidos",
+      {
+        method: "POST",
+        token,
+        json: {
+          productos: productosResumen.map((item) => ({
+            producto: item.id,
+            cantidad: item.cantidad,
+          })),
+          envio: envioPayload,
+          metodoPago,
+        },
+      },
+    );
+
+    if (isAuthError(pedidoResponse, pedidoData)) {
+      logout();
+      throw new Error("Tu sesion vencio. Vuelve a ingresar antes de continuar.");
+    }
+
+    if (!pedidoResponse.ok) {
+      throw new Error(getApiErrorMessage(pedidoData, "No se pudo crear el pedido."));
+    }
+
+    const pedidoId = pedidoData?.pedidoId;
+
+    if (!pedidoId) {
+      throw new Error("No recibimos un ID de pedido valido.");
+    }
+
+    const resumenPedido = construirResumenPedidoGuardado({
+      pedidoId,
+      pedidoData,
+      checkoutHash,
+      productosResumen,
+      envioPayload,
+      metodoPago,
+    });
+
+    guardarStorageJson(CHECKOUT_PEDIDO_STORAGE_KEY, resumenPedido);
+
+    return resumenPedido;
+  };
+
+  const obtenerPedidoPreparado = async ({
+    productosResumen,
+    envioPayload,
+    checkoutHash,
+    pedidoGuardado,
+    metodoPago,
+  }) => {
+    const reutilizarPedido =
+      puedeReutilizarPedidoGuardado({
+        pedidoGuardado,
+        userId: user.uid,
+        checkoutHash,
+      }) &&
+      pedidoGuardado;
+
+    if (!reutilizarPedido) {
+      return {
+        resumenPedido: await crearNuevoPedido({
+          productosResumen,
+          envioPayload,
+          checkoutHash,
+          metodoPago,
+        }),
+        reutilizarPedido: false,
+      };
+    }
+
+    return {
+      resumenPedido: construirResumenPedidoGuardado({
+        pedidoId: pedidoGuardado.pedidoId,
+        pedidoData: pedidoGuardado,
+        preferenceId: pedidoGuardado.preferenceId || null,
+        baseResumen: pedidoGuardado,
+        checkoutHash,
+        productosResumen,
+        envioPayload,
+        metodoPago,
+      }),
+      reutilizarPedido: true,
+    };
+  };
+
+  const iniciarCheckoutPedido = async (pedidoId) => {
+    const {
+      respuesta: checkoutResponse,
+      datos: checkoutData,
+    } = await solicitarApi("/pagos/checkout", {
+      method: "POST",
+      token,
+      json: { pedidoId },
+    });
+
+    if (isAuthError(checkoutResponse, checkoutData)) {
+      logout();
+      throw new Error("Tu sesion vencio. Ingresa nuevamente y reintenta el pago.");
+    }
+
+    if (!checkoutResponse.ok) {
+      const message = getApiErrorMessage(
+        checkoutData,
+        "No se pudo iniciar el checkout de Mercado Pago.",
+      );
+      const checkoutError = new Error(message);
+      checkoutError.status = checkoutResponse.status;
+      checkoutError.reintentarConPedidoNuevo = pedidoGuardadoDebeRecrearse({
+        status: checkoutResponse.status,
+        message,
+      });
+      throw checkoutError;
+    }
+
+    const checkoutUrl = obtenerCheckoutUrl(checkoutData);
+
+    if (!checkoutUrl) {
+      throw new Error("Mercado Pago no devolvio una URL de checkout valida.");
+    }
+
+    return { checkoutData, checkoutUrl };
+  };
+
+  const subirComprobantePedido = async (pedidoId) => {
+    if (!comprobanteTransferencia) {
+      return null;
+    }
+
+    const formData = new FormData();
+    formData.append("comprobanteTransferencia", comprobanteTransferencia);
+
+    const { respuesta, datos } = await solicitarApi(
+      `/pedidos/${pedidoId}/comprobante-transferencia`,
+      {
+        method: "POST",
+        token,
+        body: formData,
+      },
+    );
+
+    if (isAuthError(respuesta, datos)) {
+      logout();
+      throw new Error("Tu sesion vencio. Ingresa nuevamente y vuelve a cargar el comprobante.");
+    }
+
+    if (!respuesta.ok) {
+      throw new Error(
+        getApiErrorMessage(datos, "No se pudo subir el comprobante de transferencia."),
+      );
+    }
+
+    return datos?.comprobanteTransferencia || null;
+  };
+
+  const handlePagarMercadoPago = async () => {
     try {
       setProcesandoPago(true);
-      const carritoCheckout = await normalizarCarritoConCatalogo(carrito);
 
-      if (carritoCheckout.length === 0) {
-        throw new Error(
-          "Los productos de tu carrito ya no estan disponibles. Agregalos nuevamente desde el catalogo.",
-        );
+      const datosCheckout = await solicitarDatosCheckout(
+        METODO_PAGO_MERCADO_PAGO,
+        "Estamos creando el pedido y conectando Mercado Pago.",
+      );
+
+      if (!datosCheckout) {
+        return;
       }
 
-      Swal.fire({
-        title: "Preparando tu checkout",
-        text: "Estamos creando el pedido y conectando Mercado Pago.",
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        },
-      });
-
-      const productosResumen = construirProductosResumen(carritoCheckout);
-      const envioPayload = construirEnvioPayload(envio);
-      const checkoutHash = construirCheckoutHash({
-        userId: user.uid,
-        productos: productosResumen,
-        envio: envioPayload,
-      });
-      const pedidoGuardado = leerStorageJson(CHECKOUT_PEDIDO_STORAGE_KEY, null);
-
-      const construirResumenPedidoGuardado = ({
-        pedidoId,
-        pedidoData,
-        preferenceId = null,
-        baseResumen = {},
-      }) => ({
-        ...baseResumen,
-        pedidoId,
-        userId: String(user.uid || ""),
-        checkoutHash,
-        esRecuperableCheckout: true,
-        preferenceId,
-        createdAt: baseResumen.createdAt || new Date().toISOString(),
-        subtotal: Number(pedidoData?.subtotal ?? baseResumen.subtotal ?? subtotal),
-        total: Number(pedidoData?.total ?? baseResumen.total ?? totalFinal),
-        cantidadTotal:
-          baseResumen.cantidadTotal ||
-          productosResumen.reduce(
-            (acumulado, item) => acumulado + Number(item.cantidad || 0),
-            0,
-          ),
-        envio: pedidoData?.envio || baseResumen.envio || {
-          ...envioPayload,
-          proveedor: "Envio nacional",
-          costo: costoEnvio,
-          esGratis: false,
-        },
-        productos: baseResumen.productos || productosResumen,
-      });
-
-      const crearNuevoPedido = async () => {
-        const { respuesta: pedidoResponse, datos: pedidoData } = await solicitarApi(
-          "/pedidos",
-          {
-          method: "POST",
-          token,
-          json: {
-            productos: productosResumen.map((item) => ({
-              producto: item.id,
-              cantidad: item.cantidad,
-            })),
-            envio: envioPayload,
-          },
-          },
-        );
-
-        if (isAuthError(pedidoResponse, pedidoData)) {
-          logout();
-          throw new Error("Tu sesion vencio. Vuelve a ingresar antes de continuar.");
-        }
-
-        if (!pedidoResponse.ok) {
-          throw new Error(getApiErrorMessage(pedidoData, "No se pudo crear el pedido."));
-        }
-
-        const pedidoId = pedidoData?.pedidoId;
-
-        if (!pedidoId) {
-          throw new Error("No recibimos un ID de pedido valido.");
-        }
-
-        const resumenPedido = construirResumenPedidoGuardado({
-          pedidoId,
-          pedidoData,
+      const { resumenPedido: resumenInicial, reutilizarPedido } =
+        await obtenerPedidoPreparado({
+          ...datosCheckout,
+          metodoPago: METODO_PAGO_MERCADO_PAGO,
         });
 
-        guardarStorageJson(CHECKOUT_PEDIDO_STORAGE_KEY, resumenPedido);
-
-        return resumenPedido;
-      };
-
-      const iniciarCheckoutPedido = async (pedidoId) => {
-        const {
-          respuesta: checkoutResponse,
-          datos: checkoutData,
-        } = await solicitarApi("/pagos/checkout", {
-          method: "POST",
-          token,
-          json: { pedidoId },
-        });
-
-        if (isAuthError(checkoutResponse, checkoutData)) {
-          logout();
-          throw new Error("Tu sesion vencio. Ingresa nuevamente y reintenta el pago.");
-        }
-
-        if (!checkoutResponse.ok) {
-          const message = getApiErrorMessage(
-            checkoutData,
-            "No se pudo iniciar el checkout de Mercado Pago.",
-          );
-          const checkoutError = new Error(message);
-          checkoutError.status = checkoutResponse.status;
-          checkoutError.reintentarConPedidoNuevo = pedidoGuardadoDebeRecrearse({
-            status: checkoutResponse.status,
-            message,
-          });
-          throw checkoutError;
-        }
-
-        const checkoutUrl = obtenerCheckoutUrl(checkoutData);
-
-        if (!checkoutUrl) {
-          throw new Error("Mercado Pago no devolvio una URL de checkout valida.");
-        }
-
-        return { checkoutData, checkoutUrl };
-      };
-
-      const reutilizarPedido =
-        puedeReutilizarPedidoGuardado({
-          pedidoGuardado,
-          userId: user.uid,
-          checkoutHash,
-        }) &&
-        pedidoGuardado;
-
-      let resumenPedido = reutilizarPedido
-        ? construirResumenPedidoGuardado({
-            pedidoId: pedidoGuardado.pedidoId,
-            preferenceId: pedidoGuardado.preferenceId || null,
-            baseResumen: pedidoGuardado,
-          })
-        : await crearNuevoPedido();
-
+      let resumenPedido = resumenInicial;
       let checkoutResultado;
 
       try {
@@ -497,7 +649,12 @@ const Carrito = () => {
       } catch (checkoutError) {
         if (reutilizarPedido && checkoutError?.reintentarConPedidoNuevo) {
           eliminarStorageItem(CHECKOUT_PEDIDO_STORAGE_KEY);
-          resumenPedido = await crearNuevoPedido();
+          resumenPedido = await crearNuevoPedido({
+            productosResumen: datosCheckout.productosResumen,
+            envioPayload: datosCheckout.envioPayload,
+            checkoutHash: datosCheckout.checkoutHash,
+            metodoPago: METODO_PAGO_MERCADO_PAGO,
+          });
           checkoutResultado = await iniciarCheckoutPedido(resumenPedido.pedidoId);
         } else {
           throw checkoutError;
@@ -512,6 +669,7 @@ const Carrito = () => {
           null,
         esRecuperableCheckout: true,
         estadoPago: "pending",
+        metodoPago: METODO_PAGO_MERCADO_PAGO,
       });
 
       Swal.close();
@@ -522,6 +680,94 @@ const Carrito = () => {
       await Swal.fire({
         title: "No pudimos iniciar el pago",
         text: error.message || "Hubo un problema al conectar con Mercado Pago.",
+        icon: "error",
+        confirmButtonText: "Cerrar",
+      });
+    } finally {
+      setProcesandoPago(false);
+    }
+  };
+
+  const handleConfirmarTransferencia = async () => {
+    try {
+      setProcesandoPago(true);
+
+      const datosCheckout = await solicitarDatosCheckout(
+        METODO_PAGO_TRANSFERENCIA,
+        "Estamos registrando tu pedido por transferencia.",
+      );
+
+      if (!datosCheckout) {
+        return;
+      }
+
+      const { resumenPedido } = await obtenerPedidoPreparado({
+        ...datosCheckout,
+        metodoPago: METODO_PAGO_TRANSFERENCIA,
+      });
+
+      let comprobanteCargado = resumenPedido.comprobanteTransferencia || null;
+      let advertenciaComprobante = "";
+
+      if (comprobanteTransferencia) {
+        try {
+          comprobanteCargado = await subirComprobantePedido(resumenPedido.pedidoId);
+        } catch (errorComprobante) {
+          advertenciaComprobante = errorComprobante.message;
+        }
+      }
+
+      const resumenFinal = {
+        ...resumenPedido,
+        comprobanteTransferencia: comprobanteCargado,
+        metodoPago: METODO_PAGO_TRANSFERENCIA,
+        estadoPago: "pending",
+      };
+
+      guardarStorageJson(CHECKOUT_PEDIDO_STORAGE_KEY, resumenFinal);
+      vaciarCarrito();
+      Swal.close();
+
+      const totalTransferencia = Number(resumenFinal.total || totalFinal);
+      const resultado = await Swal.fire({
+        title: "Pedido por transferencia registrado",
+        html: `
+          <div class="text-start">
+            <p class="mb-2"><strong>Pedido:</strong> #${String(resumenFinal.pedidoId || "").slice(-6).toUpperCase()}</p>
+            <p class="mb-2"><strong>Alias:</strong> ${DATOS_TRANSFERENCIA.alias}</p>
+            <p class="mb-2"><strong>Total a transferir:</strong> ${formatCurrency(totalTransferencia)}</p>
+            <p class="mb-0">Cuando termines, envia el comprobante por WhatsApp.</p>
+            ${
+              advertenciaComprobante
+                ? `<p class="mt-3 mb-0 text-warning">${advertenciaComprobante}</p>`
+                : ""
+            }
+          </div>
+        `,
+        icon: "success",
+        confirmButtonText: "Ir a WhatsApp",
+        showCancelButton: true,
+        cancelButtonText: "Ver mis compras",
+      });
+
+      if (resultado.isConfirmed) {
+        window.open(
+          construirUrlWhatsAppTransferencia({
+            pedidoId: resumenFinal.pedidoId,
+            total: totalTransferencia,
+          }),
+          "_blank",
+          "noopener,noreferrer",
+        );
+      }
+
+      navigate("/mis-compras");
+    } catch (error) {
+      console.error("Error al confirmar transferencia:", error);
+      Swal.close();
+      await Swal.fire({
+        title: "No pudimos registrar tu pedido",
+        text: error.message || "Hubo un problema al registrar el pedido por transferencia.",
         icon: "error",
         confirmButtonText: "Cerrar",
       });
@@ -555,7 +801,7 @@ const Carrito = () => {
             <div>
               <h1 className="fw-bold display-5 mb-2">Tu seleccion</h1>
               <p className="text-muted mb-0">
-                Completa tu direccion de entrega y te llevamos a Mercado Pago para finalizar.
+                Completa tu direccion de entrega, elige tu forma de pago y finaliza tu pedido.
               </p>
             </div>
 
@@ -646,8 +892,7 @@ const Carrito = () => {
 
                 {!token && (
                   <Alert variant="warning" className="rounded-4">
-                    Inicia sesion desde el menu para habilitar el checkout con
-                    Mercado Pago.
+                    Inicia sesion desde el menu para habilitar el checkout y registrar tu pedido.
                   </Alert>
                 )}
 
@@ -811,7 +1056,7 @@ const Carrito = () => {
                     <div>
                       <h5 className="fw-bold mb-1">Resumen de compra</h5>
                       <p className="text-muted mb-0">
-                        Este es el total final con el envio fijo incluido.
+                        Aqui ves el subtotal, el descuento si eliges transferencia y el total final.
                       </p>
                     </div>
                   </div>
@@ -821,8 +1066,15 @@ const Carrito = () => {
                     <span>{formatCurrency(subtotal)}</span>
                   </div>
 
+                  {descuentoTransferencia > 0 && (
+                    <div className="d-flex justify-content-between mb-2 text-success">
+                      <span>Descuento transferencia 7%</span>
+                      <span>-{formatCurrency(descuentoTransferencia)}</span>
+                    </div>
+                  )}
+
                   <div className="d-flex justify-content-between mb-2">
-                    <span className="text-muted">Envio</span>
+                    <span className="text-muted">Envio nacional</span>
                     <span>{formatCurrency(costoEnvio)}</span>
                   </div>
 
@@ -844,28 +1096,125 @@ const Carrito = () => {
                     <div>
                       <h5 className="fw-bold mb-1">Forma de pago</h5>
                       <p className="text-muted mb-0">
-                        Finaliza la compra con Mercado Pago de forma segura.
+                        Elige si quieres pagar online con Mercado Pago o confirmar por transferencia.
                       </p>
                     </div>
                   </div>
 
-                  <div className="checkout-payment-method mb-4">
-                    <div className="checkout-payment-icon">
-                      <i className="bi bi-credit-card-2-front"></i>
-                    </div>
-                    <div>
-                      <div className="fw-semibold text-dark">Mercado Pago</div>
-                      <div className="small text-muted">
-                        Paga con tarjeta, dinero en cuenta o medios habilitados por Mercado Pago.
-                      </div>
-                    </div>
+                  <div className="d-grid gap-3 mb-4">
+                    <Card
+                      className={`border rounded-4 ${
+                        metodoPagoSeleccionado === METODO_PAGO_MERCADO_PAGO
+                          ? "border-success shadow-sm"
+                          : "border-light-subtle"
+                      }`}
+                    >
+                      <Card.Body className="py-3">
+                        <Form.Check
+                          type="radio"
+                          id="metodo-pago-mercado-pago"
+                          name="metodoPago"
+                          checked={metodoPagoSeleccionado === METODO_PAGO_MERCADO_PAGO}
+                          onChange={() => setMetodoPagoSeleccionado(METODO_PAGO_MERCADO_PAGO)}
+                          label={
+                            <span className="fw-semibold text-dark">Mercado Pago</span>
+                          }
+                        />
+                        <div className="small text-muted ms-4 mt-1">
+                          Pag\u00e1 con tarjeta, d\u00e9bito, dinero en cuenta o medios habilitados.
+                        </div>
+                      </Card.Body>
+                    </Card>
+
+                    <Card
+                      className={`border rounded-4 ${
+                        metodoPagoSeleccionado === METODO_PAGO_TRANSFERENCIA
+                          ? "border-success shadow-sm"
+                          : "border-light-subtle"
+                      }`}
+                    >
+                      <Card.Body className="py-3">
+                        <Form.Check
+                          type="radio"
+                          id="metodo-pago-transferencia"
+                          name="metodoPago"
+                          checked={metodoPagoSeleccionado === METODO_PAGO_TRANSFERENCIA}
+                          onChange={() => setMetodoPagoSeleccionado(METODO_PAGO_TRANSFERENCIA)}
+                          label={
+                            <span className="fw-semibold text-dark">
+                              Transferencia bancaria - 7% OFF
+                            </span>
+                          }
+                        />
+                        <div className="small text-muted ms-4 mt-1">
+                          Abon\u00e1 por transferencia directa a nuestro alias y envi\u00e1 el comprobante.
+                        </div>
+                      </Card.Body>
+                    </Card>
                   </div>
+
+                  {metodoPagoSeleccionado === METODO_PAGO_TRANSFERENCIA && (
+                    <Card className="border-0 bg-light rounded-4 mb-4">
+                      <Card.Body className="p-4">
+                        <div className="fw-bold mb-3">
+                          Transferencia bancaria - 7% OFF
+                        </div>
+
+                        <div className="small text-muted mb-3">
+                          El descuento se aplica solo sobre los productos. El envio se mantiene fijo.
+                        </div>
+
+                        <div className="d-grid gap-2">
+                          <div>
+                            <small className="text-muted d-block">Alias</small>
+                            <div className="fw-semibold">{DATOS_TRANSFERENCIA.alias}</div>
+                          </div>
+                          <div>
+                            <small className="text-muted d-block">Titular</small>
+                            <div className="fw-semibold">{DATOS_TRANSFERENCIA.titular}</div>
+                          </div>
+                          <div>
+                            <small className="text-muted d-block">Banco/Billetera</small>
+                            <div className="fw-semibold">{DATOS_TRANSFERENCIA.banco}</div>
+                          </div>
+                          <div>
+                            <small className="text-muted d-block">CUIT/CUIL</small>
+                            <div className="fw-semibold">{DATOS_TRANSFERENCIA.cuit}</div>
+                          </div>
+                          <div className="pt-2">
+                            <small className="text-muted d-block">Total a transferir</small>
+                            <div className="fs-4 fw-bold text-success">
+                              {formatCurrency(totalFinal)}
+                            </div>
+                          </div>
+                        </div>
+
+                        <Form.Group className="mt-4">
+                          <Form.Label>Comprobante de transferencia (opcional)</Form.Label>
+                          <Form.Control
+                            type="file"
+                            accept=".jpg,.jpeg,.png,.webp,.avif"
+                            onChange={(event) =>
+                              setComprobanteTransferencia(event.target.files?.[0] || null)
+                            }
+                          />
+                          <Form.Text className="text-muted">
+                            Puedes subir una imagen del comprobante ahora o enviarlo luego por WhatsApp.
+                          </Form.Text>
+                        </Form.Group>
+                      </Card.Body>
+                    </Card>
+                  )}
 
                   <Button
                     variant="success"
                     className="w-100 py-3 rounded-pill fw-bold shadow-sm"
                     size="lg"
-                    onClick={handlePagar}
+                    onClick={
+                      metodoPagoSeleccionado === METODO_PAGO_TRANSFERENCIA
+                        ? handleConfirmarTransferencia
+                        : handlePagarMercadoPago
+                    }
                     disabled={
                       carrito.length === 0 ||
                       !token ||
@@ -881,18 +1230,21 @@ const Carrito = () => {
                           role="status"
                           aria-hidden="true"
                         ></span>
-                        Conectando con Mercado Pago...
+                        {metodoPagoSeleccionado === METODO_PAGO_TRANSFERENCIA
+                          ? "Registrando pedido por transferencia..."
+                          : "Conectando con Mercado Pago..."}
                       </>
+                    ) : metodoPagoSeleccionado === METODO_PAGO_TRANSFERENCIA ? (
+                      "Confirmar pedido por transferencia"
                     ) : (
                       "Pagar con Mercado Pago"
                     )}
                   </Button>
 
                   <p className="text-muted small text-center mt-3 mb-0 checkout-payment-note">
-                    El pago se procesa en Checkout Pro de Mercado Pago y el pedido
-                    queda registrado con
-                    {" "}
-                    {`envio nacional de ${formatCurrency(ENVIO_FIJO)}.`}
+                    {metodoPagoSeleccionado === METODO_PAGO_TRANSFERENCIA
+                      ? "Tu pedido quedara registrado con pago pendiente hasta validar la transferencia."
+                      : "El pago se procesa en Checkout Pro de Mercado Pago y el pedido queda registrado de forma segura."}
                   </p>
                 </Card.Body>
               </Card>

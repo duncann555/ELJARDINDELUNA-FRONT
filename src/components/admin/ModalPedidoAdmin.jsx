@@ -3,7 +3,10 @@ import { Badge, Button, Col, FloatingLabel, Form, Modal, Row, Table } from "reac
 import { formatCurrency, formatDate } from "../../helpers/app";
 import {
   obtenerCostoEnvioPedido,
+  obtenerDescuentoPedido,
+  obtenerEstadosPagoDisponibles,
   obtenerEstadosPedidoDisponibles,
+  obtenerTextoMetodoPagoPedido,
   obtenerSubtotalPedido,
   obtenerVarianteEstadoPago,
 } from "./utilidadesAdmin";
@@ -19,6 +22,7 @@ export default function ModalPedidoAdmin({
 }) {
   const [formulario, setFormulario] = useState({
     estadoPedido: "En espera de pago",
+    estadoPago: "pending",
   });
 
   useEffect(() => {
@@ -26,6 +30,7 @@ export default function ModalPedidoAdmin({
 
     setFormulario({
       estadoPedido: pedido.estadoPedido || "En espera de pago",
+      estadoPago: pedido.estadoPago || pedido.pago?.estado || "pending",
     });
   }, [show, pedido]);
 
@@ -36,7 +41,9 @@ export default function ModalPedidoAdmin({
       ? `${pedido.usuario.nombre || ""} ${pedido.usuario.apellido || ""}`.trim()
       : "Sin cliente";
   const estadosDisponibles = obtenerEstadosPedidoDisponibles(pedido);
+  const estadosPagoDisponibles = obtenerEstadosPagoDisponibles(pedido);
   const pagoAprobado = pedido.pago?.estado === "approved";
+  const esTransferencia = pedido.metodoPago === "transferencia";
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -79,9 +86,25 @@ export default function ModalPedidoAdmin({
               <Badge bg={obtenerVarianteEstadoPago(pedido.pago?.estado)}>
                 {pedido.pago?.estado || "pending"}
               </Badge>
+              <div className="fw-bold mt-2">
+                {obtenerTextoMetodoPagoPedido(pedido)}
+              </div>
               <div className="text-muted small mt-2">
                 Preference ID: {pedido.pago?.preferenceId || "-"}
               </div>
+              {pedido.comprobanteTransferencia?.url && (
+                <Button
+                  as="a"
+                  href={pedido.comprobanteTransferencia.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  variant="outline-success"
+                  size="sm"
+                  className="mt-3"
+                >
+                  Ver comprobante
+                </Button>
+              )}
             </div>
           </Col>
 
@@ -155,6 +178,32 @@ export default function ModalPedidoAdmin({
                 </div>
               )}
             </Col>
+
+            {esTransferencia && (
+              <Col md={6}>
+                <FloatingLabel label="Estado del pago">
+                  <Form.Select
+                    name="estadoPago"
+                    value={formulario.estadoPago}
+                    onChange={(event) =>
+                      setFormulario((prev) => ({
+                        ...prev,
+                        estadoPago: event.target.value,
+                      }))
+                    }
+                  >
+                    {estadosPagoDisponibles.map((estado) => (
+                      <option key={estado} value={estado}>
+                        {estado}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </FloatingLabel>
+                <div className="small text-muted mt-2">
+                  Puedes aprobar o rechazar manualmente pagos por transferencia.
+                </div>
+              </Col>
+            )}
           </Row>
 
           <div className="d-flex justify-content-between align-items-center gap-3 flex-wrap mt-4">
@@ -162,6 +211,11 @@ export default function ModalPedidoAdmin({
               <div className="fw-bold">
                 Subtotal: {formatCurrency(obtenerSubtotalPedido(pedido))}
               </div>
+              {obtenerDescuentoPedido(pedido) > 0 && (
+                <div className="small text-success">
+                  Descuento: -{formatCurrency(obtenerDescuentoPedido(pedido))}
+                </div>
+              )}
               <div className="small text-muted">
                 Envio: {formatCurrency(obtenerCostoEnvioPedido(pedido))}
               </div>

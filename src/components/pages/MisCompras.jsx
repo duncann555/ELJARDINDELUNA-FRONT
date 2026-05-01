@@ -22,7 +22,9 @@ import {
 import { solicitarApi } from "../../helpers/clienteApi";
 import {
   obtenerCostoEnvioPedido,
+  obtenerDescuentoPedido,
   obtenerSubtotalPedido,
+  obtenerTextoMetodoPagoPedido,
   obtenerTextoEstadoPago,
   obtenerVarianteEstadoPago,
   obtenerVarianteEstadoPedido,
@@ -132,6 +134,15 @@ function TarjetaPedido({ pedido, index }) {
                   </span>
                 </div>
 
+                {obtenerDescuentoPedido(pedido) > 0 && (
+                  <div className="d-flex justify-content-between mb-2 text-success">
+                    <span>Descuento transferencia 7%</span>
+                    <span className="fw-semibold">
+                      -{formatCurrency(obtenerDescuentoPedido(pedido))}
+                    </span>
+                  </div>
+                )}
+
                 <div className="d-flex justify-content-between mb-2">
                   <span className="text-muted">Envio</span>
                   <span className="fw-semibold">
@@ -147,6 +158,13 @@ function TarjetaPedido({ pedido, index }) {
                 </div>
 
                 <hr />
+
+                <div className="mb-2">
+                  <small className="text-muted d-block mb-1">Metodo</small>
+                  <div className="fw-semibold">
+                    {obtenerTextoMetodoPagoPedido(pedido)}
+                  </div>
+                </div>
 
                 <div className="mb-2">
                   <small className="text-muted d-block mb-1">Pago</small>
@@ -168,6 +186,22 @@ function TarjetaPedido({ pedido, index }) {
                     {construirResumenEnvio(pedido)}
                   </div>
                 </div>
+
+                {pedido?.comprobanteTransferencia?.url && (
+                  <div className="mt-3">
+                    <Button
+                      as="a"
+                      href={pedido.comprobanteTransferencia.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      variant="outline-success"
+                      size="sm"
+                      className="rounded-pill"
+                    >
+                      Ver comprobante
+                    </Button>
+                  </div>
+                )}
               </Card.Body>
             </Card>
           </Col>

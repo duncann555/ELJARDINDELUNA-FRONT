@@ -1,13 +1,19 @@
 import {
   obtenerCostoEnvioPedido,
+  obtenerDescuentoPedido,
+  obtenerMetodoPagoPedido,
   obtenerSubtotalPedido,
+  obtenerTextoMetodoPagoPedido,
   obtenerVarianteEstadoPago,
   obtenerVarianteEstadoPedido,
 } from "../../helpers/pedidos";
 
 export {
   obtenerCostoEnvioPedido,
+  obtenerDescuentoPedido,
+  obtenerMetodoPagoPedido,
   obtenerSubtotalPedido,
+  obtenerTextoMetodoPagoPedido,
   obtenerVarianteEstadoPago,
   obtenerVarianteEstadoPedido,
 };
@@ -57,6 +63,11 @@ export const obtenerEstadosPedidoDisponibles = (pedido) => {
     ]),
   );
 };
+
+export const obtenerEstadosPagoDisponibles = (pedido) =>
+  obtenerMetodoPagoPedido(pedido) === "transferencia"
+    ? ["pending", "approved", "rejected"]
+    : [pedido?.pago?.estado || "pending"];
 
 export const obtenerIdUsuario = (usuario) => usuario?._id || usuario?.uid;
 
