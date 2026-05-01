@@ -41,7 +41,7 @@ export default function RecuperarPassword() {
       setError("");
       setSuccessMessage(
         data?.mensaje ||
-          "Si el email existe, te enviaremos un enlace para restablecer tu contraseña.",
+          "Si el email existe, te vamos a enviar un enlace para restablecer tu contraseña.",
       );
     } catch (requestError) {
       setSuccessMessage("");
@@ -60,7 +60,7 @@ export default function RecuperarPassword() {
       title="Recuperar contraseña"
       subtitle="Te ayudamos a volver a entrar sin salir del estilo natural y cálido de la tienda."
       infoTitle="Te enviamos un enlace privado"
-      infoText="Escribí el email de tu cuenta y te mandaremos un enlace para restablecer la contraseña con tranquilidad."
+      infoText="Escribí el email de tu cuenta y te vamos a mandar un enlace para restablecer la contraseña con tranquilidad."
       infoNote="Si no ves el correo en unos minutos, revisá Spam o Promociones."
       infoIcon="bi-envelope-paper-heart"
     >
@@ -68,7 +68,7 @@ export default function RecuperarPassword() {
         <p className="recovery-form-kicker mb-2">Restablecer acceso</p>
         <h2 className="font-playfair fw-bold mb-2">Recuperar contraseña</h2>
         <p className="text-muted mb-0">
-          Te enviaremos un enlace para restablecer tu clave.
+          Te vamos a enviar un enlace para restablecer tu clave.
         </p>
       </div>
 

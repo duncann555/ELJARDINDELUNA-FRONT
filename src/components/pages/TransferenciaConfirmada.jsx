@@ -12,7 +12,6 @@ export default function TransferenciaConfirmada() {
   const location = useLocation();
   const pedido =
     location.state?.pedido || leerStorageJson(CHECKOUT_PEDIDO_STORAGE_KEY, null);
-  const advertenciaComprobante = location.state?.advertenciaComprobante || "";
 
   if (!pedido?.pedidoId) {
     return (
@@ -58,12 +57,6 @@ export default function TransferenciaConfirmada() {
                   </p>
                 </div>
 
-                {advertenciaComprobante && (
-                  <Alert variant="warning" className="rounded-4">
-                    {advertenciaComprobante}
-                  </Alert>
-                )}
-
                 <div className="d-grid gap-3">
                   <div className="d-flex justify-content-between">
                     <span className="text-muted">Número de pedido</span>
@@ -91,14 +84,16 @@ export default function TransferenciaConfirmada() {
                     <small className="text-muted d-block">Banco/Billetera</small>
                     <div className="fw-semibold">{DATOS_TRANSFERENCIA.banco}</div>
                   </div>
-                  <div>
-                    <small className="text-muted d-block">CUIT/CUIL</small>
-                    <div className="fw-semibold">{DATOS_TRANSFERENCIA.cuit}</div>
-                  </div>
+                  {DATOS_TRANSFERENCIA.cuit && (
+                    <div>
+                      <small className="text-muted d-block">CUIT/CUIL</small>
+                      <div className="fw-semibold">{DATOS_TRANSFERENCIA.cuit}</div>
+                    </div>
+                  )}
                 </div>
 
                 <p className="text-muted mt-4 mb-4">
-                  Luego enviá el comprobante por WhatsApp.
+                  Después de transferir, enviá el comprobante por WhatsApp para confirmar tu compra.
                 </p>
 
                 <div className="d-grid gap-2">

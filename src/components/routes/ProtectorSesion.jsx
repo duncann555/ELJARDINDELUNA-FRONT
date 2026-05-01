@@ -3,6 +3,8 @@ import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
+const LOGOUT_EN_CURSO_KEY = "eljardinluna_logout_en_curso";
+
 const ProtectorSesion = ({
   children,
   titulo = "Primero iniciá sesión",
@@ -19,6 +21,14 @@ const ProtectorSesion = ({
     }
 
     redireccionRealizadaRef.current = true;
+
+    if (sessionStorage.getItem(LOGOUT_EN_CURSO_KEY) === "1") {
+      navigate("/", {
+        replace: true,
+        state: { sesionCerrada: true },
+      });
+      return;
+    }
 
     void Swal.fire({
       icon: "info",

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Badge, Button, Col, FloatingLabel, Form, Modal, Row, Table } from "react-bootstrap";
+import { Button, Col, FloatingLabel, Form, Modal, Row, Table } from "react-bootstrap";
 import { formatCurrency, formatDate } from "../../helpers/app";
 import {
   obtenerCostoEnvioPedido,
@@ -14,8 +14,8 @@ import {
   obtenerTextoMetodoPagoPedido,
   obtenerTextoTipoEnvioPedido,
   obtenerSubtotalPedido,
-  obtenerVarianteEstadoPago,
 } from "./utilidadesAdmin";
+import EstadoBadge from "../shared/EstadoBadge";
 
 export default function ModalPedidoAdmin({
   show,
@@ -110,9 +110,7 @@ export default function ModalPedidoAdmin({
           <Col md={6}>
             <div className="admin-modal-card p-3 rounded border bg-light h-100">
               <small className="text-muted d-block mb-1">Pago</small>
-              <Badge bg={obtenerVarianteEstadoPago(estadoPagoVisible)}>
-                {obtenerTextoEstadoPago(estadoPagoVisible)}
-              </Badge>
+              <EstadoBadge tipo="pago" valor={estadoPagoVisible} />
               <div className="fw-bold mt-2">
                 {obtenerTextoMetodoPagoPedido(pedido)}
               </div>

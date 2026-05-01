@@ -1,8 +1,8 @@
-import { Badge, Button, Col, Form, InputGroup, Row, Table } from "react-bootstrap";
+import { Button, Col, Form, InputGroup, Row, Table } from "react-bootstrap";
 import {
   obtenerIdUsuario,
-  obtenerVarianteEstadoUsuario,
 } from "./utilidadesAdmin";
+import EstadoBadge from "../shared/EstadoBadge";
 
 export default function SeccionUsuariosAdmin({
   usuarioActual,
@@ -27,11 +27,13 @@ export default function SeccionUsuariosAdmin({
         </div>
 
         <div className="d-flex flex-wrap gap-2">
-          <Badge bg="primary">{totalUsuarios} registrados</Badge>
-          <Badge bg="success">{usuariosActivos} activos</Badge>
-          <Badge bg="warning" text="dark">
-            {usuariosSuspendidos} suspendidos
-          </Badge>
+          <EstadoBadge tipo="general" valor="total" label={`${totalUsuarios} registrados`} />
+          <EstadoBadge tipo="usuario" valor="Activo" label={`${usuariosActivos} activos`} />
+          <EstadoBadge
+            tipo="usuario"
+            valor="Suspendido"
+            label={`${usuariosSuspendidos} suspendidos`}
+          />
         </div>
       </div>
 
@@ -95,16 +97,10 @@ export default function SeccionUsuariosAdmin({
                       )}
                     </td>
                     <td>
-                      <Badge
-                        bg={usuario.rol === "Administrador" ? "danger" : "secondary"}
-                      >
-                        {usuario.rol}
-                      </Badge>
+                      <EstadoBadge tipo="usuario" valor={usuario.rol} />
                     </td>
                     <td>
-                      <Badge bg={obtenerVarianteEstadoUsuario(usuario.estado)}>
-                        {usuario.estado}
-                      </Badge>
+                      <EstadoBadge tipo="usuario" valor={usuario.estado} />
                       {esUsuarioActual && (
                         <div className="small text-muted mt-1">Tu cuenta</div>
                       )}

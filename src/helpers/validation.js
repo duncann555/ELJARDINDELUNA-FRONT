@@ -113,7 +113,7 @@ export const validatePassword = (value) => {
 export const validatePasswordConfirmation = (value, password) => {
   const text = String(value || "");
 
-  if (!text) return "Debes repetir la contrase\u00f1a";
+  if (!text) return "Tenés que repetir la contraseña";
   if (text !== String(password || "")) {
     return "Las contrase\u00f1as no coinciden";
   }

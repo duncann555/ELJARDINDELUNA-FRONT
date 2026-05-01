@@ -5,7 +5,7 @@ export const DATOS_TRANSFERENCIA = {
   alias: import.meta.env.VITE_TRANSFER_ALIAS || "ELJARDINDELUNA",
   titular: import.meta.env.VITE_TRANSFER_TITULAR || "SEBASTIAN FLOMENBAUN",
   banco: import.meta.env.VITE_TRANSFER_BANCO || "BANCO GALICIA",
-  cuit: import.meta.env.VITE_TRANSFER_CUIT || "20-37309602-5",
+  cuit: import.meta.env.VITE_TRANSFER_CUIT || "",
 };
 
 export const obtenerNumeroPedidoVisible = (pedidoId) =>

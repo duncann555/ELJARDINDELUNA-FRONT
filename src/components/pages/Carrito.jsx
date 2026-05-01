@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
-  Badge,
   Button,
   Card,
   Col,
@@ -30,7 +29,6 @@ import {
   obtenerCheckoutUrl,
   obtenerProductoId,
 } from "../../helpers/checkout";
-import { DATOS_TRANSFERENCIA } from "../../helpers/transferencia";
 import {
   validateCiudad,
   validateCodigoPostal,
@@ -38,6 +36,7 @@ import {
   validateProvincia,
   validateTelefono,
 } from "../../helpers/validation";
+import EstadoBadge from "../shared/EstadoBadge";
 import "../../styles/carrito.css";
 
 const ENVIO_INICIAL = {
@@ -56,7 +55,6 @@ const TIPO_ENVIO_ANDREANI_DOMICILIO = "andreani_domicilio";
 const TIPO_ENVIO_ANDREANI_SUCURSAL = "andreani_sucursal";
 const TIPO_ENVIO_CADETE_LOCAL = "cadete_local";
 const COSTO_ENVIO_ANDREANI = Number(import.meta.env.VITE_COSTO_ENVIO_ANDREANI || 9500);
-const LOCALIDADES_CADETE = ["San Miguel de Tucumán", "Yerba Buena"];
 const OPCIONES_ENVIO = [
   {
     tipo: TIPO_ENVIO_ANDREANI_DOMICILIO,
@@ -79,15 +77,6 @@ const METODO_PAGO_TRANSFERENCIA = "transferencia";
 const DESCUENTO_TRANSFERENCIA = 0.07;
 const normalizePhone = (value) => String(value || "").replace(/\D/g, "");
 const normalizeCheckoutText = (value) => String(value || "").trim();
-const normalizarLocalidad = (value) =>
-  normalizeCheckoutText(value)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-const localidadPermiteCadete = (ciudad) =>
-  LOCALIDADES_CADETE.some(
-    (localidad) => normalizarLocalidad(localidad) === normalizarLocalidad(ciudad),
-  );
 const obtenerCostoEnvio = (tipo) =>
   tipo === TIPO_ENVIO_CADETE_LOCAL ? 0 : COSTO_ENVIO_ANDREANI;
 const obtenerTituloEnvio = (tipo) =>
@@ -98,18 +87,31 @@ const calcularDescuentoTransferencia = (subtotal, metodoPago) =>
     ? Number((subtotal * DESCUENTO_TRANSFERENCIA).toFixed(2))
     : 0;
 
-const construirEnvioPayload = (envio) => ({
-  tipo: envio.tipo || TIPO_ENVIO_ANDREANI_DOMICILIO,
-  provincia: normalizeCheckoutText(envio.provincia),
-  ciudad: normalizeCheckoutText(envio.ciudad),
-  domicilio: normalizeCheckoutText(envio.domicilio),
-  celular: normalizePhone(envio.celular),
-  entreCalles: normalizeCheckoutText(envio.entreCalles),
-  referencia: normalizeCheckoutText(envio.referencia),
-  codigoPostal: normalizeCheckoutText(envio.codigoPostal),
-  sucursalAndreani: normalizeCheckoutText(envio.sucursalAndreani),
-  horarioConveniente: normalizeCheckoutText(envio.horarioConveniente),
-});
+const construirEnvioPayload = (envio) => {
+  const tipo = envio.tipo || TIPO_ENVIO_ANDREANI_DOMICILIO;
+  const referencia = normalizeCheckoutText(envio.referencia);
+
+  if (tipo === TIPO_ENVIO_CADETE_LOCAL) {
+    return {
+      tipo,
+      celular: normalizePhone(envio.celular),
+      ...(referencia ? { referencia } : {}),
+    };
+  }
+
+  return {
+    tipo,
+    provincia: normalizeCheckoutText(envio.provincia),
+    ciudad: normalizeCheckoutText(envio.ciudad),
+    domicilio: normalizeCheckoutText(envio.domicilio),
+    celular: normalizePhone(envio.celular),
+    entreCalles: normalizeCheckoutText(envio.entreCalles),
+    referencia,
+    codigoPostal: normalizeCheckoutText(envio.codigoPostal),
+    sucursalAndreani: normalizeCheckoutText(envio.sucursalAndreani),
+    horarioConveniente: normalizeCheckoutText(envio.horarioConveniente),
+  };
+};
 
 const construirProductosResumen = (carritoCheckout) =>
   carritoCheckout
@@ -260,7 +262,6 @@ const Carrito = () => {
     METODO_PAGO_MERCADO_PAGO,
   );
   const [guardarDatosEnvio, setGuardarDatosEnvio] = useState(false);
-  const [comprobanteTransferencia, setComprobanteTransferencia] = useState(null);
 
   useEffect(() => {
     guardarStorageJson(CHECKOUT_ENVIO_STORAGE_KEY, envio);
@@ -271,16 +272,12 @@ const Carrito = () => {
     [carrito],
   );
 
-  const cadeteDisponible = useMemo(
-    () => localidadPermiteCadete(envio.ciudad),
-    [envio.ciudad],
-  );
   const camposEnvioRequeridos = useMemo(() => {
     switch (envio.tipo) {
       case TIPO_ENVIO_ANDREANI_SUCURSAL:
         return ["provincia", "ciudad", "codigoPostal", "sucursalAndreani", "celular"];
       case TIPO_ENVIO_CADETE_LOCAL:
-        return ["ciudad", "celular"];
+        return ["celular"];
       default:
         return ["provincia", "ciudad", "codigoPostal", "domicilio", "celular"];
     }
@@ -311,10 +308,7 @@ const Carrito = () => {
   const costoEnvio = carrito.length > 0 ? obtenerCostoEnvio(envio.tipo) : 0;
   const totalFinal = subtotal - descuentoTransferencia + costoEnvio;
   const guardarDatosDomicilio = envio.tipo !== TIPO_ENVIO_CADETE_LOCAL && guardarDatosEnvio;
-  const envioListo =
-    envioCompleto &&
-    envioValido &&
-    !(envio.tipo === TIPO_ENVIO_CADETE_LOCAL && !cadeteDisponible);
+  const envioListo = envioCompleto && envioValido;
 
   function validarCampoEnvio(name, value) {
     switch (name) {
@@ -326,12 +320,16 @@ const Carrito = () => {
         if (envio.tipo === TIPO_ENVIO_CADETE_LOCAL) return "";
         return validateProvincia(value);
       case "ciudad":
+        if (envio.tipo === TIPO_ENVIO_CADETE_LOCAL) return "";
         return validateCiudad(value);
       case "domicilio":
         if (envio.tipo === TIPO_ENVIO_CADETE_LOCAL) return "";
         if (envio.tipo === TIPO_ENVIO_ANDREANI_SUCURSAL) return "";
         return validateDomicilioCompleto(value);
       case "celular":
+        if (envio.tipo === TIPO_ENVIO_CADETE_LOCAL && !normalizePhone(value)) {
+          return "El celular / WhatsApp es obligatorio para coordinar la entrega.";
+        }
         return validateCelularEntrega(value);
       case "entreCalles":
         if (envio.tipo === TIPO_ENVIO_CADETE_LOCAL) return "";
@@ -355,10 +353,7 @@ const Carrito = () => {
 
   const validarEnvio = () => {
     const nuevosErrores = {
-      tipo:
-        envio.tipo === TIPO_ENVIO_CADETE_LOCAL && !cadeteDisponible
-          ? "Acordar con el vendedor solo está disponible para San Miguel de Tucumán y Yerba Buena"
-          : validarCampoEnvio("tipo", envio.tipo),
+      tipo: validarCampoEnvio("tipo", envio.tipo),
       provincia: validarCampoEnvio("provincia", envio.provincia),
       ciudad: validarCampoEnvio("ciudad", envio.ciudad),
       domicilio: validarCampoEnvio("domicilio", envio.domicilio),
@@ -636,37 +631,6 @@ const Carrito = () => {
     return { checkoutData, checkoutUrl };
   };
 
-  const subirComprobantePedido = async (pedidoId) => {
-    if (!comprobanteTransferencia) {
-      return null;
-    }
-
-    const formData = new FormData();
-    formData.append("comprobanteTransferencia", comprobanteTransferencia);
-
-    const { respuesta, datos } = await solicitarApi(
-      `/pedidos/${pedidoId}/comprobante-transferencia`,
-      {
-        method: "POST",
-        token,
-        body: formData,
-      },
-    );
-
-    if (isAuthError(respuesta, datos)) {
-      logout();
-      throw new Error("Tu sesión venció. Ingresá nuevamente y volvé a cargar el comprobante.");
-    }
-
-    if (!respuesta.ok) {
-      throw new Error(
-        getApiErrorMessage(datos, "No se pudo subir el comprobante de transferencia."),
-      );
-    }
-
-    return datos?.comprobanteTransferencia || null;
-  };
-
   const handlePagarMercadoPago = async () => {
     try {
       setProcesandoPago(true);
@@ -751,20 +715,8 @@ const Carrito = () => {
         metodoPago: METODO_PAGO_TRANSFERENCIA,
       });
 
-      let comprobanteCargado = resumenPedido.comprobanteTransferencia || null;
-      let advertenciaComprobante = "";
-
-      if (comprobanteTransferencia) {
-        try {
-          comprobanteCargado = await subirComprobantePedido(resumenPedido.pedidoId);
-        } catch (errorComprobante) {
-          advertenciaComprobante = errorComprobante.message;
-        }
-      }
-
       const resumenFinal = {
         ...resumenPedido,
-        comprobanteTransferencia: comprobanteCargado,
         metodoPago: METODO_PAGO_TRANSFERENCIA,
         estadoPago: "pending",
       };
@@ -776,7 +728,6 @@ const Carrito = () => {
       navigate("/transferencia-confirmada", {
         state: {
           pedido: resumenFinal,
-          advertenciaComprobante,
         },
       });
     } catch (error) {
@@ -826,9 +777,7 @@ const Carrito = () => {
         </div>
 
         <Alert variant="secondary" className="rounded-4 border-0 shadow-sm">
-          <strong>Envíos disponibles.</strong>{" "}
-          Andreani a domicilio o sucursal {formatCurrency(COSTO_ENVIO_ANDREANI)}.
-          Acordar con el vendedor: costo de entrega a coordinar por WhatsApp.
+          Elegí cómo querés recibir tu pedido. Podés usar Andreani o coordinar por WhatsApp.
         </Alert>
 
         <Row className="g-4">
@@ -899,9 +848,11 @@ const Carrito = () => {
 
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
 
-                  <Badge bg={token ? "success" : "secondary"} pill className="px-3 py-2">
-                    {token ? "Sesión activa" : "Necesitás iniciar sesión"}
-                  </Badge>
+                  <EstadoBadge
+                    tipo={token ? "usuario" : "general"}
+                    valor={token ? "Activo" : "pendiente"}
+                    label={token ? "Sesión activa" : "Necesitás iniciar sesión"}
+                  />
                 </div>
 
                 {!token && (
@@ -918,46 +869,37 @@ const Carrito = () => {
                 )}
 
                 <div className="d-grid gap-3 mb-4">
-                  {OPCIONES_ENVIO.map((opcion) => {
-                    const deshabilitado =
-                      opcion.tipo === TIPO_ENVIO_CADETE_LOCAL && !cadeteDisponible;
-
-                    return (
-                      <Card
-                        key={opcion.tipo}
-                        className={`border rounded-4 ${
-                          envio.tipo === opcion.tipo
-                            ? "border-success shadow-sm"
-                            : "border-light-subtle"
-                        } ${deshabilitado ? "opacity-75" : ""}`}
-                      >
-                        <Card.Body className="py-3">
-                          <Form.Check
-                            type="radio"
-                            id={`tipo-envio-${opcion.tipo}`}
-                            name="tipo"
-                            checked={envio.tipo === opcion.tipo}
-                            disabled={deshabilitado}
-                            onChange={() => handleTipoEnvioChange(opcion.tipo)}
-                            label={
-                              <span className="fw-semibold text-dark">
-                                {opcion.titulo}
-                                {opcion.tipo !== TIPO_ENVIO_CADETE_LOCAL
-                                  ? ` - ${formatCurrency(obtenerCostoEnvio(opcion.tipo))}`
-                                  : ""}
-                              </span>
-                            }
-                          />
-                          <div className="small text-muted ms-4 mt-1">
-                            {opcion.descripcion}
-                            {deshabilitado
-                              ? " Disponible solo para San Miguel de Tucumán y Yerba Buena."
-                              : ""}
-                          </div>
-                        </Card.Body>
-                      </Card>
-                    );
-                  })}
+                  {OPCIONES_ENVIO.map((opcion) => (
+                    <Card
+                      key={opcion.tipo}
+                      className={`border rounded-4 ${
+                        envio.tipo === opcion.tipo
+                          ? "border-success shadow-sm"
+                          : "border-light-subtle"
+                      }`}
+                    >
+                      <Card.Body className="py-3">
+                        <Form.Check
+                          type="radio"
+                          id={`tipo-envio-${opcion.tipo}`}
+                          name="tipo"
+                          checked={envio.tipo === opcion.tipo}
+                          onChange={() => handleTipoEnvioChange(opcion.tipo)}
+                          label={
+                            <span className="fw-semibold text-dark">
+                              {opcion.titulo}
+                              {opcion.tipo !== TIPO_ENVIO_CADETE_LOCAL
+                                ? ` - ${formatCurrency(obtenerCostoEnvio(opcion.tipo))}`
+                                : ""}
+                            </span>
+                          }
+                        />
+                        <div className="small text-muted ms-4 mt-1">
+                          {opcion.descripcion}
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  ))}
                   {erroresEnvio.tipo && (
                     <div className="text-danger small">{erroresEnvio.tipo}</div>
                   )}
@@ -991,24 +933,26 @@ const Carrito = () => {
                     </Col>
                   )}
 
-                  <Col md={envio.tipo === TIPO_ENVIO_CADETE_LOCAL ? 12 : 6}>
-                    <Form.Group>
-                      <Form.Label>Ciudad/localidad</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="ciudad"
-                        minLength={2}
-                        maxLength={80}
-                        value={envio.ciudad}
-                        onChange={handleEnvioChange}
-                        placeholder="Yerba Buena"
-                        isInvalid={Boolean(erroresEnvio.ciudad)}
-                      />
-                      <Form.Control.Feedback type="invalid">
-                        {erroresEnvio.ciudad}
-                      </Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
+                  {envio.tipo !== TIPO_ENVIO_CADETE_LOCAL && (
+                    <Col md={6}>
+                      <Form.Group>
+                        <Form.Label>Ciudad/localidad</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="ciudad"
+                          minLength={2}
+                          maxLength={80}
+                          value={envio.ciudad}
+                          onChange={handleEnvioChange}
+                          placeholder="Yerba Buena"
+                          isInvalid={Boolean(erroresEnvio.ciudad)}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {erroresEnvio.ciudad}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  )}
 
                   {envio.tipo !== TIPO_ENVIO_CADETE_LOCAL && (
                     <Col md={4}>
@@ -1073,7 +1017,7 @@ const Carrito = () => {
                     </Col>
                   )}
 
-                  <Col md={4}>
+                  <Col md={envio.tipo === TIPO_ENVIO_CADETE_LOCAL ? 12 : 4}>
                     <Form.Group>
                       <Form.Label>
                         {envio.tipo === TIPO_ENVIO_CADETE_LOCAL
@@ -1266,7 +1210,7 @@ const Carrito = () => {
                           }
                         />
                         <div className="small text-muted ms-4 mt-1">
-                          Transferí a nuestro alias y enviá el comprobante.
+                          Al confirmar el pedido, te mostraremos los datos para transferir.
                         </div>
                       </Card.Body>
                     </Card>
@@ -1284,22 +1228,9 @@ const Carrito = () => {
                         </div>
 
                         <div className="d-grid gap-2">
-                          <div>
-                            <small className="text-muted d-block">Alias</small>
-                            <div className="fw-semibold">{DATOS_TRANSFERENCIA.alias}</div>
-                          </div>
-                          <div>
-                            <small className="text-muted d-block">Titular</small>
-                            <div className="fw-semibold">{DATOS_TRANSFERENCIA.titular}</div>
-                          </div>
-                          <div>
-                            <small className="text-muted d-block">Banco/Billetera</small>
-                            <div className="fw-semibold">{DATOS_TRANSFERENCIA.banco}</div>
-                          </div>
-                          <div>
-                            <small className="text-muted d-block">CUIT/CUIL</small>
-                            <div className="fw-semibold">{DATOS_TRANSFERENCIA.cuit}</div>
-                          </div>
+                          <Alert variant="info" className="rounded-4 mb-2">
+                            Al confirmar el pedido, te mostraremos los datos para transferir.
+                          </Alert>
                           <div className="border-top pt-3 mt-1">
                             <div className="d-flex justify-content-between mb-2">
                               <small className="text-muted">Subtotal productos</small>
@@ -1330,19 +1261,9 @@ const Carrito = () => {
                           </div>
                         </div>
 
-                        <Form.Group className="mt-4">
-                          <Form.Label>Comprobante de transferencia (opcional)</Form.Label>
-                          <Form.Control
-                            type="file"
-                            accept=".jpg,.jpeg,.png,.webp,.avif"
-                            onChange={(event) =>
-                              setComprobanteTransferencia(event.target.files?.[0] || null)
-                            }
-                          />
-                          <Form.Text className="text-muted">
-                            Podés subir una imagen del comprobante ahora o enviarlo luego por WhatsApp.
-                          </Form.Text>
-                        </Form.Group>
+                        <p className="small text-muted mt-4 mb-0">
+                          Después de transferir, enviá el comprobante por WhatsApp para confirmar tu compra.
+                        </p>
                       </Card.Body>
                     </Card>
                   )}

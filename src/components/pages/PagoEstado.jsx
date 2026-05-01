@@ -14,13 +14,13 @@ import {
   leerStorageJson,
 } from "../../helpers/checkout";
 import { solicitarApi } from "../../helpers/clienteApi";
+import EstadoBadge from "../shared/EstadoBadge";
 
 const ESTADOS = {
   "/pago-exitoso": {
     icon: "bi-check2-circle",
     iconClass: "text-success",
-    badge: "Pago aprobado",
-    badgeClass: "success",
+    badgeValue: "approved",
     title: "Pago confirmado",
     description:
       "Tu pedido fue enviado a Mercado Pago correctamente y ya registramos la compra en EL JARDÍN DE LUNA.",
@@ -28,8 +28,7 @@ const ESTADOS = {
   "/pago-pendiente": {
     icon: "bi-hourglass-split",
     iconClass: "text-warning",
-    badge: "Pago pendiente",
-    badgeClass: "warning",
+    badgeValue: "pending",
     title: "Estamos esperando la acreditación",
     description:
       "Tu pedido fue creado y el pago quedó pendiente. Te recomendamos guardar este resumen para seguirlo desde admin.",
@@ -136,9 +135,11 @@ function PagoEstado() {
                     <i className={`bi ${estadoActual.icon}`}></i>
                   </div>
 
-                  <span className={`badge text-bg-${estadoActual.badgeClass} px-3 py-2 mb-3`}>
-                    {estadoActual.badge}
-                  </span>
+                  <EstadoBadge
+                    tipo="pago"
+                    valor={estadoActual.badgeValue}
+                    className="mb-3"
+                  />
 
                   <h1 className="fw-bold mb-3">{estadoActual.title}</h1>
                   <p className="text-muted mb-0">{estadoActual.description}</p>

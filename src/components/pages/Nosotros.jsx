@@ -110,8 +110,8 @@ export default function Nosotros() {
                 <Card.Body>
                   <h5 className="fw-bold font-playfair">Para quién es</h5>
                   <p className="text-muted mb-0">
-                    Para quienes quieren sumar hábitos más conscientes, regalar
-                    bienestar o encontrar opciones naturales para su rutina.
+                    Para vos, si querés sumar hábitos más conscientes, regalar
+                    bienestar o encontrar opciones naturales para tu rutina.
                   </p>
                 </Card.Body>
               </Card>

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   Accordion,
   Alert,
-  Badge,
   Button,
   Card,
   Col,
@@ -27,13 +26,12 @@ import {
   obtenerMetodoPagoPedido,
   obtenerTextoMetodoPagoPedido,
   obtenerTextoEstadoPago,
-  obtenerVarianteEstadoPago,
-  obtenerVarianteEstadoPedido,
 } from "../../helpers/pedidos";
 import {
   DATOS_TRANSFERENCIA,
   construirUrlWhatsAppTransferencia,
 } from "../../helpers/transferencia";
+import EstadoBadge from "../shared/EstadoBadge";
 
 const obtenerIdentificadorPedido = (pedido) =>
   pedido?._id ? `#${String(pedido._id).slice(-6).toUpperCase()}` : "-";
@@ -92,16 +90,14 @@ function TarjetaPedido({ pedido, index }) {
           </div>
 
           <div className="d-flex flex-wrap gap-2 mt-3">
-            <Badge bg={obtenerVarianteEstadoPedido(pedido?.estadoPedido)}>
-              {pedido?.estadoPedido || "Sin estado"}
-            </Badge>
-            <Badge bg={obtenerVarianteEstadoPago(estadoPago)}>
-              Pago {obtenerTextoEstadoPago(estadoPago)}
-            </Badge>
+            <EstadoBadge tipo="pedido" valor={pedido?.estadoPedido} />
+            <EstadoBadge tipo="pago" valor={estadoPago} />
             {esTransferenciaPendiente && (
-              <Badge bg="warning" text="dark">
-                Pendiente de pago
-              </Badge>
+              <EstadoBadge
+                tipo="general"
+                valor="destacado"
+                label="Comprobante pendiente"
+              />
             )}
           </div>
         </div>
@@ -355,7 +351,7 @@ export default function MisCompras() {
                   </div>
                   <h4 className="fw-bold mb-2">Todavía no tenés compras registradas</h4>
                   <p className="text-muted mb-4">
-                    Cuando completes un pedido, te va a aparecer acá con su fecha,
+                    Cuando completes un pedido, te va a aparecer acá con la fecha,
                     estado y detalle.
                   </p>
                   <Button

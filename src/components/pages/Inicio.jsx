@@ -13,6 +13,7 @@ import {
 } from "../../helpers/app";
 import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
 import { obtenerProductosPublicos } from "../../helpers/productosApi";
+import EstadoBadge from "../shared/EstadoBadge";
 
 const IMG_PLACEHOLDER = (text) =>
   `https://placehold.co/800x800/png?text=${encodeURIComponent(text || "Sin Imagen")}`;
@@ -93,9 +94,11 @@ const CardProducto = ({ producto }) => {
       >
         <div className="producto-img-wrapper position-relative">
           {sinStock && (
-            <span className="badge producto-stock-badge position-absolute top-0 end-0 m-3 px-3 py-2 z-1 shadow-sm">
-              Sin stock
-            </span>
+            <EstadoBadge
+              tipo="stock"
+              valor="sin_stock"
+              className="producto-stock-badge position-absolute top-0 end-0 m-3 z-1 shadow-sm"
+            />
           )}
 
         <Card.Img
@@ -109,9 +112,11 @@ const CardProducto = ({ producto }) => {
           }}
         />
 
-        <span className="badge producto-categoria-badge position-absolute bottom-0 start-0 m-2 z-1">
-          {obtenerCategoriaVisible(categoria)}
-        </span>
+        <EstadoBadge
+          tipo="categoria"
+          valor={obtenerCategoriaVisible(categoria)}
+          className="producto-categoria-badge position-absolute bottom-0 start-0 m-2 z-1"
+        />
       </div>
 
       <Card.Body className="d-flex flex-column p-4 producto-card-body">

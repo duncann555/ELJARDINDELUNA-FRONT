@@ -112,10 +112,10 @@ export default function RestablecerPassword() {
     <LayoutRecuperacion
       eyebrow="Nueva clave"
       title="Restablecer contraseña"
-      subtitle="Define una nueva clave para seguir comprando con normalidad dentro del sitio."
+      subtitle="Definí una nueva clave para seguir comprando con normalidad dentro del sitio."
       infoTitle="Tu enlace sigue un camino seguro"
-      infoText="Cuando guardes la nueva contraseña, el enlace actual dejará de servir y podrás ingresar otra vez."
-      infoNote="Usa una clave de al menos 8 caracteres."
+      infoText="Cuando guardes la nueva contraseña, el enlace actual dejará de servir y vas a poder ingresar otra vez."
+      infoNote="Usá una clave de al menos 8 caracteres."
       infoIcon="bi-shield-lock"
     >
       <div className="text-center mb-4">

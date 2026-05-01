@@ -1,9 +1,10 @@
-import { Badge, Button, Col, Form, InputGroup, Row, Table } from "react-bootstrap";
+import { Button, Col, Form, InputGroup, Row, Table } from "react-bootstrap";
 import {
   formatCurrency,
   obtenerCategoriaVisible,
   optimizarImagenCloudinary,
 } from "../../helpers/app";
+import EstadoBadge, { obtenerStockBadge } from "../shared/EstadoBadge";
 
 export default function SeccionProductosAdmin({
   busqueda,
@@ -69,19 +70,19 @@ export default function SeccionProductosAdmin({
                   </td>
                   <td className="fw-bold">{producto.nombre}</td>
                   <td>
-                    <Badge bg="info" text="dark">
-                      {obtenerCategoriaVisible(producto.categoria)}
-                    </Badge>
+                    <EstadoBadge
+                      tipo="categoria"
+                      valor={obtenerCategoriaVisible(producto.categoria)}
+                    />
                   </td>
                   <td>
-                    <Badge bg={productoVisible ? "success" : "secondary"}>
-                      {productoVisible ? "Visible" : "Suspendido"}
-                    </Badge>
+                    <EstadoBadge
+                      tipo="producto"
+                      valor={productoVisible ? "Activo" : "Suspendido"}
+                    />
                   </td>
                   <td>
-                    <Badge bg={producto.stock > 0 ? "success" : "danger"}>
-                      {producto.stock}
-                    </Badge>
+                    <EstadoBadge {...obtenerStockBadge(producto.stock)} />
                   </td>
                   <td>{formatCurrency(producto.precio)}</td>
                   <td>

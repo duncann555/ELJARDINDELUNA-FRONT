@@ -1,17 +1,14 @@
-import { Badge, Button, Table } from "react-bootstrap";
+import { Button, Table } from "react-bootstrap";
 import { formatCurrency, formatDate } from "../../helpers/app";
 import {
   obtenerCostoEnvioPedido,
   obtenerDescuentoPedido,
   obtenerEstadoPagoPedido,
   obtenerSubtotalPedido,
-  obtenerTextoEstadoPago,
-  obtenerTextoEstadoPedido,
   obtenerTextoMetodoPagoPedido,
   obtenerTextoTipoEnvioPedido,
-  obtenerVarianteEstadoPago,
-  obtenerVarianteEstadoPedido,
 } from "./utilidadesAdmin";
+import EstadoBadge from "../shared/EstadoBadge";
 
 export default function SeccionPedidosAdmin({
   pedidos,
@@ -29,9 +26,7 @@ export default function SeccionPedidosAdmin({
           </p>
         </div>
 
-        <Badge bg="warning" text="dark" className="fs-6">
-          {pedidosEnGestion} en gestión
-        </Badge>
+        <EstadoBadge tipo="general" valor="pendiente" label={`${pedidosEnGestion} en gestión`} />
       </div>
 
       {cargandoPedidos ? (
@@ -93,15 +88,11 @@ export default function SeccionPedidosAdmin({
                   </td>
 
                   <td>
-                    <Badge bg={obtenerVarianteEstadoPago(estadoPago)}>
-                      {obtenerTextoEstadoPago(estadoPago)}
-                    </Badge>
+                    <EstadoBadge tipo="pago" valor={estadoPago} />
                   </td>
 
                   <td>
-                    <Badge bg={obtenerVarianteEstadoPedido(pedido.estadoPedido)}>
-                      {obtenerTextoEstadoPedido(pedido.estadoPedido)}
-                    </Badge>
+                    <EstadoBadge tipo="pedido" valor={pedido.estadoPedido} />
                   </td>
 
                   <td>

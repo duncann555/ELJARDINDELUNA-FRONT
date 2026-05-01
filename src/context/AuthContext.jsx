@@ -98,7 +98,7 @@ export const AuthProvider = ({ children }) => {
       const normalizedToken = normalizeToken(nextToken);
 
       if (!normalizedUser?.uid || !normalizedToken) {
-        throw crearErrorAuth("No se pudo recuperar una sesion valida.");
+        throw crearErrorAuth("No se pudo recuperar una sesión válida.");
       }
 
       setUser(normalizedUser);
@@ -160,7 +160,7 @@ export const AuthProvider = ({ children }) => {
 
     if (!respuesta.ok) {
       throw crearErrorAuth(
-        getApiErrorMessage(datos, "Error al iniciar sesion."),
+        getApiErrorMessage(datos, "Error al iniciar sesión."),
       );
     }
 
@@ -202,7 +202,7 @@ export const AuthProvider = ({ children }) => {
         message:
           getApiErrorMessage(
             datos,
-            "Necesitamos tu numero de WhatsApp para completar el acceso.",
+            "Necesitamos tu número de WhatsApp para completar el acceso.",
           ),
         profile: datos?.perfil || {},
       };
@@ -268,14 +268,14 @@ export const AuthProvider = ({ children }) => {
       throw crearErrorAuth(
         getApiErrorMessage(
           datos,
-          "No se pudo iniciar la recuperacion de contrasena.",
+          "No se pudo iniciar la recuperación de contraseña.",
         ),
       );
     }
 
     return datos || {
       mensaje:
-        "Si el email existe, te enviaremos un enlace para restablecer tu contrasena.",
+        "Si el email existe, te vamos a enviar un enlace para restablecer tu contraseña.",
     };
   };
 
@@ -290,12 +290,12 @@ export const AuthProvider = ({ children }) => {
 
     if (!respuesta.ok) {
       throw crearErrorAuth(
-        getApiErrorMessage(datos, "No se pudo restablecer la contrasena."),
+        getApiErrorMessage(datos, "No se pudo restablecer la contraseña."),
       );
     }
 
     return datos || {
-      mensaje: "La contrasena se actualizo correctamente",
+      mensaje: "La contraseña se actualizó correctamente",
     };
   };
 

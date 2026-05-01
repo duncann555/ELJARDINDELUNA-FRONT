@@ -42,9 +42,11 @@ export const obtenerTextoEstadoPedido = (estado) => {
   switch (estado) {
     case "Preparando envío":
     case "Preparando env\u00edo":
-      return "Preparando envío";
+      return "En preparación";
     case "En espera de pago":
+      return "En espera";
     case "Despachado":
+      return "Enviado";
     case "Entregado":
     case "Cancelado":
       return estado;
@@ -85,8 +87,8 @@ export const obtenerTextoEstadoPago = (estado) => {
     case "approved":
       return "Pagado";
     case "rejected":
-      return "Rechazado";
+      return "Pago rechazado";
     default:
-      return "Pendiente";
+      return "Pago pendiente";
   }
 };

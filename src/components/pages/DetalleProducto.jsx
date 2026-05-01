@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Badge, Breadcrumb, Button, Col, Container, Row } from "react-bootstrap";
+import { Breadcrumb, Button, Col, Container, Row } from "react-bootstrap";
 import { Link, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../../styles/detalle.css";
@@ -11,6 +11,7 @@ import {
 } from "../../helpers/app";
 import { solicitarJsonApi } from "../../helpers/clienteApi";
 import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
+import EstadoBadge from "../shared/EstadoBadge";
 
 const IMG_PLACEHOLDER = (text) =>
   `https://placehold.co/600x600/png?text=${encodeURIComponent(text || "Sin Imagen")}`;
@@ -157,9 +158,11 @@ const DetalleProducto = () => {
           <Col xs={12} lg={6}>
             <div className="detalle-info h-100 d-flex flex-column justify-content-center">
               <div>
-                <Badge bg="success" className="mb-3 text-uppercase ls-1 px-3 py-2 rounded-pill">
-                  {obtenerCategoriaVisible(producto.categoria)}
-                </Badge>
+                <EstadoBadge
+                  tipo="categoria"
+                  valor={obtenerCategoriaVisible(producto.categoria)}
+                  className="mb-3"
+                />
 
                 <h1 className="fw-bold display-5 text-dark font-playfair mb-2">
                   {producto.nombre}

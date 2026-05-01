@@ -27,6 +27,7 @@ const NAV_LINKS = [
 
 const ROL_ADMIN = "Administrador";
 const MOBILE_CART_BADGE_STYLE = { fontSize: "0.6rem" };
+const LOGOUT_EN_CURSO_KEY = "eljardinluna_logout_en_curso";
 
 function CartShortcut({
   cantidadTotal,
@@ -98,9 +99,16 @@ function Menu() {
   const location = useLocation();
 
   const handleLogout = async () => {
-    await logout();
+    sessionStorage.setItem(LOGOUT_EN_CURSO_KEY, "1");
     setExpanded(false);
-    navigate("/");
+    navigate("/", {
+      replace: true,
+      state: { sesionCerrada: true },
+    });
+    await logout();
+    window.setTimeout(() => {
+      sessionStorage.removeItem(LOGOUT_EN_CURSO_KEY);
+    }, 600);
   };
 
   const esAdmin = user?.rol === ROL_ADMIN;

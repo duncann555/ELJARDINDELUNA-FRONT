@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Badge,
   Button,
   Card,
   Col,
@@ -22,6 +21,7 @@ import {
 import { solicitarJsonApi } from "../../helpers/clienteApi";
 import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
 import { obtenerProductosPublicos } from "../../helpers/productosApi";
+import EstadoBadge from "../shared/EstadoBadge";
 
 const IMG_PLACEHOLDER = (text) =>
   `https://placehold.co/800x800/png?text=${encodeURIComponent(text || "Sin Imagen")}`;
@@ -132,14 +132,18 @@ function CardProducto({ producto }) {
           }}
         />
 
-        <Badge className="position-absolute bottom-0 start-0 productos-categoria-badge">
-          {obtenerCategoriaVisible(categoria)}
-        </Badge>
+        <EstadoBadge
+          tipo="categoria"
+          valor={obtenerCategoriaVisible(categoria)}
+          className="position-absolute bottom-0 start-0 productos-categoria-badge"
+        />
 
         {sinStock && (
-          <Badge className="position-absolute top-0 end-0 m-3 productos-stock-badge">
-            Sin stock
-          </Badge>
+          <EstadoBadge
+            tipo="stock"
+            valor="sin_stock"
+            className="position-absolute top-0 end-0 m-3 productos-stock-badge"
+          />
         )}
       </div>
 
