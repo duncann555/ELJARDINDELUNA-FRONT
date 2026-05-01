@@ -59,10 +59,7 @@ export default function RecuperarPassword() {
       eyebrow="Acceso seguro"
       title="Recuperar contraseña"
       subtitle="Te ayudamos a volver a entrar sin salir del estilo natural y cálido de la tienda."
-      infoTitle="Te enviamos un enlace privado"
-      infoText="Escribí el email de tu cuenta y te vamos a mandar un enlace para restablecer la contraseña con tranquilidad."
-      infoNote="Si no ves el correo en unos minutos, revisá Spam o Promociones."
-      infoIcon="bi-envelope-paper-heart"
+      showInfo={false}
     >
       <div className="text-center mb-4">
         <p className="recovery-form-kicker mb-2">Restablecer acceso</p>

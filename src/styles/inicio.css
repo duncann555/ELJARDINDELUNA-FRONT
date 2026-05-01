@@ -18,7 +18,7 @@
   background:
     radial-gradient(circle at top, rgba(217, 200, 162, 0.08), transparent 28%),
     radial-gradient(circle at 82% 18%, rgba(123, 141, 120, 0.1), transparent 22%),
-    linear-gradient(180deg, rgba(7, 12, 20, 0.22) 0%, rgba(15, 23, 36, 0) 100%);
+    linear-gradient(180deg, rgba(19, 34, 53, 0.24) 0%, rgba(24, 40, 58, 0) 100%);
 }
 
 .hero-carousel-shell {
@@ -142,14 +142,14 @@
 }
 
 :root[data-theme="dark"] .producto-card {
-  border-color: rgba(217, 200, 162, 0.18) !important;
-  background: linear-gradient(180deg, rgba(21, 30, 42, 0.96) 0%, rgba(13, 20, 31, 0.98) 100%);
-  box-shadow: 0 22px 42px rgba(2, 6, 23, 0.28) !important;
+  border-color: rgba(217, 200, 162, 0.22) !important;
+  background: linear-gradient(180deg, rgba(31, 47, 65, 0.96) 0%, rgba(23, 36, 52, 0.98) 100%);
+  box-shadow: 0 22px 42px rgba(5, 12, 22, 0.24) !important;
 }
 
 :root[data-theme="dark"] .producto-card:hover {
   border-color: rgba(217, 200, 162, 0.34) !important;
-  box-shadow: 0 28px 52px rgba(2, 6, 23, 0.38) !important;
+  box-shadow: 0 28px 52px rgba(5, 12, 22, 0.3) !important;
 }
 
 :root[data-theme="dark"] .producto-card::before {
@@ -175,9 +175,9 @@
 
 :root[data-theme="dark"] .producto-img-wrapper {
   background:
-    radial-gradient(circle at top, rgba(217, 200, 162, 0.08), transparent 55%),
-    linear-gradient(180deg, rgba(18, 26, 38, 0.98) 0%, rgba(11, 18, 28, 0.98) 100%);
-  border-bottom-color: rgba(217, 200, 162, 0.18);
+    radial-gradient(circle at top, rgba(217, 200, 162, 0.1), transparent 55%),
+    linear-gradient(180deg, rgba(36, 51, 68, 0.98) 0%, rgba(25, 39, 55, 0.98) 100%);
+  border-bottom-color: rgba(217, 200, 162, 0.22);
 }
 
 .producto-img {
@@ -207,7 +207,7 @@
 }
 
 :root[data-theme="dark"] .producto-card-body {
-  background: linear-gradient(180deg, rgba(13, 20, 31, 0.18) 0%, rgba(8, 14, 23, 0.9) 100%);
+  background: linear-gradient(180deg, rgba(28, 43, 60, 0.2) 0%, rgba(21, 34, 49, 0.88) 100%);
 }
 
 :root[data-theme="dark"] .producto-title {
@@ -334,9 +334,9 @@
 }
 
 :root[data-theme="dark"] .categoria-banner {
-  background: linear-gradient(135deg, rgba(9, 17, 27, 0.98) 0%, rgba(63, 82, 60, 0.94) 100%);
-  border-color: rgba(217, 200, 162, 0.14);
-  box-shadow: 0 18px 38px rgba(2, 6, 23, 0.3);
+  background: linear-gradient(135deg, rgba(25, 40, 58, 0.98) 0%, rgba(75, 96, 71, 0.94) 100%);
+  border-color: rgba(217, 200, 162, 0.2);
+  box-shadow: 0 18px 38px rgba(5, 12, 22, 0.24);
 }
 
 .beneficios-wrapper {
@@ -358,9 +358,9 @@
 }
 
 :root[data-theme="dark"] .beneficios-wrapper .container {
-  background: linear-gradient(135deg, rgba(18, 26, 38, 0.96) 0%, rgba(11, 18, 28, 0.98) 100%);
-  border-color: rgba(217, 200, 162, 0.08);
-  box-shadow: 0 30px 54px rgba(2, 6, 23, 0.34);
+  background: linear-gradient(135deg, rgba(31, 47, 65, 0.96) 0%, rgba(22, 35, 51, 0.98) 100%);
+  border-color: rgba(217, 200, 162, 0.14);
+  box-shadow: 0 30px 54px rgba(5, 12, 22, 0.26);
 }
 
 .beneficio-item {
@@ -444,9 +444,9 @@
 
 :root[data-theme="dark"] .carousel-control-prev-icon,
 :root[data-theme="dark"] .carousel-control-next-icon {
-  background-color: rgba(11, 18, 28, 0.94) !important;
+  background-color: rgba(27, 43, 61, 0.94) !important;
   border-color: rgba(217, 200, 162, 0.2);
-  box-shadow: 0 14px 28px rgba(2, 6, 23, 0.36);
+  box-shadow: 0 14px 28px rgba(5, 12, 22, 0.28);
 }
 
 .carousel-control-prev:hover .carousel-control-prev-icon,
@@ -459,7 +459,7 @@
 :root[data-theme="dark"] .carousel-control-prev:hover .carousel-control-prev-icon,
 :root[data-theme="dark"] .carousel-control-next:hover .carousel-control-next-icon {
   background-color: var(--theme-sage-deep) !important;
-  box-shadow: 0 18px 32px rgba(2, 6, 23, 0.42);
+  box-shadow: 0 18px 32px rgba(5, 12, 22, 0.32);
 }
 
 @media (min-width: 992px) {

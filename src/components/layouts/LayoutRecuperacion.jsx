@@ -10,6 +10,7 @@ export default function LayoutRecuperacion({
   infoText,
   infoNote,
   infoIcon,
+  showInfo = true,
   children,
 }) {
   return (
@@ -21,24 +22,26 @@ export default function LayoutRecuperacion({
           <p className="recovery-subtitle mb-0">{subtitle}</p>
         </section>
 
-        <Row className="g-4 g-xl-5 align-items-stretch mt-1">
-          <Col lg={4}>
-            <aside className="recovery-info-card h-100">
-              <div className="recovery-info-icon">
-                <i className={`bi ${infoIcon}`}></i>
-              </div>
-              <p className="recovery-info-kicker mb-2">Ayuda segura</p>
-              <h2 className="font-playfair mb-3">{infoTitle}</h2>
-              <p className="recovery-info-copy mb-3">{infoText}</p>
-              <div className="recovery-info-note">{infoNote}</div>
-              <Link to="/" className="btn btn-outline-light recovery-back-btn mt-4">
-                Volver al inicio
-              </Link>
-            </aside>
-          </Col>
+        <Row className={`g-4 g-xl-5 align-items-stretch mt-1 ${showInfo ? "" : "justify-content-center"}`}>
+          {showInfo && (
+            <Col lg={4}>
+              <aside className="recovery-info-card h-100">
+                <div className="recovery-info-icon">
+                  <i className={`bi ${infoIcon}`}></i>
+                </div>
+                <p className="recovery-info-kicker mb-2">Ayuda segura</p>
+                <h2 className="font-playfair mb-3">{infoTitle}</h2>
+                <p className="recovery-info-copy mb-3">{infoText}</p>
+                <div className="recovery-info-note">{infoNote}</div>
+                <Link to="/" className="btn btn-outline-light recovery-back-btn mt-4">
+                  Volver al inicio
+                </Link>
+              </aside>
+            </Col>
+          )}
 
-          <Col lg={8}>
-            <section className="recovery-content-card h-100">
+          <Col lg={showInfo ? 8 : 7} xl={showInfo ? 8 : 6}>
+            <section className={`recovery-content-card h-100 ${showInfo ? "" : "recovery-content-card--single"}`}>
               <div className="recovery-form-shell">{children}</div>
             </section>
           </Col>

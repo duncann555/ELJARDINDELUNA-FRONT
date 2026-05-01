@@ -36,7 +36,6 @@ import {
   validateProvincia,
   validateTelefono,
 } from "../../helpers/validation";
-import EstadoBadge from "../shared/EstadoBadge";
 import "../../styles/carrito.css";
 
 const ENVIO_INICIAL = {
@@ -846,15 +845,6 @@ const Carrito = () => {
                   </div>
                 </div>
 
-                <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-
-                  <EstadoBadge
-                    tipo={token ? "usuario" : "general"}
-                    valor={token ? "Activo" : "pendiente"}
-                    label={token ? "Sesión activa" : "Necesitás iniciar sesión"}
-                  />
-                </div>
-
                 {!token && (
                   <Alert variant="warning" className="rounded-4">
                     Iniciá sesión desde el menú para habilitar el checkout y registrar tu pedido.
@@ -1031,7 +1021,7 @@ const Carrito = () => {
                         maxLength={18}
                         value={envio.celular}
                         onChange={handleEnvioChange}
-                        placeholder="Ej: 381 4137174"
+                        placeholder="Ej: 381 1234567"
                         isInvalid={Boolean(erroresEnvio.celular)}
                       />
                       <Form.Control.Feedback type="invalid">

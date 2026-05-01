@@ -28,18 +28,18 @@
 }
 
 :root[data-theme="dark"] {
-  --theme-night: #08111d;
-  --theme-night-soft: #162235;
+  --theme-night: #142538;
+  --theme-night-soft: #21384d;
   --theme-sage: #90a88a;
   --theme-sage-deep: #7d9577;
   --theme-moon: #d7c39a;
-  --theme-moon-soft: #394253;
-  --theme-cream: #0f1724;
-  --theme-paper: #17212f;
-  --theme-border: rgba(222, 230, 239, 0.12);
+  --theme-moon-soft: #46566a;
+  --theme-cream: #142233;
+  --theme-paper: #1b2d40;
+  --theme-border: rgba(222, 230, 239, 0.18);
   --theme-text: #edf2f7;
-  --theme-muted: #a6b3c2;
-  --theme-shadow: 0 24px 60px rgba(2, 6, 23, 0.45);
+  --theme-muted: #bac6d3;
+  --theme-shadow: 0 24px 60px rgba(5, 12, 22, 0.34);
 
   --color-brand: var(--theme-sage);
   --color-brand-dark: var(--theme-moon);
@@ -48,7 +48,7 @@
 
   --bs-body-color: var(--theme-text);
   --bs-body-bg: var(--theme-cream);
-  --bs-light-rgb: 23, 33, 47;
+  --bs-light-rgb: 27, 45, 64;
   --bs-dark-rgb: 237, 242, 247;
 }
 
@@ -83,7 +83,7 @@ body {
   background:
     radial-gradient(circle at top left, rgba(123, 141, 120, 0.16), transparent 28%),
     radial-gradient(circle at 85% 12%, rgba(217, 200, 162, 0.12), transparent 22%),
-    linear-gradient(180deg, #0b1320 0%, #111b28 42%, #17212f 100%);
+    linear-gradient(180deg, #132235 0%, #18283a 42%, #1b2d40 100%);
 }
 
 body::before,
@@ -169,7 +169,7 @@ body,
 }
 
 :root[data-theme="dark"] .bg-light {
-  background-color: rgba(23, 33, 47, 0.82) !important;
+  background-color: rgba(31, 49, 68, 0.84) !important;
 }
 
 .bg-white {
@@ -177,7 +177,7 @@ body,
 }
 
 :root[data-theme="dark"] .bg-white {
-  background-color: rgba(18, 26, 38, 0.9) !important;
+  background-color: rgba(25, 39, 55, 0.92) !important;
 }
 
 .shadow-sm,
@@ -193,9 +193,9 @@ body,
 }
 
 :root[data-theme="dark"] .card {
-  border-color: rgba(222, 230, 239, 0.08);
+  border-color: rgba(222, 230, 239, 0.14);
   background:
-    linear-gradient(180deg, rgba(21, 30, 42, 0.96) 0%, rgba(14, 22, 33, 0.98) 100%);
+    linear-gradient(180deg, rgba(31, 47, 65, 0.96) 0%, rgba(23, 36, 52, 0.98) 100%);
 }
 
 .btn {
@@ -333,8 +333,8 @@ body,
 :root[data-theme="dark"] .form-select,
 :root[data-theme="dark"] .form-floating > .form-control,
 :root[data-theme="dark"] .form-floating > .form-select {
-  border-color: rgba(222, 230, 239, 0.12);
-  background-color: rgba(11, 18, 28, 0.92);
+  border-color: rgba(222, 230, 239, 0.18);
+  background-color: rgba(24, 38, 54, 0.94);
   color: var(--theme-text);
 }
 
@@ -386,7 +386,7 @@ body,
 :root[data-theme="dark"] .offcanvas,
 :root[data-theme="dark"] .modal-content {
   background:
-    linear-gradient(180deg, rgba(18, 26, 38, 0.98) 0%, rgba(12, 19, 29, 0.98) 100%);
+    linear-gradient(180deg, rgba(30, 45, 63, 0.98) 0%, rgba(22, 35, 51, 0.98) 100%);
   color: var(--theme-text);
 }
 

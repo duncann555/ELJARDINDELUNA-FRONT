@@ -356,17 +356,17 @@
   background:
     radial-gradient(circle at top, rgba(217, 200, 162, 0.08), transparent 28%),
     radial-gradient(circle at 82% 16%, rgba(123, 141, 120, 0.08), transparent 22%),
-    linear-gradient(180deg, rgba(11, 18, 28, 0.98) 0%, rgba(15, 23, 36, 0.98) 100%) !important;
+    linear-gradient(180deg, rgba(21, 34, 49, 0.98) 0%, rgba(26, 42, 59, 0.98) 100%) !important;
   color: var(--theme-text);
 }
 
 :root[data-theme="dark"] .carrito-page .card {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(217, 200, 162, 0.08) !important;
+  border: 1px solid rgba(217, 200, 162, 0.14) !important;
   background:
-    linear-gradient(180deg, rgba(18, 26, 38, 0.96) 0%, rgba(11, 18, 28, 0.98) 100%) !important;
-  box-shadow: 0 24px 48px rgba(2, 6, 23, 0.3) !important;
+    linear-gradient(180deg, rgba(31, 47, 65, 0.96) 0%, rgba(22, 35, 51, 0.98) 100%) !important;
+  box-shadow: 0 24px 48px rgba(5, 12, 22, 0.24) !important;
 }
 
 :root[data-theme="dark"] .carrito-page .card::before {
@@ -406,8 +406,8 @@
 }
 
 :root[data-theme="dark"] .carrito-item-img-wrapper {
-  background-color: rgba(11, 18, 28, 0.92);
-  border-color: rgba(217, 200, 162, 0.1);
+  background-color: rgba(27, 43, 61, 0.92);
+  border-color: rgba(217, 200, 162, 0.16);
 }
 
 :root[data-theme="dark"] .carrito-item-name {
@@ -458,8 +458,8 @@
 :root[data-theme="dark"] .checkout-payment-method {
   position: relative;
   overflow: hidden;
-  border-color: rgba(217, 200, 162, 0.1);
-  background: linear-gradient(180deg, rgba(18, 26, 38, 0.98) 0%, rgba(11, 18, 28, 0.98) 100%);
+  border-color: rgba(217, 200, 162, 0.16);
+  background: linear-gradient(180deg, rgba(31, 47, 65, 0.98) 0%, rgba(22, 35, 51, 0.98) 100%);
 }
 
 :root[data-theme="dark"] .checkout-payment-method::before {
@@ -487,9 +487,9 @@
 }
 
 :root[data-theme="dark"] .carrito-page .alert-secondary {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.07);
   color: #d8e2ef;
-  border-color: rgba(217, 200, 162, 0.08);
+  border-color: rgba(217, 200, 162, 0.14);
 }
 
 :root[data-theme="dark"] .carrito-page .alert-success {
