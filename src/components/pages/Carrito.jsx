@@ -1041,7 +1041,7 @@ const Carrito = () => {
                     <div>
                       <h5 className="fw-bold mb-1">Forma de pago</h5>
                       <p className="text-muted mb-0">
-                        Elige si quieres pagar online con Mercado Pago o confirmar por transferencia.
+                        Elegí si querés pagar online con Mercado Pago o confirmar por transferencia.
                       </p>
                     </div>
                   </div>
@@ -1066,7 +1066,7 @@ const Carrito = () => {
                           }
                         />
                         <div className="small text-muted ms-4 mt-1">
-                          Pag\u00e1 con tarjeta, d\u00e9bito, dinero en cuenta o medios habilitados.
+                          Pagá con tarjeta, débito, dinero en cuenta o medios habilitados.
                         </div>
                       </Card.Body>
                     </Card>
@@ -1092,7 +1092,7 @@ const Carrito = () => {
                           }
                         />
                         <div className="small text-muted ms-4 mt-1">
-                          Transfer\u00ed a nuestro alias y envi\u00e1 el comprobante.
+                          Transferí a nuestro alias y enviá el comprobante.
                         </div>
                       </Card.Body>
                     </Card>
@@ -1204,8 +1204,8 @@ const Carrito = () => {
 
                   <p className="text-muted small text-center mt-3 mb-0 checkout-payment-note">
                     {metodoPagoSeleccionado === METODO_PAGO_TRANSFERENCIA
-                      ? "Tu pedido quedara registrado con pago pendiente hasta validar la transferencia."
-                      : "El pago se procesa en Checkout Pro de Mercado Pago y el pedido queda registrado de forma segura."}
+                      ? "El pedido quedará registrado como pendiente hasta que confirmemos el pago."
+                      : "El pago se procesa de forma segura con Mercado Pago."}
                   </p>
                 </Card.Body>
               </Card>
