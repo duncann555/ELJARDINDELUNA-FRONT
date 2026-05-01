@@ -13,6 +13,7 @@ import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
 import carousel1 from "../../assets/carousel1.png";
 import carousel2 from "../../assets/carousel2.png";
 import carousel3 from "../../assets/carousel3.png";
+import carousel4 from "../../assets/carousel4.png";
 import oferta1 from "../../assets/oferta1.png";
 import oferta2 from "../../assets/oferta2.jpg";
 import oferta3 from "../../assets/oferta3.jpg";
@@ -209,7 +210,7 @@ export default function Inicio() {
     <div className="inicio-wrapper" style={{ overflowX: "hidden", position: "relative" }}>
       <Container fluid className="hero-carousel-shell py-3 px-0 px-md-3">
         <Carousel fade controls className="mx-auto hero-carousel" style={{ maxWidth: 1400 }}>
-          {[carousel1, carousel2, carousel3].map((imagen, index) => (
+          {[carousel1, carousel2, carousel3, carousel4].map((imagen, index) => (
             <Carousel.Item key={index}>
               <div className="ratio ratio-16x9">
                 <img
