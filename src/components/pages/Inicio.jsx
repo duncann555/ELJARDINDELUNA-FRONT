@@ -325,19 +325,15 @@ export default function Inicio() {
           </Carousel>
         </div>
 
-        <Row className="g-4">
-          {ofertas.length > 0 ? (
-            ofertas.map((producto) => (
+        {ofertas.length > 0 && (
+          <Row className="g-4">
+            {ofertas.map((producto) => (
               <Col xs={12} sm={6} md={4} lg={3} key={producto._id}>
                 <CardProducto producto={producto} />
               </Col>
-            ))
-          ) : (
-            <div className="text-center text-muted w-100 py-4 bg-light rounded-3">
-              <small>No hay ofertas activas en este momento.</small>
-            </div>
-          )}
-        </Row>
+            ))}
+          </Row>
+        )}
       </Container>
     </div>
   );
