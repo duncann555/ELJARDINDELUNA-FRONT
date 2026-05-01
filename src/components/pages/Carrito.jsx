@@ -47,10 +47,7 @@ const ENVIO_INICIAL = {
   referencia: "",
   codigoPostal: "",
 };
-const ENVIO_FIJO = Number(import.meta.env.VITE_FIXED_SHIPPING_COST || 15000);
-const ENVIO_GRATIS_DESDE = Number(
-  import.meta.env.VITE_FREE_SHIPPING_THRESHOLD || 60000,
-);
+const ENVIO_FIJO = 8500;
 const normalizePhone = (value) => String(value || "").replace(/\D/g, "");
 const normalizeCheckoutText = (value) => String(value || "").trim();
 
@@ -235,10 +232,8 @@ const Carrito = () => {
       ].some(Boolean),
     [envio],
   );
-  const envioEsGratis = carrito.length > 0 && subtotal >= ENVIO_GRATIS_DESDE;
-  const costoEnvio = carrito.length > 0 ? (envioEsGratis ? 0 : ENVIO_FIJO) : 0;
+  const costoEnvio = carrito.length > 0 ? ENVIO_FIJO : 0;
   const totalFinal = subtotal + costoEnvio;
-  const faltanteEnvioGratis = Math.max(ENVIO_GRATIS_DESDE - subtotal, 0);
 
   function validarCampoEnvio(name, value) {
     switch (name) {
@@ -395,7 +390,7 @@ const Carrito = () => {
           ...envioPayload,
           proveedor: "Envio nacional",
           costo: costoEnvio,
-          esGratis: envioEsGratis,
+          esGratis: false,
         },
         productos: baseResumen.productos || productosResumen,
       });
@@ -567,44 +562,13 @@ const Carrito = () => {
           </div>
         </div>
 
-        <Alert
-          variant={envioEsGratis ? "success" : "secondary"}
-          className="rounded-4 border-0 shadow-sm"
-        >
-          {envioEsGratis ? (
-            <>
-              <strong>Ya tienes envio gratis.</strong>
-              {" "}
-              Superaste los
-              {" "}
-              {formatCurrency(ENVIO_GRATIS_DESDE)}
-              {" "}
-              en tu compra.
-            </>
-          ) : (
-            <>
-              <strong>Envios a todo el pais.</strong>
-              {" "}
-              El envio cuesta
-              {" "}
-              {formatCurrency(ENVIO_FIJO)}
-              {" "}
-              o es gratis desde
-              {" "}
-              {formatCurrency(ENVIO_GRATIS_DESDE)}
-              .
-              {carrito.length > 0 && (
-                <>
-                  {" "}
-                  Te faltan
-                  {" "}
-                  <strong>{formatCurrency(faltanteEnvioGratis)}</strong>
-                  {" "}
-                  para bonificarlo.
-                </>
-              )}
-            </>
-          )}
+        <Alert variant="secondary" className="rounded-4 border-0 shadow-sm">
+          <strong>Envios a todo el pais.</strong>
+          {" "}
+          El envio cuesta
+          {" "}
+          {formatCurrency(ENVIO_FIJO)}
+          .
         </Alert>
 
         <Row className="g-4">
@@ -668,7 +632,7 @@ const Carrito = () => {
                     <h5 className="fw-bold mb-1">Direccion de entrega</h5>
                     <p className="text-muted mb-0">
                       Usaremos estos datos para registrar tu pedido y coordinar
-                      el envio a todo el pais con tarifa fija o gratis segun el total.
+                      el envio a todo el pais con tarifa fija de {formatCurrency(ENVIO_FIJO)}.
                     </p>
                   </div>
                 </div>
@@ -687,20 +651,10 @@ const Carrito = () => {
                   </Alert>
                 )}
 
-                <Alert variant={envioEsGratis ? "success" : "secondary"} className="rounded-4">
-                  {envioEsGratis ? (
-                    <>
-                      Envio nacional bonificado por superar
-                      {" "}
-                      <strong>{formatCurrency(ENVIO_GRATIS_DESDE)}</strong>
-                    </>
-                  ) : (
-                    <>
-                      Envio fijo nacional:
-                      {" "}
-                      <strong>{formatCurrency(ENVIO_FIJO)}</strong>
-                    </>
-                  )}
+                <Alert variant="secondary" className="rounded-4">
+                  Envio fijo nacional:
+                  {" "}
+                  <strong>{formatCurrency(ENVIO_FIJO)}</strong>
                 </Alert>
 
                 <Row className="g-3">
@@ -857,7 +811,7 @@ const Carrito = () => {
                     <div>
                       <h5 className="fw-bold mb-1">Resumen de compra</h5>
                       <p className="text-muted mb-0">
-                        Este es el total final con el envio actualizado segun tu compra.
+                        Este es el total final con el envio fijo incluido.
                       </p>
                     </div>
                   </div>
@@ -869,7 +823,7 @@ const Carrito = () => {
 
                   <div className="d-flex justify-content-between mb-2">
                     <span className="text-muted">Envio</span>
-                    <span>{envioEsGratis ? "Gratis" : formatCurrency(costoEnvio)}</span>
+                    <span>{formatCurrency(costoEnvio)}</span>
                   </div>
 
                   <hr />
@@ -938,9 +892,7 @@ const Carrito = () => {
                     El pago se procesa en Checkout Pro de Mercado Pago y el pedido
                     queda registrado con
                     {" "}
-                    {envioEsGratis
-                      ? "envio gratis."
-                      : `envio nacional de ${formatCurrency(ENVIO_FIJO)}.`}
+                    {`envio nacional de ${formatCurrency(ENVIO_FIJO)}.`}
                   </p>
                 </Card.Body>
               </Card>
