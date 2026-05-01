@@ -86,7 +86,7 @@ export default function ModalPedidoAdmin({
       dialogClassName="admin-modal-dialog"
     >
       <Modal.Header closeButton>
-        <Modal.Title>Gestion del pedido</Modal.Title>
+        <Modal.Title>Gestión del pedido</Modal.Title>
       </Modal.Header>
 
       <Modal.Body>
@@ -145,7 +145,7 @@ export default function ModalPedidoAdmin({
 
           <Col md={6}>
             <div className="admin-modal-card p-3 rounded border bg-light h-100">
-              <small className="text-muted d-block mb-1">Envio</small>
+              <small className="text-muted d-block mb-1">Envío</small>
               <div className="fw-bold">{obtenerTextoTipoEnvioPedido(pedido)}</div>
               {tipoEnvio === "andreani_sucursal" ? (
                 <div className="text-muted small mt-2">
@@ -153,7 +153,7 @@ export default function ModalPedidoAdmin({
                 </div>
               ) : (
                 <div className="text-muted small mt-2">
-                  Direccion: {pedido.envio?.domicilio || pedido.datosEnvio?.domicilio || "-"}
+                  Dirección: {pedido.envio?.domicilio || pedido.datosEnvio?.domicilio || "-"}
                 </div>
               )}
               <div className="text-muted small">
@@ -260,7 +260,7 @@ export default function ModalPedidoAdmin({
                   </Form.Select>
                 </FloatingLabel>
                 <div className="small text-muted mt-2">
-                  Puedes aprobar o rechazar manualmente pagos por transferencia.
+                  Podés aprobar o rechazar manualmente pagos por transferencia.
                 </div>
               </Col>
             )}
@@ -277,7 +277,7 @@ export default function ModalPedidoAdmin({
                 </div>
               )}
               <div className="small text-muted">
-                Envio: {formatCurrency(obtenerCostoEnvioPedido(pedido))}
+                Envío: {formatCurrency(obtenerCostoEnvioPedido(pedido))}
               </div>
               <div className="fw-bold">
                 Total: {formatCurrency(pedido.total)}

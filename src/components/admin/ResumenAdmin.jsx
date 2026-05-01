@@ -3,31 +3,31 @@ import { Card, Col, Row } from "react-bootstrap";
 const TARJETAS_RESUMEN = [
   {
     clave: "productosTotales",
-    titulo: "Productos Totales",
+    titulo: "Productos totales",
     icono: "bi-box-seam",
     claseColor: "bg-primary bg-opacity-10 text-primary",
   },
   {
     clave: "productosSinStock",
-    titulo: "Sin Stock",
+    titulo: "Sin stock",
     icono: "bi-exclamation-triangle-fill",
     claseColor: "bg-danger bg-opacity-10 text-danger",
   },
   {
     clave: "usuariosActivos",
-    titulo: "Usuarios Activos",
+    titulo: "Usuarios activos",
     icono: "bi-people-fill",
     claseColor: "bg-success bg-opacity-10 text-success",
   },
   {
     clave: "pedidosEnGestion",
-    titulo: "Pedidos en Gestion",
+    titulo: "Pedidos en gestión",
     icono: "bi-receipt-cutoff",
     claseColor: "bg-warning bg-opacity-10 text-warning",
   },
   {
     clave: "pedidosPendientesPago",
-    titulo: "Pendientes de Pago",
+    titulo: "Pendientes de pago",
     icono: "bi-hourglass-split",
     claseColor: "bg-secondary bg-opacity-10 text-secondary",
   },

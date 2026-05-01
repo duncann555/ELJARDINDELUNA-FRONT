@@ -41,13 +41,13 @@ export default function RecuperarPassword() {
       setError("");
       setSuccessMessage(
         data?.mensaje ||
-          "Si el email existe, te enviaremos un enlace para restablecer tu contrasena.",
+          "Si el email existe, te enviaremos un enlace para restablecer tu contraseña.",
       );
     } catch (requestError) {
       setSuccessMessage("");
       setError(
         requestError.message ||
-          "No se pudo iniciar la recuperacion de contrasena.",
+          "No se pudo iniciar la recuperación de contraseña.",
       );
     } finally {
       setLoading(false);
@@ -57,16 +57,16 @@ export default function RecuperarPassword() {
   return (
     <LayoutRecuperacion
       eyebrow="Acceso seguro"
-      title="Recuperar contrasena"
-      subtitle="Te ayudamos a volver a entrar sin salir del estilo natural y calido de la tienda."
+      title="Recuperar contraseña"
+      subtitle="Te ayudamos a volver a entrar sin salir del estilo natural y cálido de la tienda."
       infoTitle="Te enviamos un enlace privado"
-      infoText="Escribe el email de tu cuenta y te mandaremos un enlace para restablecer la contrasena con tranquilidad."
-      infoNote="Si no ves el correo en unos minutos, revisa Spam o Promociones."
+      infoText="Escribí el email de tu cuenta y te mandaremos un enlace para restablecer la contraseña con tranquilidad."
+      infoNote="Si no ves el correo en unos minutos, revisá Spam o Promociones."
       infoIcon="bi-envelope-paper-heart"
     >
       <div className="text-center mb-4">
         <p className="recovery-form-kicker mb-2">Restablecer acceso</p>
-        <h2 className="font-playfair fw-bold mb-2">Recuperar contrasena</h2>
+        <h2 className="font-playfair fw-bold mb-2">Recuperar contraseña</h2>
         <p className="text-muted mb-0">
           Te enviaremos un enlace para restablecer tu clave.
         </p>
@@ -88,7 +88,7 @@ export default function RecuperarPassword() {
         <FloatingLabel label="Email" className="mb-3">
           <Form.Control
             type="email"
-            placeholder="Email"
+            placeholder=" "
             className="ml-input"
             autoComplete="email"
             minLength={6}
@@ -120,7 +120,7 @@ export default function RecuperarPassword() {
       </Form>
 
       <div className="text-center mt-4 pt-3 border-top recovery-footer-links">
-        <p className="mb-2 small text-muted">Recordaste tu contrasena?</p>
+        <p className="mb-2 small text-muted">¿Recordaste tu contraseña?</p>
         <Link to="/" className="text-decoration-none fw-semibold">
           Volver al inicio para ingresar
         </Link>

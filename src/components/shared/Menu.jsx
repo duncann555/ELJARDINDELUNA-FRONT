@@ -120,7 +120,7 @@ function Menu() {
         <Container>
           <div className="d-flex d-lg-none w-100 justify-content-between align-items-center">
             <Navbar.Brand as={Link} to="/" onClick={() => setExpanded(false)}>
-              <img src={LOGO} alt="El Jardin de Luna" height="52" />
+              <img src={LOGO} alt="El Jardín de Luna" height="52" />
             </Navbar.Brand>
 
             <div className="d-flex gap-3 align-items-center">
@@ -136,7 +136,7 @@ function Menu() {
           <Row className="d-none d-lg-flex w-100 align-items-center m-0 flex-nowrap navbar-desktop-row">
             <Col lg="auto" className="navbar-brand-col p-0">
               <Navbar.Brand as={Link} to="/">
-                <img src={LOGO} alt="El Jardin de Luna" height="72" />
+                <img src={LOGO} alt="El Jardín de Luna" height="72" />
               </Navbar.Brand>
             </Col>
 
@@ -171,12 +171,12 @@ function Menu() {
                     align="end"
                     className="shadow border-0 rounded-3 mt-2"
                   >
-                    <Dropdown.Header>Mi Cuenta</Dropdown.Header>
+                    <Dropdown.Header>Mi cuenta</Dropdown.Header>
 
                     {esAdmin && (
                       <Dropdown.Item as={Link} to="/admin">
                         <i className="bi bi-speedometer2 me-2"></i>
-                        Panel Admin
+                        Panel admin
                       </Dropdown.Item>
                     )}
 
@@ -190,7 +190,7 @@ function Menu() {
                       className="text-danger"
                     >
                       <i className="bi bi-box-arrow-right me-2"></i>
-                      Cerrar sesion
+                      Cerrar sesión
                     </Dropdown.Item>
                   </Dropdown.Menu>
                 </Dropdown>
@@ -249,7 +249,7 @@ function Menu() {
                     onClick={() => setExpanded(false)}
                   >
                     <i className="bi bi-speedometer2 me-2"></i>
-                    Panel de administracion
+                    Panel de administración
                   </NavLink>
                 )}
 
@@ -274,7 +274,7 @@ function Menu() {
                   onClick={handleLogout}
                 >
                   <i className="bi bi-box-arrow-right"></i>
-                  Cerrar sesion ({user.nombre})
+                  Cerrar sesión ({user.nombre})
                 </Button>
               ) : (
                 <Button

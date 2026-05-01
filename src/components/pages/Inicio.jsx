@@ -6,7 +6,11 @@ import "../../styles/inicio.css";
 
 import { useCarrito } from "../../context/CarritoContext";
 import { useTheme } from "../../context/ThemeContext";
-import { formatCurrency, optimizarImagenCloudinary } from "../../helpers/app";
+import {
+  formatCurrency,
+  obtenerCategoriaVisible,
+  optimizarImagenCloudinary,
+} from "../../helpers/app";
 import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
 import { obtenerProductosPublicos } from "../../helpers/productosApi";
 
@@ -18,25 +22,25 @@ const CAROUSEL_IMAGES = [
     src:
       import.meta.env.VITE_CAROUSEL_1_URL ||
       "https://res.cloudinary.com/dd9wzjf1q/image/upload/v1777613550/el_jardin_de_luna/carousel/carousel1.png",
-    alt: "Banner principal El Jardin de Luna 1",
+    alt: "Banner principal El Jardín de Luna 1",
   },
   {
     src:
       import.meta.env.VITE_CAROUSEL_2_URL ||
       "https://res.cloudinary.com/dd9wzjf1q/image/upload/v1777613551/el_jardin_de_luna/carousel/carousel2.png",
-    alt: "Banner principal El Jardin de Luna 2",
+    alt: "Banner principal El Jardín de Luna 2",
   },
   {
     src:
       import.meta.env.VITE_CAROUSEL_3_URL ||
       "https://res.cloudinary.com/dd9wzjf1q/image/upload/v1777613552/el_jardin_de_luna/carousel/carousel3.png",
-    alt: "Banner principal El Jardin de Luna 3",
+    alt: "Banner principal El Jardín de Luna 3",
   },
   {
     src:
       import.meta.env.VITE_CAROUSEL_4_URL ||
       "https://res.cloudinary.com/dd9wzjf1q/image/upload/v1777613553/el_jardin_de_luna/carousel/carousel4.png",
-    alt: "Banner principal El Jardin de Luna 4",
+    alt: "Banner principal El Jardín de Luna 4",
   },
 ].map((image) => ({
   ...image,
@@ -106,7 +110,7 @@ const CardProducto = ({ producto }) => {
         />
 
         <span className="badge producto-categoria-badge position-absolute bottom-0 start-0 m-2 z-1">
-          {categoria}
+          {obtenerCategoriaVisible(categoria)}
         </span>
       </div>
 
@@ -213,7 +217,7 @@ export default function Inicio() {
     return (
       <div className="text-center py-5 mt-5">
         <div className="spinner-border text-success" role="status"></div>
-        <p className="mt-2 text-muted">Preparando el jardin...</p>
+        <p className="mt-2 text-muted">Preparando el jardín...</p>
       </div>
     );
   }
@@ -239,10 +243,10 @@ export default function Inicio() {
       </Container>
 
       <Container className="py-4 text-center inicio-intro">
-        <p className="inicio-overline mb-2">Botanica artesanal & bienestar</p>
-        <h1 className="inicio-title font-playfair mb-2">Bienvenidos a El Jardin de Luna</h1>
+        <p className="inicio-overline mb-2">Botánica artesanal & bienestar</p>
+        <h1 className="inicio-title font-playfair mb-2">Bienvenidos a El Jardín de Luna</h1>
         <p className="inicio-subtitle mb-0">
-          Un espacio calido para descubrir rituales botanicos, tinturas y bienestar cotidiano.
+          Un espacio cálido para descubrir rituales botánicos, tinturas y bienestar cotidiano.
         </p>
       </Container>
 
@@ -262,7 +266,7 @@ export default function Inicio() {
 
           return (
             <section key={categoria.id} className="mb-5 text-center">
-              <BannerCategoria texto={`Destacados en ${categoria.nombre}`} />
+              <BannerCategoria texto={`Destacados en ${obtenerCategoriaVisible(categoria.nombre)}`} />
 
               <Carousel
                 interval={null}
@@ -293,15 +297,15 @@ export default function Inicio() {
             <Col xs={12} md={4} className="beneficio-item d-flex align-items-center justify-content-center gap-3">
               <i className="bi bi-credit-card-2-back beneficio-icon"></i>
               <div className="text-start">
-                <h6 className="fw-bold m-0">Hasta 3 cuotas sin interes</h6>
+                <h6 className="fw-bold m-0">Hasta 3 cuotas sin interés</h6>
               </div>
             </Col>
 
             <Col xs={12} md={4} className="beneficio-item d-flex align-items-center justify-content-center gap-3">
               <i className="bi bi-truck beneficio-icon"></i>
               <div className="text-start">
-                <h6 className="fw-bold m-0">Envios a todo el pais</h6>
-                <small className="text-muted">Seguimiento online</small>
+                <h6 className="fw-bold m-0">Envíos a todo el país</h6>
+                <small className="text-muted">Andreani</small>
               </div>
             </Col>
 
@@ -309,7 +313,7 @@ export default function Inicio() {
               <i className="bi bi-flower2 beneficio-icon"></i>
               <div className="text-start">
                 <h6 className="fw-bold m-0">100% Natural</h6>
-                <small className="text-muted">Sin aditivos quimicos</small>
+                <small className="text-muted">Material de primera calidad</small>
               </div>
             </Col>
           </Row>

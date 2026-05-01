@@ -174,7 +174,7 @@ export default function ModalAcceso({ show, onClose }) {
               <FloatingLabel label="Contraseña">
                 <Form.Control
                   type={showPass ? "text" : "password"}
-                  placeholder="Contraseña"
+                  placeholder=" "
                   className="ml-input pe-5"
                   autoComplete="current-password"
                   minLength={PASSWORD_MIN_LENGTH}

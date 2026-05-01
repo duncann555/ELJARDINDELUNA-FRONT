@@ -21,7 +21,7 @@ export const obtenerTextoTipoEnvioPedido = (pedido) => {
     case "andreani_domicilio":
       return "Andreani a domicilio";
     default:
-      return pedido?.envio?.proveedor || "Envio nacional";
+      return pedido?.envio?.proveedor || "Envío nacional";
   }
 };
 
@@ -40,9 +40,9 @@ export const obtenerTextoMetodoPagoPedido = (pedido) =>
 
 export const obtenerTextoEstadoPedido = (estado) => {
   switch (estado) {
-    case "Preparando envÃ­o":
+    case "Preparando envío":
     case "Preparando env\u00edo":
-      return "Preparando envio";
+      return "Preparando envío";
     case "En espera de pago":
     case "Despachado":
     case "Entregado":

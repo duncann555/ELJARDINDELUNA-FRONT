@@ -109,6 +109,11 @@
   color: #8d99a6;
 }
 
+.reg-form-shell .form-floating > .form-control::placeholder {
+  color: transparent;
+  opacity: 0;
+}
+
 .reg-form-shell .form-control:focus::placeholder {
   color: transparent;
 }

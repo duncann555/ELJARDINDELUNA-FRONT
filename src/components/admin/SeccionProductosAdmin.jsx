@@ -1,5 +1,9 @@
 import { Badge, Button, Col, Form, InputGroup, Row, Table } from "react-bootstrap";
-import { formatCurrency, optimizarImagenCloudinary } from "../../helpers/app";
+import {
+  formatCurrency,
+  obtenerCategoriaVisible,
+  optimizarImagenCloudinary,
+} from "../../helpers/app";
 
 export default function SeccionProductosAdmin({
   busqueda,
@@ -16,7 +20,7 @@ export default function SeccionProductosAdmin({
       <Row className="mb-3 g-3">
         <Col md={4}>
           <Button className="w-100 btn-admin-primary" onClick={onNuevoProducto}>
-            + Nuevo Producto
+            + Nuevo producto
           </Button>
         </Col>
 
@@ -38,7 +42,7 @@ export default function SeccionProductosAdmin({
             <tr>
               <th>Imagen</th>
               <th>Nombre</th>
-              <th>Categoria</th>
+              <th>Categoría</th>
               <th>Estado</th>
               <th>Stock</th>
               <th>Precio</th>
@@ -66,7 +70,7 @@ export default function SeccionProductosAdmin({
                   <td className="fw-bold">{producto.nombre}</td>
                   <td>
                     <Badge bg="info" text="dark">
-                      {producto.categoria}
+                      {obtenerCategoriaVisible(producto.categoria)}
                     </Badge>
                   </td>
                   <td>

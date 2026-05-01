@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import "../../styles/footer.css";
 import LOGO from "../../assets/EL_JARDIN_DE_LUNA_FOOTER.png";
 import {
-  CONTACTO_EMAIL,
   CONTACTO_WHATSAPP_LABEL,
   CONTACTO_WHATSAPP_URL,
 } from "../../helpers/contact";
@@ -19,11 +18,11 @@ const Footer = () => {
         <Row className="gy-4">
           <Col xs={12} md={4} className="text-center text-md-start">
             <Link to="/">
-              <img src={LOGO} alt="El Jardin de Luna" className="footer-logo mb-3" />
+              <img src={LOGO} alt="El Jardín de Luna" className="footer-logo mb-3" />
             </Link>
 
             <p className="footer-text">
-              Botanica artesanal y bienestar para volver a lo simple, lo noble y lo
+              Botánica artesanal y bienestar para volver a lo simple, lo noble y lo
               natural con una experiencia de compra serena y cercana.
             </p>
           </Col>
@@ -31,14 +30,14 @@ const Footer = () => {
           <Col xs={12} md={4} className="text-center text-md-start">
             <h5 className="footer-heading">Explorar</h5>
             <ul className="list-unstyled d-grid gap-2 mb-0 footer-links">
-              <li><Link to="/productos">Tienda Online</Link></li>
-              <li><Link to="/nosotros">Nuestra Historia</Link></li>
+              <li><Link to="/productos">Tienda online</Link></li>
+              <li><Link to="/nosotros">Nuestra historia</Link></li>
               <li>
                 <a href={CONTACTO_WHATSAPP_URL} target="_blank" rel="noreferrer">
                   WhatsApp
                 </a>
               </li>
-              <li><Link to="/register">Acceso Clientes</Link></li>
+              <li><Link to="/register">Acceso clientes</Link></li>
             </ul>
           </Col>
 
@@ -50,12 +49,8 @@ const Footer = () => {
               {CONTACTO_WHATSAPP_LABEL}
             </p>
             <p className="mb-3 d-flex align-items-center justify-content-center justify-content-md-start">
-              <i className="bi bi-envelope-fill me-2 icon-brand"></i>
-              {CONTACTO_EMAIL}
-            </p>
-            <p className="mb-3 d-flex align-items-center justify-content-center justify-content-md-start">
               <i className="bi bi-geo-alt-fill me-2 icon-brand"></i>
-              Tucuman, Argentina
+              Tucumán, Argentina
             </p>
 
             <div className="footer-socials d-flex gap-3 mt-3 justify-content-center justify-content-md-start flex-wrap">
@@ -68,7 +63,7 @@ const Footer = () => {
 
       <div className="footer-bottom py-3 text-center">
         <small>
-          &copy; {currentYear} <strong>El Jardin de Luna</strong> · Todos los derechos reservados.
+          &copy; {currentYear} <strong>El Jardín de Luna</strong> · Todos los derechos reservados.
         </small>
       </div>
     </footer>

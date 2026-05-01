@@ -118,7 +118,7 @@ export default function SocialAuthSection({ onSuccess, onPhoneStepChange }) {
     } catch (socialError) {
       setError(
         socialError.message ||
-          "No se pudo guardar tu numero de WhatsApp.",
+          "No se pudo guardar tu número de WhatsApp.",
       );
     } finally {
       setSavingPhone(false);
@@ -129,7 +129,7 @@ export default function SocialAuthSection({ onSuccess, onPhoneStepChange }) {
     <>
       <div className="social-auth-shell mt-4">
         <div className="social-auth-divider">
-          <span>o continua con</span>
+          <span>o continuá con</span>
         </div>
 
         {error && !pendingAuth && (
@@ -181,10 +181,10 @@ export default function SocialAuthSection({ onSuccess, onPhoneStepChange }) {
             <div className="text-center mb-4">
               <div className="ml-brand-badge mb-3">WhatsApp</div>
               <h3 className="font-playfair fw-bold mb-2 ml-title">
-                Falta un paso mas
+                Falta un paso más
               </h3>
               <p className="small mb-0 ml-subtitle">
-                Tu cuenta de Google ya fue validada. Solo falta tu numero de
+                Tu cuenta de Google ya fue validada. Solo falta tu número de
                 WhatsApp para terminar.
               </p>
             </div>
@@ -196,11 +196,11 @@ export default function SocialAuthSection({ onSuccess, onPhoneStepChange }) {
             )}
 
             <Form onSubmit={handlePhoneSubmit} noValidate>
-              <FloatingLabel label="Numero de WhatsApp">
+              <FloatingLabel label="Número de WhatsApp">
                 <Form.Control
                   type="text"
                   inputMode="numeric"
-                  placeholder="Numero de WhatsApp"
+                  placeholder=" "
                   className="ml-input"
                   minLength={8}
                   maxLength={15}

@@ -18,11 +18,19 @@
 }
 
 .nosotros-logo {
-  width: 82px;
-  height: 82px;
+  width: 104px;
+  height: 104px;
   object-fit: contain;
-  border-radius: 22px;
-  box-shadow: 0 20px 40px rgba(29, 48, 70, 0.12);
+  flex: 0 0 auto;
+  padding: 0.55rem;
+  border: 1px solid rgba(45, 68, 93, 0.14);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 242, 232, 0.98) 100%);
+  box-shadow:
+    0 20px 40px rgba(29, 48, 70, 0.14),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.74);
+  filter: drop-shadow(0 8px 14px rgba(29, 48, 70, 0.08));
 }
 
 .nosotros-overline {
@@ -133,8 +141,10 @@
 
 @media (max-width: 768px) {
   .nosotros-logo {
-    width: 64px;
-    height: 64px;
+    width: 76px;
+    height: 76px;
+    padding: 0.4rem;
+    border-radius: 18px;
   }
 
   .nosotros-wrapper {

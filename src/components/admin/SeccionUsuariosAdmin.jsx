@@ -20,9 +20,9 @@ export default function SeccionUsuariosAdmin({
     <div className="admin-section-card bg-white p-4 rounded shadow-sm">
       <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
         <div>
-          <h5 className="fw-bold mb-1">Gestion de clientes</h5>
+          <h5 className="fw-bold mb-1">Gestión de clientes</h5>
           <p className="text-muted mb-0">
-            Busca usuarios y administra su acceso desde el panel.
+            Buscá usuarios y administrá su acceso desde el panel.
           </p>
         </div>
 
@@ -91,7 +91,7 @@ export default function SeccionUsuariosAdmin({
                           {usuario.telefono}
                         </a>
                       ) : (
-                        <span className="text-muted">Sin telefono</span>
+                        <span className="text-muted">Sin teléfono</span>
                       )}
                     </td>
                     <td>
@@ -123,7 +123,7 @@ export default function SeccionUsuariosAdmin({
                           onClick={() => onCambiarEstadoUsuario(usuario)}
                           title={
                             esCuentaProtegida
-                              ? "No puedes cambiar el estado de esta cuenta"
+                              ? "No podés cambiar el estado de esta cuenta"
                               : ""
                           }
                         >
@@ -154,7 +154,7 @@ export default function SeccionUsuariosAdmin({
                           onClick={() => onEliminarUsuario(usuario)}
                           title={
                             esCuentaProtegida
-                              ? "No puedes eliminar esta cuenta"
+                              ? "No podés eliminar esta cuenta"
                               : ""
                           }
                         >
@@ -169,7 +169,7 @@ export default function SeccionUsuariosAdmin({
             ) : (
               <tr>
                 <td colSpan="6" className="text-center py-4 text-muted">
-                  No se encontraron usuarios para esa busqueda.
+                  No se encontraron usuarios para esa búsqueda.
                 </td>
               </tr>
             )}

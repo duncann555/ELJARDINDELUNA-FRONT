@@ -30,9 +30,9 @@ const normalizeDigits = (value) => String(value || "").replace(/\D/g, "");
 const validateAreaCode = (value) => {
   const digits = normalizeDigits(value);
 
-  if (!digits) return "El codigo de area es obligatorio";
+  if (!digits) return "El código de área es obligatorio";
   if (digits.length < 2 || digits.length > 5) {
-    return "Ingresa un codigo de area valido";
+    return "Ingresá un código de área válido";
   }
 
   return "";
@@ -41,9 +41,9 @@ const validateAreaCode = (value) => {
 const validatePhoneNumber = (value) => {
   const digits = normalizeDigits(value);
 
-  if (!digits) return "El numero de WhatsApp es obligatorio";
+  if (!digits) return "El número de WhatsApp es obligatorio";
   if (digits.length < 6 || digits.length > 10) {
-    return "Ingresa un numero de WhatsApp valido";
+    return "Ingresá un número de WhatsApp válido";
   }
 
   return "";
@@ -176,7 +176,7 @@ export default function Register() {
           <p className="reg-overline mb-2">Crear cuenta</p>
           <h1 className="reg-title font-playfair mb-3">Registrarse</h1>
           <p className="reg-subtitle mb-0">
-            Crea tu cuenta para comprar con calma, guardar tu sesion y seguir tu pedido.
+            Creá tu cuenta para comprar con calma, guardar tu sesión y seguir tu pedido.
           </p>
         </section>
 
@@ -198,7 +198,7 @@ export default function Register() {
                       <FloatingLabel label="Nombre">
                         <Form.Control
                           type="text"
-                          placeholder="Nombre"
+                          placeholder=" "
                           className="ml-input"
                           minLength={2}
                           maxLength={50}
@@ -218,7 +218,7 @@ export default function Register() {
                       <FloatingLabel label="Apellido">
                         <Form.Control
                           type="text"
-                          placeholder="Apellido"
+                          placeholder=" "
                           className="ml-input"
                           minLength={2}
                           maxLength={50}
@@ -238,7 +238,7 @@ export default function Register() {
                       <FloatingLabel label="Email">
                         <Form.Control
                           type="email"
-                          placeholder="Email"
+                          placeholder=" "
                           className="ml-input"
                           autoComplete="email"
                           minLength={6}
@@ -261,7 +261,7 @@ export default function Register() {
 
                     <Col md={4}>
                       <Form.Group>
-                        <Form.Label className="reg-field-label">Codigo de area</Form.Label>
+                        <Form.Label className="reg-field-label">Código de área</Form.Label>
                         <Form.Control
                           type="text"
                           inputMode="numeric"
@@ -285,7 +285,7 @@ export default function Register() {
 
                     <Col md={8}>
                       <Form.Group>
-                        <Form.Label className="reg-field-label">Numero de WhatsApp</Form.Label>
+                        <Form.Label className="reg-field-label">Número de WhatsApp</Form.Label>
                         <Form.Control
                           type="text"
                           inputMode="numeric"
@@ -311,7 +311,7 @@ export default function Register() {
                       <FloatingLabel label="Contraseña">
                         <Form.Control
                           type={showPasswords ? "text" : "password"}
-                          placeholder="Contraseña"
+                          placeholder=" "
                           className="ml-input"
                           autoComplete="new-password"
                           minLength={PASSWORD_MIN_LENGTH}
@@ -334,7 +334,7 @@ export default function Register() {
                       <FloatingLabel label="Repetir contraseña">
                         <Form.Control
                           type={showPasswords ? "text" : "password"}
-                          placeholder="Repetir contraseña"
+                          placeholder=" "
                           className="ml-input"
                           autoComplete="new-password"
                           minLength={PASSWORD_MIN_LENGTH}
@@ -375,9 +375,9 @@ export default function Register() {
                 </Form>
 
                 <div className="text-center mt-4 pt-3 border-top">
-                  <p className="mb-2 small text-muted">Ya tenes cuenta?</p>
+                  <p className="mb-2 small text-muted">¿Ya tenés cuenta?</p>
                   <Link to="/" className="text-decoration-none fw-semibold">
-                    Inicia sesion desde el menu
+                    Iniciá sesión desde el menú
                   </Link>
                 </div>
               </div>

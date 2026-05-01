@@ -51,7 +51,7 @@ const construirResumenEnvio = (pedido) => {
     partes.push(`CP ${codigoPostal}`);
   }
 
-  return partes.join(", ") || "Sin direccion registrada";
+  return partes.join(", ") || "Sin dirección registrada";
 };
 
 function TarjetaPedido({ pedido, index }) {
@@ -86,7 +86,7 @@ function TarjetaPedido({ pedido, index }) {
             <div className="text-md-end">
               <div className="fw-bold">{formatCurrency(pedido?.total || 0)}</div>
               <small className="text-muted">
-                {totalProductos} producto(s)
+                {totalProductos} productos
               </small>
             </div>
           </div>
@@ -157,7 +157,7 @@ function TarjetaPedido({ pedido, index }) {
                 )}
 
                 <div className="d-flex justify-content-between mb-2">
-                  <span className="text-muted">Envio</span>
+                  <span className="text-muted">Envío</span>
                   <span className="fw-semibold">
                     {formatCurrency(obtenerCostoEnvioPedido(pedido))}
                   </span>
@@ -173,7 +173,7 @@ function TarjetaPedido({ pedido, index }) {
                 <hr />
 
                 <div className="mb-2">
-                  <small className="text-muted d-block mb-1">Metodo</small>
+                  <small className="text-muted d-block mb-1">Método</small>
                   <div className="fw-semibold">
                     {obtenerTextoMetodoPagoPedido(pedido)}
                   </div>
@@ -189,12 +189,12 @@ function TarjetaPedido({ pedido, index }) {
                 <div className="mb-2">
                   <small className="text-muted d-block mb-1">Proveedor</small>
                   <div className="fw-semibold">
-                    {pedido?.envio?.proveedor || "Envio nacional"}
+                    {pedido?.envio?.proveedor || "Envío nacional"}
                   </div>
                 </div>
 
                 <div>
-                  <small className="text-muted d-block mb-1">Direccion</small>
+                  <small className="text-muted d-block mb-1">Dirección</small>
                   <div className="fw-semibold">
                     {construirResumenEnvio(pedido)}
                   </div>
@@ -322,8 +322,8 @@ export default function MisCompras() {
                     <h1 className="font-playfair fw-bold mb-2">Mis compras</h1>
                     <p className="text-muted mb-0">
                       {user?.nombre
-                        ? `${user.nombre}, aqui puedes revisar todas las compras que fuiste realizando en el tiempo.`
-                        : "Aqui puedes revisar todas las compras que realizaste en el tiempo."}
+                        ? `${user.nombre}, acá podés revisar todas las compras que fuiste realizando en el tiempo.`
+                        : "Acá podés revisar todas las compras que realizaste en el tiempo."}
                     </p>
                   </div>
 
@@ -353,9 +353,9 @@ export default function MisCompras() {
                   <div className="display-5 text-muted mb-3">
                     <i className="bi bi-bag"></i>
                   </div>
-                  <h4 className="fw-bold mb-2">Todavia no tienes compras registradas</h4>
+                  <h4 className="fw-bold mb-2">Todavía no tenés compras registradas</h4>
                   <p className="text-muted mb-4">
-                    Cuando completes un pedido, te va a aparecer aqui con su fecha,
+                    Cuando completes un pedido, te va a aparecer acá con su fecha,
                     estado y detalle.
                   </p>
                   <Button

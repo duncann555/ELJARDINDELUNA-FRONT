@@ -75,7 +75,7 @@ export default function RestablecerPassword() {
     event.preventDefault();
 
     if (!token) {
-      setError("El enlace de recuperacion no es valido o esta incompleto.");
+      setError("El enlace de recuperación no es válido o está incompleto.");
       return;
     }
 
@@ -96,12 +96,12 @@ export default function RestablecerPassword() {
         passwordConfirm: "",
       });
       setSuccessMessage(
-        data?.mensaje || "La contrasena se actualizo correctamente.",
+        data?.mensaje || "La contraseña se actualizó correctamente.",
       );
     } catch (resetError) {
       setSuccessMessage("");
       setError(
-        resetError.message || "No se pudo restablecer la contrasena.",
+        resetError.message || "No se pudo restablecer la contraseña.",
       );
     } finally {
       setLoading(false);
@@ -111,24 +111,24 @@ export default function RestablecerPassword() {
   return (
     <LayoutRecuperacion
       eyebrow="Nueva clave"
-      title="Restablecer contrasena"
+      title="Restablecer contraseña"
       subtitle="Define una nueva clave para seguir comprando con normalidad dentro del sitio."
       infoTitle="Tu enlace sigue un camino seguro"
-      infoText="Cuando guardes la nueva contrasena, el enlace actual dejara de servir y podras ingresar otra vez."
+      infoText="Cuando guardes la nueva contraseña, el enlace actual dejará de servir y podrás ingresar otra vez."
       infoNote="Usa una clave de al menos 8 caracteres."
       infoIcon="bi-shield-lock"
     >
       <div className="text-center mb-4">
         <p className="recovery-form-kicker mb-2">Actualizar acceso</p>
-        <h2 className="font-playfair fw-bold mb-2">Restablecer contrasena</h2>
+        <h2 className="font-playfair fw-bold mb-2">Restablecer contraseña</h2>
         <p className="text-muted mb-0">
-          Ingresa tu nueva contrasena para continuar.
+          Ingresá tu nueva contraseña para continuar.
         </p>
       </div>
 
       {!token && (
         <Alert variant="danger" className="small text-center">
-          El enlace de recuperacion no es valido o esta incompleto.
+          El enlace de recuperación no es válido o está incompleto.
         </Alert>
       )}
 
@@ -146,10 +146,10 @@ export default function RestablecerPassword() {
 
       <Form onSubmit={handleSubmit} noValidate>
         <div className="mb-3">
-          <FloatingLabel label="Nueva contrasena">
+          <FloatingLabel label="Nueva contraseña">
             <Form.Control
               type={showPasswords ? "text" : "password"}
-              placeholder="Nueva contrasena"
+              placeholder=" "
               className="ml-input"
               autoComplete="new-password"
               minLength={PASSWORD_MIN_LENGTH}
@@ -168,10 +168,10 @@ export default function RestablecerPassword() {
         </div>
 
         <div className="mb-3">
-          <FloatingLabel label="Repetir contrasena">
+          <FloatingLabel label="Repetir contraseña">
             <Form.Control
               type={showPasswords ? "text" : "password"}
-              placeholder="Repetir contrasena"
+              placeholder=" "
               className="ml-input"
               autoComplete="new-password"
               minLength={PASSWORD_MIN_LENGTH}
@@ -194,7 +194,7 @@ export default function RestablecerPassword() {
         <Form.Check
           type="checkbox"
           id="reset-show-passwords"
-          label="Mostrar contrasenas"
+          label="Mostrar contraseñas"
           className="mb-3"
           checked={showPasswords}
           onChange={(event) => setShowPasswords(event.target.checked)}
@@ -206,7 +206,7 @@ export default function RestablecerPassword() {
           className="ml-btn-primary w-100"
           disabled={loading || !token || Boolean(successMessage)}
         >
-          {loading ? "Guardando..." : "Guardar nueva contrasena"}
+          {loading ? "Guardando..." : "Guardar nueva contraseña"}
         </Button>
       </Form>
 

@@ -160,6 +160,18 @@ export const formatDate = (
 ) =>
   value ? new Date(value).toLocaleString("es-AR", options) : "-";
 
+const CATEGORY_VISIBLE_LABELS = {
+  "Tinturas Madres": "Tinturas madres",
+  "Esencias Aromaticas": "Esencias aromáticas",
+  "Hierbas Naturales": "Hierbas naturales",
+  "Cosmetica Natural": "Cosmética natural",
+};
+
+export const obtenerCategoriaVisible = (value) => {
+  const category = String(value || "").trim();
+  return CATEGORY_VISIBLE_LABELS[category] || category;
+};
+
 export const optimizarImagenCloudinary = (
   url,
   transformation = "f_auto,q_auto",

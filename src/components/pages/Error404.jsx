@@ -21,8 +21,8 @@ export default function Error404() {
           </h2>
 
           <p className="text-muted mb-5 mx-auto" style={{ maxWidth: "450px" }}>
-            El sendero que buscas no existe o cambio de lugar. No te preocupes,
-            siempre podes volver a la naturaleza.
+            El sendero que buscás no existe o cambió de lugar. No te preocupes,
+            siempre podés volver a la naturaleza.
           </p>
 
           <div className="d-flex gap-3 justify-content-center flex-wrap">
@@ -31,14 +31,14 @@ export default function Error404() {
               onClick={() => navigate(-1)}
             >
               <i className="bi bi-arrow-left me-2"></i>
-              Volver atras
+              Volver atrás
             </Button>
 
             <Button
               className="btn-brand rounded-pill px-4 py-2 fw-bold"
               onClick={() => navigate("/", { replace: true })}
             >
-              Ir al Inicio
+              Ir al inicio
               <i className="bi bi-house-door-fill ms-2"></i>
             </Button>
           </div>

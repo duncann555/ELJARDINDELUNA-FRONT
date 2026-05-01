@@ -22,7 +22,7 @@ import {
 import { solicitarApi } from "../../helpers/clienteApi";
 import "../../styles/admin.css";
 
-const mostrarExito = (mensaje) => Swal.fire("Exito", mensaje, "success");
+const mostrarExito = (mensaje) => Swal.fire("Éxito", mensaje, "success");
 const mostrarError = (mensaje) => Swal.fire("Error", mensaje, "error");
 
 const mostrarErroresValidacion = async (errores) => {
@@ -70,10 +70,10 @@ export default function Admin() {
       logout();
 
       await Swal.fire({
-        title: "Sesion vencida",
+        title: "Sesión vencida",
         text:
           datos?.mensaje ||
-          "Tu sesion ya no es valida. Ingresa nuevamente para seguir administrando productos.",
+          "Tu sesión ya no es válida. Ingresá nuevamente para seguir administrando productos.",
         icon: "info",
         confirmButtonText: "Entendido",
       });
@@ -297,11 +297,11 @@ export default function Admin() {
     if (!pedidoSeleccionado?._id) return;
 
     const result = await Swal.fire({
-      title: "Eliminar pedido?",
-      text: "Se eliminara el pedido y, si corresponde, se restaurara el stock. Esta accion no se puede deshacer.",
+      title: "¿Eliminar pedido?",
+      text: "Se eliminará el pedido y, si corresponde, se restaurará el stock. Esta acción no se puede deshacer.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Si, eliminar",
+      confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
       confirmButtonColor: "#d33",
     });
@@ -340,10 +340,10 @@ export default function Admin() {
 
   const eliminarProducto = async (id) => {
     const result = await Swal.fire({
-      title: "Borrar producto?",
+      title: "¿Borrar producto?",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Si, borrar",
+      confirmButtonText: "Sí, borrar",
       cancelButtonText: "Cancelar",
     });
 
@@ -380,14 +380,14 @@ export default function Admin() {
     const accion = nuevoEstado === "Inactivo" ? "Suspender" : "Mostrar";
 
     const result = await Swal.fire({
-      title: `${accion} producto?`,
+      title: `¿${accion} producto?`,
       text:
         nuevoEstado === "Inactivo"
-          ? `${producto.nombre} dejara de verse en Inicio y en Productos.`
-          : `${producto.nombre} volvera a mostrarse en Inicio y en Productos.`,
+          ? `${producto.nombre} dejará de verse en Inicio y en Productos.`
+          : `${producto.nombre} volverá a mostrarse en Inicio y en Productos.`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: `Si, ${accion.toLowerCase()}`,
+      confirmButtonText: `Sí, ${accion.toLowerCase()}`,
       cancelButtonText: "Cancelar",
     });
 
@@ -434,13 +434,13 @@ export default function Admin() {
     const result = await Swal.fire({
       title:
         nuevoEstado === "Suspendido"
-          ? "Suspender usuario?"
-          : "Reactivar usuario?",
-      text: `${usuario.nombre} ${usuario.apellido} pasara a estado ${nuevoEstado}.`,
+          ? "¿Suspender usuario?"
+          : "¿Reactivar usuario?",
+      text: `${usuario.nombre} ${usuario.apellido} pasará a estado ${nuevoEstado}.`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonText:
-        nuevoEstado === "Suspendido" ? "Si, suspender" : "Si, reactivar",
+        nuevoEstado === "Suspendido" ? "Sí, suspender" : "Sí, reactivar",
       cancelButtonText: "Cancelar",
     });
 
@@ -482,11 +482,11 @@ export default function Admin() {
     const usuarioId = obtenerIdUsuario(usuario);
 
     const result = await Swal.fire({
-      title: "Eliminar usuario?",
-      text: `Se eliminara la cuenta de ${usuario.nombre} ${usuario.apellido}. Esta accion no se puede deshacer.`,
+      title: "¿Eliminar usuario?",
+      text: `Se eliminará la cuenta de ${usuario.nombre} ${usuario.apellido}. Esta acción no se puede deshacer.`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Si, eliminar",
+      confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
       confirmButtonColor: "#d33",
     });
@@ -575,7 +575,7 @@ export default function Admin() {
   return (
     <Container fluid className="admin-panel py-5 px-lg-5 bg-light min-vh-100">
       <h2 className="fw-bold mb-4 font-playfair">
-        Panel de Control - EL JARDIN DE LUNA
+        Panel de control - EL JARDÍN DE LUNA
       </h2>
 
       <ResumenAdmin

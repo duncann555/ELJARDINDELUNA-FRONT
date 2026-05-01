@@ -14,7 +14,11 @@ import Swal from "sweetalert2";
 import "../../styles/productos.css";
 
 import { useCarrito } from "../../context/CarritoContext";
-import { formatCurrency, optimizarImagenCloudinary } from "../../helpers/app";
+import {
+  formatCurrency,
+  obtenerCategoriaVisible,
+  optimizarImagenCloudinary,
+} from "../../helpers/app";
 import { solicitarJsonApi } from "../../helpers/clienteApi";
 import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
 import { obtenerProductosPublicos } from "../../helpers/productosApi";
@@ -49,7 +53,7 @@ function SidebarContent({ categorias, categoriaActiva, setCategoriaActiva, onSel
           className="border-0 rounded-3 mb-1 d-flex align-items-center gap-2 py-2 cursor-pointer"
         >
           <i className="bi bi-tag-fill"></i>
-          {categoria}
+          {obtenerCategoriaVisible(categoria)}
         </ListGroup.Item>
       ))}
     </ListGroup>
@@ -129,7 +133,7 @@ function CardProducto({ producto }) {
         />
 
         <Badge className="position-absolute bottom-0 start-0 productos-categoria-badge">
-          {categoria}
+          {obtenerCategoriaVisible(categoria)}
         </Badge>
 
         {sinStock && (
@@ -148,7 +152,7 @@ function CardProducto({ producto }) {
         </Card.Title>
 
         <Card.Text className="small mb-3 productos-card-note">
-          Presentacion 50 ml
+          Presentación 50 ml
         </Card.Text>
 
         <div className="fs-4 fw-bold mb-3 productos-card-price">
@@ -256,11 +260,11 @@ export default function Productos() {
       <Container>
         <div className="d-md-none mb-4">
           <div className="text-center mb-3 productos-mobile-header">
-            <h2 className="fw-bold text-success">Nuestros Productos</h2>
+            <h2 className="fw-bold text-success">Nuestros productos</h2>
             <p className="text-muted">
               {terminoBusqueda
                 ? `Resultados para "${terminoBusqueda}"`
-                : "Explora nuestro catalogo natural"}
+                : "Explorá nuestro catálogo natural"}
             </p>
           </div>
 
@@ -270,7 +274,7 @@ export default function Productos() {
             onClick={handleShowOffcanvas}
           >
             <i className="bi bi-funnel-fill"></i>
-            Filtrar Productos
+            Filtrar productos
           </Button>
         </div>
 
@@ -295,7 +299,7 @@ export default function Productos() {
                   Buscando por: <strong>{terminoBusqueda}</strong>
                 </p>
                 <small className="text-muted">
-                  {productos.length} resultado(s) encontrado(s)
+                  {productos.length} resultados encontrados
                 </small>
               </div>
             )}
@@ -305,9 +309,9 @@ export default function Productos() {
                 texto={
                   categoriaActiva === "todas"
                     ? terminoBusqueda
-                      ? `Resultados de busqueda`
-                      : "Catalogo Completo"
-                    : categoriaActiva
+                      ? `Resultados de búsqueda`
+                      : "Catálogo completo"
+                    : obtenerCategoriaVisible(categoriaActiva)
                 }
               />
             </div>
@@ -316,8 +320,8 @@ export default function Productos() {
               <div className="text-center py-5 text-muted">
                 <h4>
                   {terminoBusqueda
-                    ? "No se encontraron productos para tu busqueda."
-                    : "No se encontraron productos en esta categoria."}
+                    ? "No se encontraron productos para tu búsqueda."
+                    : "No se encontraron productos en esta categoría."}
                 </h4>
               </div>
             ) : (

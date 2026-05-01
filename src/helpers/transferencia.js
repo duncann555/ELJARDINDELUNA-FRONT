@@ -13,7 +13,7 @@ export const obtenerNumeroPedidoVisible = (pedidoId) =>
 
 export const construirMensajeWhatsAppTransferencia = ({ pedidoId, total }) =>
   [
-    "Hola, hice una compra en El Jardin de Luna.",
+    "Hola, hice una compra en El Jardín de Luna.",
     `Pedido: ${obtenerNumeroPedidoVisible(pedidoId)}`,
     `Total transferido: ${formatCurrency(total)}`,
     "Adjunto comprobante.",

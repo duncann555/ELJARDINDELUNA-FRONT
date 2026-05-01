@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { Button, Col, FloatingLabel, Form, Modal, Row } from "react-bootstrap";
 import { useForm, useWatch } from "react-hook-form";
-import { optimizarImagenCloudinary } from "../../helpers/app";
+import { obtenerCategoriaVisible, optimizarImagenCloudinary } from "../../helpers/app";
 import {
   asValidationRule,
   normalizeText,
@@ -100,13 +100,13 @@ export default function ModalProductoAdmin({
     >
       <Modal.Header closeButton>
         <Modal.Title>
-          {modoProducto === "crear" ? "Nuevo Producto" : "Editar Producto"}
+          {modoProducto === "crear" ? "Nuevo producto" : "Editar producto"}
         </Modal.Title>
       </Modal.Header>
 
       <Modal.Body>
         <Form id="formProducto" onSubmit={handleSubmit(enviarFormulario)}>
-          <FloatingLabel label="Nombre del Producto" className="mb-3">
+          <FloatingLabel label="Nombre del producto" className="mb-3">
             <Form.Control
               type="text"
               {...register("nombre", {
@@ -121,7 +121,7 @@ export default function ModalProductoAdmin({
 
           <Row className="mb-3">
             <Col md={6}>
-              <FloatingLabel label="Categoria">
+              <FloatingLabel label="Categoría">
                 <Form.Select
                   {...register("categoria", {
                     validate: asValidationRule((value) =>
@@ -130,10 +130,10 @@ export default function ModalProductoAdmin({
                   })}
                   isInvalid={!!errors.categoria}
                 >
-                  <option value="">Seleccione una categoria</option>
+                  <option value="">Seleccioná una categoría</option>
                   {CATEGORIAS_PRODUCTO.map((categoria) => (
                     <option key={categoria} value={categoria}>
-                      {categoria}
+                      {obtenerCategoriaVisible(categoria)}
                     </option>
                   ))}
                 </Form.Select>
@@ -162,7 +162,7 @@ export default function ModalProductoAdmin({
 
           <Row className="mb-3">
             <Col md={6}>
-              <FloatingLabel label="Stock Disponible">
+              <FloatingLabel label="Stock disponible">
                 <Form.Control
                   type="number"
                   {...register("stock", {
@@ -177,7 +177,7 @@ export default function ModalProductoAdmin({
             </Col>
 
             <Col md={6}>
-              <FloatingLabel label="Estado del Producto">
+              <FloatingLabel label="Estado del producto">
                 <Form.Select {...register("estado")}>
                   <option value="Activo">Activo</option>
                   <option value="Inactivo">Inactivo</option>
@@ -212,7 +212,7 @@ export default function ModalProductoAdmin({
             </div>
           )}
 
-          <FloatingLabel label="Descripcion">
+          <FloatingLabel label="Descripción">
             <Form.Control
               as="textarea"
               style={{ height: "100px" }}
@@ -229,7 +229,7 @@ export default function ModalProductoAdmin({
           <Form.Group className="admin-modal-switchbox my-3 p-3 bg-light rounded border">
             <Form.Check
               type="switch"
-              label="Mostrar en la seccion de destacados"
+              label="Mostrar en la sección de destacados"
               id="destacado-switch"
               {...register("destacado")}
             />

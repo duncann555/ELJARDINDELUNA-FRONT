@@ -49,7 +49,7 @@ function App() {
                     element={
                       <ProtectorSesion
                         titulo="Entra a tu cuenta"
-                        mensaje="Asi podemos guardar tu carrito y acompanarte mejor en tu compra"
+                        mensaje="Así podemos guardar tu carrito y acompañarte mejor en tu compra"
                       >
                         <Carrito />
                       </ProtectorSesion>
@@ -59,8 +59,8 @@ function App() {
                     path="/mis-compras"
                     element={
                       <ProtectorSesion
-                        titulo="Tus compras estan protegidas"
-                        mensaje="Inicia sesion para consultar tu historial de compras."
+                        titulo="Tus compras están protegidas"
+                        mensaje="Iniciá sesión para consultar tu historial de compras."
                       >
                         <MisCompras />
                       </ProtectorSesion>
@@ -70,8 +70,8 @@ function App() {
                     path="/transferencia-confirmada"
                     element={
                       <ProtectorSesion
-                        titulo="Primero inicia sesion"
-                        mensaje="Necesitas iniciar sesion para ver la confirmacion de tu pedido."
+                        titulo="Primero iniciá sesión"
+                        mensaje="Necesitás iniciar sesión para ver la confirmación de tu pedido."
                       >
                         <TransferenciaConfirmada />
                       </ProtectorSesion>

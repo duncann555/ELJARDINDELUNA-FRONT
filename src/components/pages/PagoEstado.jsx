@@ -23,16 +23,16 @@ const ESTADOS = {
     badgeClass: "success",
     title: "Pago confirmado",
     description:
-      "Tu pedido fue enviado a Mercado Pago correctamente y ya registramos la compra en EL JARDIN DE LUNA.",
+      "Tu pedido fue enviado a Mercado Pago correctamente y ya registramos la compra en EL JARDÍN DE LUNA.",
   },
   "/pago-pendiente": {
     icon: "bi-hourglass-split",
     iconClass: "text-warning",
     badge: "Pago pendiente",
     badgeClass: "warning",
-    title: "Estamos esperando la acreditacion",
+    title: "Estamos esperando la acreditación",
     description:
-      "Tu pedido fue creado y el pago quedo pendiente. Te recomendamos guardar este resumen para seguirlo desde admin.",
+      "Tu pedido fue creado y el pago quedó pendiente. Te recomendamos guardar este resumen para seguirlo desde admin.",
   },
 };
 
@@ -98,7 +98,7 @@ function PagoEstado() {
 
         if (isAuthError(respuesta, datos)) {
           logout();
-          throw new Error(datos?.mensaje || "La sesion ya no es valida.");
+          throw new Error(datos?.mensaje || "La sesión ya no es válida.");
         }
 
         if (!respuesta.ok) {
@@ -152,13 +152,13 @@ function PagoEstado() {
 
                 {estadoSincronizacion === "success" && (
                   <Alert variant="success" className="rounded-4">
-                    El estado del pedido ya quedo actualizado en el sistema.
+                    El estado del pedido ya quedó actualizado en el sistema.
                   </Alert>
                 )}
 
                 {estadoSincronizacion === "error" && (
                   <Alert variant="warning" className="rounded-4">
-                    No pudimos confirmar el estado automaticamente. Si hace falta, puedes
+                    No pudimos confirmar el estado automáticamente. Si hace falta, podés
                     revisarlo luego desde admin.
                   </Alert>
                 )}
@@ -170,7 +170,7 @@ function PagoEstado() {
                       <div className="fw-bold">
                         {pedidoGuardado?.pedidoId
                           ? `#${String(pedidoGuardado.pedidoId).slice(-6).toUpperCase()}`
-                          : "Pendiente de identificacion"}
+                          : "Pendiente de identificación"}
                       </div>
                     </Col>
 
@@ -195,9 +195,9 @@ function PagoEstado() {
                     </Col>
 
                     <Col md={6}>
-                      <small className="text-muted d-block mb-1">Items</small>
+                      <small className="text-muted d-block mb-1">Productos</small>
                       <div className="fw-bold">
-                        {pedidoGuardado?.cantidadTotal ?? 0} producto(s)
+                        {pedidoGuardado?.cantidadTotal ?? 0} productos
                       </div>
                     </Col>
 
@@ -209,11 +209,11 @@ function PagoEstado() {
                     </Col>
 
                     <Col xs={12}>
-                      <small className="text-muted d-block mb-1">Envio</small>
+                      <small className="text-muted d-block mb-1">Envío</small>
                       <div className="fw-semibold">
                         {pedidoGuardado?.envio
                           ? `${pedidoGuardado.envio.domicilio}, ${pedidoGuardado.envio.ciudad}, ${pedidoGuardado.envio.provincia} (${pedidoGuardado.envio.codigoPostal})`
-                          : "No encontramos una direccion guardada para este pedido."}
+                          : "No encontramos una dirección guardada para este pedido."}
                       </div>
                     </Col>
                   </Row>

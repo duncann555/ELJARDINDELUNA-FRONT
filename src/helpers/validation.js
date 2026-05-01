@@ -58,7 +58,7 @@ export const validateEmail = (value, { required = true } = {}) => {
   }
 
   if (!EMAIL_REGEX.test(text)) {
-    return "El email ingresado no es valido";
+    return "El email ingresado no es válido";
   }
 
   return "";
@@ -68,15 +68,15 @@ export const validateTelefono = (value, { required = true } = {}) => {
   const text = normalizeText(value);
 
   if (!text) {
-    return required ? "El telefono es obligatorio" : "";
+    return required ? "El teléfono es obligatorio" : "";
   }
 
   if (!/^\d+$/.test(text)) {
-    return "El telefono debe contener solo numeros";
+    return "El teléfono debe contener solo números";
   }
 
   if (!PHONE_REGEX.test(text)) {
-    return "El telefono debe contener entre 8 y 15 digitos";
+    return "El teléfono debe contener entre 8 y 15 dígitos";
   }
 
   return "";
@@ -126,7 +126,7 @@ export const validateProvincia = (value) => {
 
   if (!text) return "La provincia es obligatoria";
   if (text.length < 2 || text.length > 80) {
-    return "La provincia no es valida";
+    return "La provincia no es válida";
   }
 
   return "";
@@ -137,7 +137,7 @@ export const validateCiudad = (value) => {
 
   if (!text) return "La ciudad es obligatoria";
   if (text.length < 2 || text.length > 80) {
-    return "La ciudad no es valida";
+    return "La ciudad no es válida";
   }
 
   return "";
@@ -148,7 +148,7 @@ export const validateDomicilio = (value) => {
 
   if (!text) return "El domicilio es obligatorio";
   if (text.length < 5 || text.length > DOMICILIO_MAX_LENGTH) {
-    return "El domicilio no es valido";
+    return "El domicilio no es válido";
   }
 
   return "";
@@ -157,9 +157,9 @@ export const validateDomicilio = (value) => {
 export const validateCodigoPostal = (value) => {
   const text = normalizeText(value);
 
-  if (!text) return "El codigo postal es obligatorio";
+  if (!text) return "El código postal es obligatorio";
   if (!CODIGO_POSTAL_REGEX.test(text)) {
-    return "El codigo postal no es valido";
+    return "El código postal no es válido";
   }
 
   return "";
@@ -179,9 +179,9 @@ export const validateProductoNombre = (value) => {
 export const validateProductoCategoria = (value, categorias = []) => {
   const text = normalizeText(value);
 
-  if (!text) return "La categoria es un dato obligatorio";
+  if (!text) return "La categoría es un dato obligatorio";
   if (categorias.length > 0 && !categorias.includes(text)) {
-    return `La categoria debe ser valida (${categorias.join(", ")})`;
+    return `La categoría debe ser válida (${categorias.join(", ")})`;
   }
 
   return "";
@@ -194,10 +194,10 @@ export const validateProductoPrecio = (value) => {
 
   const numberValue = Number(text);
   if (!Number.isFinite(numberValue)) {
-    return "El precio debe ser un numero valido";
+    return "El precio debe ser un número válido";
   }
   if (numberValue < 0 || numberValue > 1000000) {
-    return "El precio debe ser un numero valido entre 0 y 1.000.000";
+    return "El precio debe ser un número válido entre 0 y 1.000.000";
   }
 
   return "";
@@ -214,7 +214,7 @@ export const validateProductoStock = (value) => {
     numberValue < 0 ||
     numberValue > PRODUCT_STOCK_MAX
   ) {
-    return `El stock debe ser un numero entero entre 0 y ${PRODUCT_STOCK_MAX}`;
+    return `El stock debe ser un número entero entre 0 y ${PRODUCT_STOCK_MAX}`;
   }
 
   return "";
@@ -223,9 +223,9 @@ export const validateProductoStock = (value) => {
 export const validateProductoDescripcion = (value) => {
   const text = normalizeText(value);
 
-  if (!text) return "La descripcion es un dato obligatorio";
+  if (!text) return "La descripción es un dato obligatorio";
   if (text.length < 10 || text.length > 1000) {
-    return "La descripcion debe contener entre 10 y 1000 caracteres";
+    return "La descripción debe contener entre 10 y 1000 caracteres";
   }
 
   return "";
@@ -234,7 +234,7 @@ export const validateProductoDescripcion = (value) => {
 export const validateProductImageFile = (file) => {
   if (!file) return "";
   if (!PRODUCT_IMAGE_TYPES.has(file.type)) {
-    return "Solo se permiten imagenes JPG, PNG, WEBP o AVIF";
+    return "Solo se permiten imágenes JPG, PNG, WEBP o AVIF";
   }
   if (file.size > PRODUCT_IMAGE_MAX_SIZE) {
     return "La imagen no puede superar los 2 MB";

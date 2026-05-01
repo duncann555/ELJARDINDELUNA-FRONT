@@ -4,7 +4,11 @@ import { Link, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../../styles/detalle.css";
 import { useCarrito } from "../../context/CarritoContext";
-import { formatCurrency, optimizarImagenCloudinary } from "../../helpers/app";
+import {
+  formatCurrency,
+  obtenerCategoriaVisible,
+  optimizarImagenCloudinary,
+} from "../../helpers/app";
 import { solicitarJsonApi } from "../../helpers/clienteApi";
 import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
 
@@ -154,7 +158,7 @@ const DetalleProducto = () => {
             <div className="detalle-info h-100 d-flex flex-column justify-content-center">
               <div>
                 <Badge bg="success" className="mb-3 text-uppercase ls-1 px-3 py-2 rounded-pill">
-                  {producto.categoria}
+                  {obtenerCategoriaVisible(producto.categoria)}
                 </Badge>
 
                 <h1 className="fw-bold display-5 text-dark font-playfair mb-2">

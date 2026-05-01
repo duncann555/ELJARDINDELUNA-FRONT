@@ -54,7 +54,7 @@ export default function TransferenciaConfirmada() {
                     Pedido registrado correctamente
                   </h1>
                   <p className="text-muted mb-0">
-                    Estado del pago: Pendiente de confirmacion
+                    Estado del pago: pendiente de confirmación
                   </p>
                 </div>
 
@@ -66,14 +66,14 @@ export default function TransferenciaConfirmada() {
 
                 <div className="d-grid gap-3">
                   <div className="d-flex justify-content-between">
-                    <span className="text-muted">Numero de pedido</span>
+                    <span className="text-muted">Número de pedido</span>
                     <span className="fw-bold">
                       {obtenerNumeroPedidoVisible(pedido.pedidoId)}
                     </span>
                   </div>
 
                   <div className="text-center bg-light rounded-4 p-4">
-                    <div className="text-muted small mb-1">Transferi exactamente</div>
+                    <div className="text-muted small mb-1">Transferí exactamente</div>
                     <div className="display-6 fw-bold text-success">
                       {formatCurrency(totalTransferencia)}
                     </div>
@@ -98,7 +98,7 @@ export default function TransferenciaConfirmada() {
                 </div>
 
                 <p className="text-muted mt-4 mb-4">
-                  Luego envia el comprobante por WhatsApp.
+                  Luego enviá el comprobante por WhatsApp.
                 </p>
 
                 <div className="d-grid gap-2">

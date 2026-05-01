@@ -23,14 +23,14 @@ export default function SeccionPedidosAdmin({
     <div className="admin-section-card bg-white p-4 rounded shadow-sm">
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-          <h5 className="fw-bold mb-1">Gestion de pedidos</h5>
+          <h5 className="fw-bold mb-1">Gestión de pedidos</h5>
           <p className="text-muted mb-0">
-            Revisa estados, pagos y resumenes de compra.
+            Revisá estados, pagos y resúmenes de compra.
           </p>
         </div>
 
         <Badge bg="warning" text="dark" className="fs-6">
-          {pedidosEnGestion} en gestion
+          {pedidosEnGestion} en gestión
         </Badge>
       </div>
 
@@ -64,7 +64,7 @@ export default function SeccionPedidosAdmin({
                       #{String(pedido._id).slice(-6).toUpperCase()}
                     </div>
                     <small className="text-muted">
-                      {pedido.productos?.length || 0} producto(s)
+                      {pedido.productos?.length || 0} productos
                     </small>
                   </td>
 
@@ -123,9 +123,9 @@ export default function SeccionPedidosAdmin({
       ) : (
         <div className="text-center py-5 text-muted">
           <i className="bi bi-receipt display-1 d-block mb-3 opacity-25"></i>
-          <h5 className="fw-bold">Todavia no hay pedidos</h5>
+          <h5 className="fw-bold">Todavía no hay pedidos</h5>
           <p className="mb-0">
-            Cuando entren compras, vas a poder seguirlas desde esta pestana.
+            Cuando entren compras, vas a poder seguirlas desde esta pestaña.
           </p>
         </div>
       )}

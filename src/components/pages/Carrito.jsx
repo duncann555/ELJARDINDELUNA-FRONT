@@ -17,6 +17,7 @@ import {
   formatCurrency,
   getApiErrorMessage,
   isAuthError,
+  obtenerCategoriaVisible,
 } from "../../helpers/app";
 import { solicitarApi } from "../../helpers/clienteApi";
 import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
@@ -190,7 +191,7 @@ function CarritoItem({
 
       <div className="carrito-item-info">
         <small className="text-muted text-uppercase fw-bold d-block mb-1">
-          {item.categoria}
+          {obtenerCategoriaVisible(item.categoria)}
         </small>
         <p className="carrito-item-name mb-0">{item.nombre}</p>
 
@@ -402,7 +403,7 @@ const Carrito = () => {
 
     if (!token || !user) {
       await Swal.fire({
-        title: "Inicia sesion para continuar",
+        title: "Iniciá sesión para continuar",
         text: "Necesitamos una cuenta activa para registrar tu pedido y continuar con el pago.",
         icon: "info",
         confirmButtonText: "Entendido",
@@ -412,8 +413,8 @@ const Carrito = () => {
 
     if (!validarEnvio()) {
       await Swal.fire({
-        title: "Faltan datos de envio",
-        text: "Completa los datos requeridos para la forma de envio elegida antes de continuar.",
+        title: "Faltan datos de envío",
+        text: "Completá los datos requeridos para la forma de envío elegida antes de continuar.",
         icon: "warning",
         confirmButtonText: "Revisar",
       });
@@ -424,7 +425,7 @@ const Carrito = () => {
 
     if (carritoCheckout.length === 0) {
       throw new Error(
-        "Los productos de tu carrito ya no estan disponibles. Agregalos nuevamente desde el catalogo.",
+        "Los productos de tu carrito ya no están disponibles. Agregalos nuevamente desde el catálogo.",
       );
     }
 
@@ -528,7 +529,7 @@ const Carrito = () => {
 
     if (isAuthError(pedidoResponse, pedidoData)) {
       logout();
-      throw new Error("Tu sesion vencio. Vuelve a ingresar antes de continuar.");
+      throw new Error("Tu sesión venció. Volvé a ingresar antes de continuar.");
     }
 
     if (!pedidoResponse.ok) {
@@ -538,7 +539,7 @@ const Carrito = () => {
     const pedidoId = pedidoData?.pedidoId;
 
     if (!pedidoId) {
-      throw new Error("No recibimos un ID de pedido valido.");
+      throw new Error("No recibimos un ID de pedido válido.");
     }
 
     const resumenPedido = construirResumenPedidoGuardado({
@@ -609,7 +610,7 @@ const Carrito = () => {
 
     if (isAuthError(checkoutResponse, checkoutData)) {
       logout();
-      throw new Error("Tu sesion vencio. Ingresa nuevamente y reintenta el pago.");
+      throw new Error("Tu sesión venció. Ingresá nuevamente y reintentá el pago.");
     }
 
     if (!checkoutResponse.ok) {
@@ -629,7 +630,7 @@ const Carrito = () => {
     const checkoutUrl = obtenerCheckoutUrl(checkoutData);
 
     if (!checkoutUrl) {
-      throw new Error("Mercado Pago no devolvio una URL de checkout valida.");
+      throw new Error("Mercado Pago no devolvió una URL de checkout válida.");
     }
 
     return { checkoutData, checkoutUrl };
@@ -654,7 +655,7 @@ const Carrito = () => {
 
     if (isAuthError(respuesta, datos)) {
       logout();
-      throw new Error("Tu sesion vencio. Ingresa nuevamente y vuelve a cargar el comprobante.");
+      throw new Error("Tu sesión venció. Ingresá nuevamente y volvé a cargar el comprobante.");
     }
 
     if (!respuesta.ok) {
@@ -815,9 +816,9 @@ const Carrito = () => {
 
           <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mt-3">
             <div>
-              <h1 className="fw-bold display-5 mb-2">Tu seleccion</h1>
+              <h1 className="fw-bold display-5 mb-2">Tu selección</h1>
               <p className="text-muted mb-0">
-                Completa tu direccion de entrega, elige tu forma de pago y finaliza tu pedido.
+                Completá tu dirección de entrega, elegí tu forma de pago y finalizá tu pedido.
               </p>
             </div>
 
@@ -839,7 +840,7 @@ const Carrito = () => {
                   <div>
                     <h5 className="fw-bold mb-1">Carrito</h5>
                     <p className="text-muted mb-0">
-                      Revisa los productos que vas a llevar antes de continuar.
+                      Revisá los productos que vas a llevar antes de continuar.
                     </p>
                   </div>
                 </div>
@@ -847,7 +848,7 @@ const Carrito = () => {
                 {carrito.length === 0 ? (
                   <div className="text-center py-5">
                     <i className="bi bi-cart-x display-1 text-muted opacity-25"></i>
-                    <h4 className="mt-3 text-muted">Tu carrito esta vacio</h4>
+                    <h4 className="mt-3 text-muted">Tu carrito está vacío</h4>
                     <Button
                       variant="success"
                       className="mt-3 rounded-pill"
@@ -899,13 +900,13 @@ const Carrito = () => {
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
 
                   <Badge bg={token ? "success" : "secondary"} pill className="px-3 py-2">
-                    {token ? "Sesion activa" : "Necesitas login"}
+                    {token ? "Sesión activa" : "Necesitás iniciar sesión"}
                   </Badge>
                 </div>
 
                 {!token && (
                   <Alert variant="warning" className="rounded-4">
-                    Inicia sesion desde el menu para habilitar el checkout y registrar tu pedido.
+                    Iniciá sesión desde el menú para habilitar el checkout y registrar tu pedido.
                   </Alert>
                 )}
 
@@ -1174,7 +1175,7 @@ const Carrito = () => {
                   </div>
 
                   <div className="d-flex justify-content-between mb-2">
-                    <span className="text-muted">Subtotal ({cantidadTotal} items)</span>
+                    <span className="text-muted">Subtotal ({cantidadTotal} productos)</span>
                     <span>{formatCurrency(subtotal)}</span>
                   </div>
 
@@ -1339,7 +1340,7 @@ const Carrito = () => {
                             }
                           />
                           <Form.Text className="text-muted">
-                            Puedes subir una imagen del comprobante ahora o enviarlo luego por WhatsApp.
+                            Podés subir una imagen del comprobante ahora o enviarlo luego por WhatsApp.
                           </Form.Text>
                         </Form.Group>
                       </Card.Body>
