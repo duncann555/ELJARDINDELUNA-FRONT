@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Button, Col, FloatingLabel, Form, Modal, Row } from "react-bootstrap";
 import { useForm, useWatch } from "react-hook-form";
+import { optimizarImagenCloudinary } from "../../helpers/app";
 import {
   asValidationRule,
   normalizeText,
@@ -30,44 +31,51 @@ export default function ModalProductoAdmin({
     control,
     formState: { errors },
   } = useForm({
-    mode: "onTouched",
-    reValidateMode: "onChange",
+    mode: "onSubmit",
+    reValidateMode: "onSubmit",
   });
-  const [preview, setPreview] = useState(null);
   const imagenFile = useWatch({ control, name: "imagen" });
 
-  useEffect(() => {
-    let objectUrl;
-
-    if (imagenFile && imagenFile.length > 0) {
-      objectUrl = URL.createObjectURL(imagenFile[0]);
-      setPreview(objectUrl);
+  const previewArchivo = useMemo(() => {
+    if (!imagenFile || imagenFile.length === 0) {
+      return null;
     }
 
-    return () => {
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
-    };
+    return URL.createObjectURL(imagenFile[0]);
   }, [imagenFile]);
 
   useEffect(() => {
-    if (!show) return;
+    return () => {
+      if (previewArchivo) {
+        URL.revokeObjectURL(previewArchivo);
+      }
+    };
+  }, [previewArchivo]);
 
+  useEffect(() => {
+    if (!show) return;
     if (productoInicial && modoProducto === "editar") {
       reset(productoInicial);
-      setPreview(productoInicial.imagenUrl || null);
       return;
     }
 
     reset(PRODUCTO_VACIO);
-    setPreview(null);
   }, [productoInicial, modoProducto, show, reset]);
+
+  const preview =
+    previewArchivo ||
+    (show && modoProducto === "editar"
+      ? optimizarImagenCloudinary(productoInicial?.imagenUrl) || null
+      : null);
 
   const enviarFormulario = (data) => {
     const formData = new FormData();
 
     Object.entries(data).forEach(([key, value]) => {
+      if (key === "oferta") {
+        return;
+      }
+
       if (key === "imagen") {
         if (value && value.length > 0) {
           formData.append("imagen", value[0]);
@@ -177,14 +185,6 @@ export default function ModalProductoAdmin({
               </FloatingLabel>
             </Col>
           </Row>
-
-          <Form.Group className="mb-3">
-            <Form.Check
-              type="checkbox"
-              label="Esta en oferta"
-              {...register("oferta")}
-            />
-          </Form.Group>
 
           <Form.Group className="mb-3">
             <Form.Label>Imagen</Form.Label>

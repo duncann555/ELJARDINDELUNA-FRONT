@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../../styles/detalle.css";
 import { useCarrito } from "../../context/CarritoContext";
-import { formatCurrency } from "../../helpers/app";
+import { formatCurrency, optimizarImagenCloudinary } from "../../helpers/app";
 import { solicitarJsonApi } from "../../helpers/clienteApi";
 import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
 
@@ -136,7 +136,7 @@ const DetalleProducto = () => {
             <div className="detalle-img-container shadow-sm position-relative">
               <img
                 src={
-                  producto.imagenUrl ||
+                  optimizarImagenCloudinary(producto.imagenUrl) ||
                   producto.imagen ||
                   IMG_PLACEHOLDER(producto.nombre)
                 }

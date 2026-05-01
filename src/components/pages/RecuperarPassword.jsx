@@ -17,7 +17,7 @@ export default function RecuperarPassword() {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [fieldError, setFieldError] = useState("");
-  const [touched, setTouched] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event) => {
@@ -27,7 +27,7 @@ export default function RecuperarPassword() {
     const nextFieldError = validateEmail(normalizedEmail);
 
     setEmail(normalizedEmail);
-    setTouched(true);
+    setSubmitted(true);
     setFieldError(nextFieldError);
 
     if (nextFieldError) {
@@ -94,22 +94,15 @@ export default function RecuperarPassword() {
             minLength={6}
             maxLength={120}
             value={email}
-            isInvalid={Boolean(touched && fieldError)}
+            isInvalid={Boolean(submitted && fieldError)}
             onChange={(event) => {
               setEmail(event.target.value);
               setError("");
+              setFieldError("");
 
               if (successMessage) {
                 setSuccessMessage("");
               }
-
-              if (touched) {
-                setFieldError(validateEmail(event.target.value));
-              }
-            }}
-            onBlur={(event) => {
-              setTouched(true);
-              setFieldError(validateEmail(event.target.value));
             }}
           />
           <Form.Control.Feedback type="invalid">

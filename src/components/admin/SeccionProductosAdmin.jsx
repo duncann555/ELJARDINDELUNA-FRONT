@@ -1,5 +1,5 @@
 import { Badge, Button, Col, Form, InputGroup, Row, Table } from "react-bootstrap";
-import { formatCurrency } from "../../helpers/app";
+import { formatCurrency, optimizarImagenCloudinary } from "../../helpers/app";
 
 export default function SeccionProductosAdmin({
   busqueda,
@@ -53,7 +53,7 @@ export default function SeccionProductosAdmin({
                 <tr key={producto._id}>
                   <td>
                     <img
-                      src={producto.imagenUrl}
+                      src={optimizarImagenCloudinary(producto.imagenUrl)}
                       alt={producto.nombre}
                       className="admin-thumb rounded"
                       style={{

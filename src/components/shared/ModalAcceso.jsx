@@ -29,14 +29,26 @@ export default function ModalAcceso({ show, onClose }) {
     email: "",
     password: "",
   });
-  const [touched, setTouched] = useState({
-    email: false,
-    password: false,
-  });
   const [shake, setShake] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
 
   if (!show) return null;
+
+  const limpiarFormulario = () => {
+    setEmail("");
+    setPassword("");
+    setShowPass(false);
+    setError("");
+    setFieldErrors({
+      email: "",
+      password: "",
+    });
+  };
+
+  const cerrarModal = () => {
+    limpiarFormulario();
+    onClose?.();
+  };
 
   const triggerError = (message) => {
     setError(message);
@@ -48,28 +60,18 @@ export default function ModalAcceso({ show, onClose }) {
       setError("");
     }
 
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        [field]: "",
+      }));
+    }
+
     if (field === "email") {
       setEmail(value);
     } else {
       setPassword(value);
     }
-
-    if (touched[field]) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        [field]:
-          field === "email" ? validateEmail(value) : validateLoginPassword(value),
-      }));
-    }
-  };
-
-  const handleFieldBlur = (field, value) => {
-    setTouched((prev) => ({ ...prev, [field]: true }));
-    setFieldErrors((prev) => ({
-      ...prev,
-      [field]:
-        field === "email" ? validateEmail(value) : validateLoginPassword(value),
-    }));
   };
 
   const validateForm = (nextEmail, nextPassword) => {
@@ -79,12 +81,14 @@ export default function ModalAcceso({ show, onClose }) {
     };
 
     setFieldErrors(nextErrors);
-    setTouched({
-      email: true,
-      password: true,
-    });
 
-    return !Object.values(nextErrors).some(Boolean);
+    const tieneErrores = Object.values(nextErrors).some(Boolean);
+
+    if (tieneErrores) {
+      triggerShake(setShake);
+    }
+
+    return !tieneErrores;
   };
 
   const handleLogin = async (event) => {
@@ -99,25 +103,27 @@ export default function ModalAcceso({ show, onClose }) {
 
     try {
       setLoginLoading(true);
+
       const session = await loginConEmailYPassword(normalizedEmail, password);
-      setError("");
-      onClose();
+
+      limpiarFormulario();
+      onClose?.();
       navigate(session?.destination || "/");
     } catch (loginError) {
       console.error("Unified Login Error:", loginError);
-      triggerError(loginError.message || "No se pudo iniciar sesion.");
+      triggerError(loginError.message || "No se pudo iniciar sesión.");
     } finally {
       setLoginLoading(false);
     }
   };
 
   return (
-    <div className="ml-overlay" onClick={onClose}>
+    <div className="ml-overlay" onClick={cerrarModal}>
       <div
         className={`ml-modal ${shake ? "shake" : ""}`}
         onClick={(event) => event.stopPropagation()}
       >
-        <button type="button" className="ml-close" onClick={onClose}>
+        <button type="button" className="ml-close" onClick={cerrarModal}>
           <i className="bi bi-x-lg"></i>
         </button>
 
@@ -125,7 +131,7 @@ export default function ModalAcceso({ show, onClose }) {
           <div className="ml-brand-badge mb-3">Acceso</div>
           <h2 className="font-playfair fw-bold mb-0 ml-title">Bienvenido</h2>
           <p className="small mb-0 ml-subtitle">
-            Ingresa con tu email y contraseña para continuar.
+            Ingresá con tu email y contraseña para continuar.
           </p>
         </div>
 
@@ -135,7 +141,7 @@ export default function ModalAcceso({ show, onClose }) {
           </div>
         )}
 
-        <SocialAuthSection onSuccess={() => onClose?.()} />
+        <SocialAuthSection onSuccess={cerrarModal} />
 
         <Form onSubmit={handleLogin} noValidate>
           <div className="mb-3">
@@ -148,9 +154,10 @@ export default function ModalAcceso({ show, onClose }) {
                 minLength={6}
                 maxLength={120}
                 value={email}
-                isInvalid={Boolean(touched.email && fieldErrors.email)}
-                onChange={(event) => handleFieldChange("email", event.target.value)}
-                onBlur={(event) => handleFieldBlur("email", event.target.value)}
+                isInvalid={Boolean(fieldErrors.email)}
+                onChange={(event) =>
+                  handleFieldChange("email", event.target.value)
+                }
               />
               <Form.Control.Feedback type="invalid">
                 {fieldErrors.email}
@@ -158,39 +165,52 @@ export default function ModalAcceso({ show, onClose }) {
             </FloatingLabel>
           </div>
 
-          <div className="mb-3 position-relative">
-            <FloatingLabel label="Contraseña">
-              <Form.Control
-                type={showPass ? "text" : "password"}
-                placeholder="Contraseña"
-                className="ml-input pe-5"
-                autoComplete="current-password"
-                minLength={PASSWORD_MIN_LENGTH}
-                maxLength={PASSWORD_MAX_LENGTH}
-                value={password}
-                isInvalid={Boolean(touched.password && fieldErrors.password)}
-                onChange={(event) => handleFieldChange("password", event.target.value)}
-                onBlur={(event) => handleFieldBlur("password", event.target.value)}
-              />
-              <Form.Control.Feedback type="invalid">
-                {fieldErrors.password}
-              </Form.Control.Feedback>
-            </FloatingLabel>
-            <button
-              type="button"
-              className="ml-eye-icon"
-              onClick={() => setShowPass((prev) => !prev)}
-              aria-label={showPass ? "Ocultar contraseña" : "Mostrar contraseña"}
+          <div className="mb-3">
+            <div
+              className={`position-relative ml-password-field ${
+                fieldErrors.password ? "has-password-error" : ""
+              }`}
             >
-              <i className={`bi ${showPass ? "bi-eye-slash" : "bi-eye"}`}></i>
-            </button>
+              <FloatingLabel label="Contraseña">
+                <Form.Control
+                  type={showPass ? "text" : "password"}
+                  placeholder="Contraseña"
+                  className="ml-input pe-5"
+                  autoComplete="current-password"
+                  minLength={PASSWORD_MIN_LENGTH}
+                  maxLength={PASSWORD_MAX_LENGTH}
+                  value={password}
+                  isInvalid={Boolean(fieldErrors.password)}
+                  onChange={(event) =>
+                    handleFieldChange("password", event.target.value)
+                  }
+                />
+              </FloatingLabel>
+
+              <button
+                type="button"
+                className="ml-eye-icon"
+                onClick={() => setShowPass((prev) => !prev)}
+                aria-label={
+                  showPass ? "Ocultar contraseña" : "Mostrar contraseña"
+                }
+              >
+                <i className={`bi ${showPass ? "bi-eye-slash" : "bi-eye"}`}></i>
+              </button>
+            </div>
+
+            {fieldErrors.password && (
+              <div className="invalid-feedback d-block">
+                {fieldErrors.password}
+              </div>
+            )}
           </div>
 
           <div className="text-end mb-3">
             <Link
               to="/recuperar-password"
               className="small text-decoration-none fw-semibold ml-link"
-              onClick={onClose}
+              onClick={cerrarModal}
             >
               Olvidé mi contraseña
             </Link>
@@ -201,15 +221,15 @@ export default function ModalAcceso({ show, onClose }) {
             className="ml-btn-primary w-100"
             disabled={loginLoading}
           >
-            {loginLoading ? "Ingresando..." : "Iniciar sesion"}
+            {loginLoading ? "Ingresando..." : "Iniciar sesión"}
           </Button>
 
           <div className="text-center mt-3">
-            <span className="small ml-subtitle">No tenes cuenta? </span>
+            <span className="small ml-subtitle">¿No tenés cuenta? </span>
             <Link
               to="/register"
               className="text-decoration-none fw-semibold ml-link"
-              onClick={onClose}
+              onClick={cerrarModal}
             >
               Registrarse
             </Link>

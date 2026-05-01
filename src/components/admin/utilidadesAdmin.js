@@ -4,6 +4,7 @@ import {
   obtenerEstadoPagoPedido,
   obtenerMetodoPagoPedido,
   obtenerSubtotalPedido,
+  obtenerTextoTipoEnvioPedido,
   obtenerTextoEstadoPago,
   obtenerTextoEstadoPedido,
   obtenerTextoMetodoPagoPedido,
@@ -17,6 +18,7 @@ export {
   obtenerEstadoPagoPedido,
   obtenerMetodoPagoPedido,
   obtenerSubtotalPedido,
+  obtenerTextoTipoEnvioPedido,
   obtenerTextoEstadoPago,
   obtenerTextoEstadoPedido,
   obtenerTextoMetodoPagoPedido,
@@ -32,7 +34,6 @@ export const PRODUCTO_VACIO = {
   precio: 0,
   imagenUrl: "",
   estado: "Activo",
-  oferta: false,
   destacado: false,
 };
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import {
   Badge,
   Button,
@@ -16,7 +16,8 @@ import LOGO from "../../assets/EL_JARDIN_DE_LUNA.png";
 import { useAuth } from "../../context/AuthContext";
 import { useCarrito } from "../../context/CarritoContext";
 import { useTheme } from "../../context/ThemeContext";
-import ModalAcceso from "./ModalAcceso.jsx";
+
+const ModalAcceso = lazy(() => import("./ModalAcceso.jsx"));
 
 const NAV_LINKS = [
   { to: "/", text: "Inicio" },
@@ -316,7 +317,11 @@ function Menu() {
         </Container>
       </div>
 
-      <ModalAcceso show={showLogin} onClose={() => setShowLogin(false)} />
+      {showLogin && (
+        <Suspense fallback={null}>
+          <ModalAcceso show={showLogin} onClose={() => setShowLogin(false)} />
+        </Suspense>
+      )}
     </>
   );
 }

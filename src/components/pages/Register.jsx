@@ -73,40 +73,8 @@ export default function Register() {
     password: "",
     passwordConfirm: "",
   });
-  const [touched, setTouched] = useState({
-    nombre: false,
-    apellido: false,
-    email: false,
-    codigoArea: false,
-    telefono: false,
-    password: false,
-    passwordConfirm: false,
-  });
+  const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const validateField = (field, nextValues) => {
-    switch (field) {
-      case "nombre":
-        return validateNombre(nextValues.nombre);
-      case "apellido":
-        return validateApellido(nextValues.apellido);
-      case "email":
-        return validateEmail(nextValues.email);
-      case "codigoArea":
-        return validateAreaCode(nextValues.codigoArea);
-      case "telefono":
-        return validatePhoneNumber(nextValues.telefono);
-      case "password":
-        return validatePassword(nextValues.password);
-      case "passwordConfirm":
-        return validatePasswordConfirmation(
-          nextValues.passwordConfirm,
-          nextValues.password,
-        );
-      default:
-        return "";
-    }
-  };
 
   const handleFieldChange = (field, value) => {
     if (error) {
@@ -122,30 +90,17 @@ export default function Register() {
 
     setFormValues(nextValues);
 
-    if (touched[field] || (field === "password" && touched.passwordConfirm)) {
+    if (fieldErrors[field] || (field === "password" && fieldErrors.passwordConfirm)) {
       setFieldErrors((prev) => ({
         ...prev,
-        [field]: validateField(field, nextValues),
+        [field]: "",
         ...(field === "password" || field === "passwordConfirm"
           ? {
-              passwordConfirm: validateField("passwordConfirm", nextValues),
+              passwordConfirm: "",
             }
           : {}),
       }));
     }
-  };
-
-  const handleFieldBlur = (field) => {
-    setTouched((prev) => ({ ...prev, [field]: true }));
-    setFieldErrors((prev) => ({
-      ...prev,
-      [field]: validateField(field, formValues),
-      ...(field === "password"
-        ? {
-            passwordConfirm: validateField("passwordConfirm", formValues),
-          }
-        : {}),
-    }));
   };
 
   const validateForm = (nextValues) => {
@@ -170,16 +125,8 @@ export default function Register() {
       nextErrors.telefono = nextErrors.telefono || telefonoError;
     }
 
+    setSubmitted(true);
     setFieldErrors(nextErrors);
-    setTouched({
-      nombre: true,
-      apellido: true,
-      email: true,
-      codigoArea: true,
-      telefono: true,
-      password: true,
-      passwordConfirm: true,
-    });
 
     return !Object.values(nextErrors).some(Boolean);
   };
@@ -256,11 +203,10 @@ export default function Register() {
                           minLength={2}
                           maxLength={50}
                           value={formValues.nombre}
-                          isInvalid={Boolean(touched.nombre && fieldErrors.nombre)}
+                          isInvalid={Boolean(submitted && fieldErrors.nombre)}
                           onChange={(event) =>
                             handleFieldChange("nombre", event.target.value)
                           }
-                          onBlur={() => handleFieldBlur("nombre")}
                         />
                         <Form.Control.Feedback type="invalid">
                           {fieldErrors.nombre}
@@ -277,11 +223,10 @@ export default function Register() {
                           minLength={2}
                           maxLength={50}
                           value={formValues.apellido}
-                          isInvalid={Boolean(touched.apellido && fieldErrors.apellido)}
+                          isInvalid={Boolean(submitted && fieldErrors.apellido)}
                           onChange={(event) =>
                             handleFieldChange("apellido", event.target.value)
                           }
-                          onBlur={() => handleFieldBlur("apellido")}
                         />
                         <Form.Control.Feedback type="invalid">
                           {fieldErrors.apellido}
@@ -299,11 +244,10 @@ export default function Register() {
                           minLength={6}
                           maxLength={120}
                           value={formValues.email}
-                          isInvalid={Boolean(touched.email && fieldErrors.email)}
+                          isInvalid={Boolean(submitted && fieldErrors.email)}
                           onChange={(event) =>
                             handleFieldChange("email", event.target.value)
                           }
-                          onBlur={() => handleFieldBlur("email")}
                         />
                         <Form.Control.Feedback type="invalid">
                           {fieldErrors.email}
@@ -327,12 +271,11 @@ export default function Register() {
                           maxLength={5}
                           value={formValues.codigoArea}
                           isInvalid={Boolean(
-                            touched.codigoArea && fieldErrors.codigoArea,
+                            submitted && fieldErrors.codigoArea,
                           )}
                           onChange={(event) =>
                             handleFieldChange("codigoArea", event.target.value)
                           }
-                          onBlur={() => handleFieldBlur("codigoArea")}
                         />
                         <Form.Control.Feedback type="invalid">
                           {fieldErrors.codigoArea}
@@ -352,12 +295,11 @@ export default function Register() {
                           maxLength={10}
                           value={formValues.telefono}
                           isInvalid={Boolean(
-                            touched.telefono && fieldErrors.telefono,
+                            submitted && fieldErrors.telefono,
                           )}
                           onChange={(event) =>
                             handleFieldChange("telefono", event.target.value)
                           }
-                          onBlur={() => handleFieldBlur("telefono")}
                         />
                         <Form.Control.Feedback type="invalid">
                           {fieldErrors.telefono}
@@ -376,12 +318,11 @@ export default function Register() {
                           maxLength={PASSWORD_MAX_LENGTH}
                           value={formValues.password}
                           isInvalid={Boolean(
-                            touched.password && fieldErrors.password,
+                            submitted && fieldErrors.password,
                           )}
                           onChange={(event) =>
                             handleFieldChange("password", event.target.value)
                           }
-                          onBlur={() => handleFieldBlur("password")}
                         />
                         <Form.Control.Feedback type="invalid">
                           {fieldErrors.password}
@@ -400,13 +341,11 @@ export default function Register() {
                           maxLength={PASSWORD_MAX_LENGTH}
                           value={formValues.passwordConfirm}
                           isInvalid={Boolean(
-                            touched.passwordConfirm &&
-                              fieldErrors.passwordConfirm,
+                            submitted && fieldErrors.passwordConfirm,
                           )}
                           onChange={(event) =>
                             handleFieldChange("passwordConfirm", event.target.value)
                           }
-                          onBlur={() => handleFieldBlur("passwordConfirm")}
                         />
                         <Form.Control.Feedback type="invalid">
                           {fieldErrors.passwordConfirm}

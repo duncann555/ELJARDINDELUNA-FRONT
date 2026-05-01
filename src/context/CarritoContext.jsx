@@ -4,6 +4,7 @@ import {
   getApiErrorMessage,
 } from "../helpers/app";
 import { solicitarApi } from "../helpers/clienteApi";
+import { obtenerProductosPublicos } from "../helpers/productosApi";
 import { useAuth } from "./AuthContext";
 
 const CarritoContext = createContext();
@@ -155,17 +156,7 @@ const obtenerCarritoBaseUsuario = (user) => {
   return leerCarritoPersistido(user?.uid);
 };
 
-const obtenerCatalogoProductos = async ({ signal } = {}) => {
-  const { respuesta, datos } = await solicitarApi("/productos", { signal });
-
-  if (!respuesta.ok) {
-    throw new Error(
-      getApiErrorMessage(datos, "No se pudo recuperar el catalogo."),
-    );
-  }
-
-  return Array.isArray(datos) ? datos : [];
-};
+const obtenerCatalogoProductos = () => obtenerProductosPublicos();
 
 export const CarritoProvider = ({ children }) => {
   const { user, token, isAuthenticated } = useAuth();
@@ -224,7 +215,7 @@ export const CarritoProvider = ({ children }) => {
         const carritoRemoto = normalizarCarrito(datos?.carrito);
         const carritoLocal = leerCarritoPersistido(currentUserId);
         const carritoBaseFinal = carritoRemoto.length > 0 ? carritoRemoto : carritoLocal;
-        const catalogo = await obtenerCatalogoProductos({ signal: controller.signal });
+        const catalogo = await obtenerCatalogoProductos();
         const carritoFinal = reconciliarCarritoConCatalogo(carritoBaseFinal, catalogo);
 
         ultimaFirmaRemotaRef.current = obtenerFirmaCarrito(carritoFinal);

@@ -12,6 +12,7 @@ import {
   obtenerTextoEstadoPago,
   obtenerTextoEstadoPedido,
   obtenerTextoMetodoPagoPedido,
+  obtenerTextoTipoEnvioPedido,
   obtenerSubtotalPedido,
   obtenerVarianteEstadoPago,
 } from "./utilidadesAdmin";
@@ -53,6 +54,7 @@ export default function ModalPedidoAdmin({
   const pagoAprobado = formulario.estadoPago === "approved";
   const esTransferencia = obtenerMetodoPagoPedido(pedido) === "transferencia";
   const comprobanteUrl = String(pedido.comprobanteTransferencia?.url || "").trim();
+  const tipoEnvio = pedido.envio?.tipo || pedido.datosEnvio?.tipo || "";
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -144,12 +146,42 @@ export default function ModalPedidoAdmin({
           <Col md={6}>
             <div className="admin-modal-card p-3 rounded border bg-light h-100">
               <small className="text-muted d-block mb-1">Envio</small>
-              <div className="fw-bold">{pedido.envio?.proveedor || "Envio nacional"}</div>
-              <div className="text-muted small mt-2">
-                Direccion: {pedido.envio?.domicilio || "-"}
+              <div className="fw-bold">{obtenerTextoTipoEnvioPedido(pedido)}</div>
+              {tipoEnvio === "andreani_sucursal" ? (
+                <div className="text-muted small mt-2">
+                  Sucursal: {pedido.envio?.sucursalAndreani || pedido.datosEnvio?.sucursalAndreani || "-"}
+                </div>
+              ) : (
+                <div className="text-muted small mt-2">
+                  Direccion: {pedido.envio?.domicilio || pedido.datosEnvio?.domicilio || "-"}
+                </div>
+              )}
+              <div className="text-muted small">
+                {pedido.envio?.ciudad || pedido.datosEnvio?.ciudad || "-"}
+                {pedido.envio?.provincia || pedido.datosEnvio?.provincia
+                  ? `, ${pedido.envio?.provincia || pedido.datosEnvio?.provincia}`
+                  : ""}
               </div>
               <div className="text-muted small">
-                {pedido.envio?.ciudad || "-"}, {pedido.envio?.provincia || "-"}
+                Celular: {pedido.envio?.celular || pedido.datosEnvio?.celular || "-"}
+              </div>
+              {(pedido.envio?.entreCalles || pedido.datosEnvio?.entreCalles) && (
+                <div className="text-muted small">
+                  Entre calles: {pedido.envio?.entreCalles || pedido.datosEnvio?.entreCalles}
+                </div>
+              )}
+              {(pedido.envio?.referencia || pedido.datosEnvio?.referencia) && (
+                <div className="text-muted small">
+                  Referencia: {pedido.envio?.referencia || pedido.datosEnvio?.referencia}
+                </div>
+              )}
+              {(pedido.envio?.horarioConveniente || pedido.datosEnvio?.horarioConveniente) && (
+                <div className="text-muted small">
+                  Horario: {pedido.envio?.horarioConveniente || pedido.datosEnvio?.horarioConveniente}
+                </div>
+              )}
+              <div className="text-muted small">
+                CP: {pedido.envio?.codigoPostal || pedido.datosEnvio?.codigoPostal || "-"}
               </div>
               <div className="text-muted small">
                 Costo: {formatCurrency(obtenerCostoEnvioPedido(pedido))}

@@ -6,7 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 const ProtectorSesion = ({
   children,
   titulo = "Primero inicia sesion",
-  mensaje = "Necesitas una cuenta activa para continuar.",
+  mensaje = "Necesitas una cuenta para continuar.",
 }) => {
   const navigate = useNavigate();
   const { loading, token, isAuthenticated } = useAuth();

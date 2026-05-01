@@ -6,19 +6,42 @@ import "../../styles/inicio.css";
 
 import { useCarrito } from "../../context/CarritoContext";
 import { useTheme } from "../../context/ThemeContext";
-import { formatCurrency } from "../../helpers/app";
-import { solicitarJsonApi } from "../../helpers/clienteApi";
+import { formatCurrency, optimizarImagenCloudinary } from "../../helpers/app";
 import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
-
-import carousel1 from "../../assets/carousel1.png";
-import carousel2 from "../../assets/carousel2.png";
-import carousel3 from "../../assets/carousel3.png";
-import carousel4 from "../../assets/carousel4.png";
-import oferta1 from "../../assets/oferta1.png";
-import oferta3 from "../../assets/oferta3.jpg";
+import { obtenerProductosPublicos } from "../../helpers/productosApi";
 
 const IMG_PLACEHOLDER = (text) =>
   `https://placehold.co/800x800/png?text=${encodeURIComponent(text || "Sin Imagen")}`;
+
+const CAROUSEL_IMAGES = [
+  {
+    src:
+      import.meta.env.VITE_CAROUSEL_1_URL ||
+      "https://res.cloudinary.com/dd9wzjf1q/image/upload/v1777613550/el_jardin_de_luna/carousel/carousel1.png",
+    alt: "Banner principal El Jardin de Luna 1",
+  },
+  {
+    src:
+      import.meta.env.VITE_CAROUSEL_2_URL ||
+      "https://res.cloudinary.com/dd9wzjf1q/image/upload/v1777613551/el_jardin_de_luna/carousel/carousel2.png",
+    alt: "Banner principal El Jardin de Luna 2",
+  },
+  {
+    src:
+      import.meta.env.VITE_CAROUSEL_3_URL ||
+      "https://res.cloudinary.com/dd9wzjf1q/image/upload/v1777613552/el_jardin_de_luna/carousel/carousel3.png",
+    alt: "Banner principal El Jardin de Luna 3",
+  },
+  {
+    src:
+      import.meta.env.VITE_CAROUSEL_4_URL ||
+      "https://res.cloudinary.com/dd9wzjf1q/image/upload/v1777613553/el_jardin_de_luna/carousel/carousel4.png",
+    alt: "Banner principal El Jardin de Luna 4",
+  },
+].map((image) => ({
+  ...image,
+  src: optimizarImagenCloudinary(image.src, "f_auto,q_auto,w_1600"),
+}));
 
 const BannerCategoria = ({ texto }) => <div className="categoria-banner">{texto}</div>;
 
@@ -26,7 +49,7 @@ const CardProducto = ({ producto }) => {
   const navigate = useNavigate();
   const { agregarAlCarrito } = useCarrito();
   const { isDarkMode } = useTheme();
-  const { _id, nombre, precio, imagenUrl, categoria, oferta } = producto;
+  const { _id, nombre, precio, imagenUrl, categoria } = producto;
   const stockDisponible = Number(producto?.stock || 0);
   const sinStock = stockDisponible <= 0;
 
@@ -65,12 +88,6 @@ const CardProducto = ({ producto }) => {
         onClick={() => navigate(`/producto/${_id}`)}
       >
         <div className="producto-img-wrapper position-relative">
-          {oferta && (
-            <span className="badge producto-oferta-badge position-absolute top-0 start-0 m-3 px-3 py-2 z-1 shadow-sm">
-              OFERTA
-            </span>
-          )}
-
           {sinStock && (
             <span className="badge producto-stock-badge position-absolute top-0 end-0 m-3 px-3 py-2 z-1 shadow-sm">
               Sin stock
@@ -78,7 +95,7 @@ const CardProducto = ({ producto }) => {
           )}
 
         <Card.Img
-          src={imagenUrl || IMG_PLACEHOLDER(nombre)}
+          src={optimizarImagenCloudinary(imagenUrl) || IMG_PLACEHOLDER(nombre)}
           alt={nombre}
           className="producto-img rounded-top-4"
           loading="lazy"
@@ -153,9 +170,7 @@ export default function Inicio() {
 
   const obtenerProductos = async () => {
     try {
-      const datos = await solicitarJsonApi("/productos", {
-        mensajeError: "No se pudieron cargar los productos destacados.",
-      });
+      const datos = await obtenerProductosPublicos();
       setProductos(Array.isArray(datos) ? datos : []);
     } catch (error) {
       console.error("Error cargando productos:", error);
@@ -170,8 +185,6 @@ export default function Inicio() {
     const unicas = [...new Set(nombresCategorias)];
     return unicas.map((nombre, index) => ({ id: index, nombre }));
   }, [productos]);
-
-  const ofertas = productos.filter((producto) => producto.oferta === true);
 
   const destacadosPorCategoria = useMemo(() => {
     const map = {};
@@ -209,13 +222,15 @@ export default function Inicio() {
     <div className="inicio-wrapper" style={{ overflowX: "hidden", position: "relative" }}>
       <Container fluid className="hero-carousel-shell py-3 px-0 px-md-3">
         <Carousel fade controls className="mx-auto hero-carousel" style={{ maxWidth: 1400 }}>
-          {[carousel1, carousel2, carousel3, carousel4].map((imagen, index) => (
+          {CAROUSEL_IMAGES.map((imagen, index) => (
             <Carousel.Item key={index}>
               <div className="ratio ratio-16x9">
                 <img
-                  src={imagen}
-                  alt={`Banner ${index + 1}`}
+                  src={imagen.src}
+                  alt={imagen.alt}
                   className="w-100 rounded-0 rounded-md-4 object-fit-cover"
+                  loading={index === 0 ? "eager" : "lazy"}
+                  fetchPriority={index === 0 ? "high" : "low"}
                 />
               </div>
             </Carousel.Item>
@@ -300,41 +315,6 @@ export default function Inicio() {
           </Row>
         </Container>
       </section>
-
-      <Container className="pb-5">
-        <div className="mb-5 px-md-5">
-          <Carousel interval={3000} className="main-carousel-ofertas mx-auto shadow-lg rounded-4 overflow-hidden">
-            {[
-              {
-                imagen: oferta1,
-                alt: "Familia de tinturas madre artesanales",
-                imageClassName: "main-carousel-ofertas-image main-carousel-ofertas-image--top",
-              },
-              {
-                imagen: oferta3,
-                alt: "Ofertas de la semana",
-                imageClassName: "main-carousel-ofertas-image",
-              },
-            ].map(({ imagen, alt, imageClassName }, index) => (
-              <Carousel.Item key={index}>
-                <div className="main-carousel-ofertas-frame">
-                  <img className={imageClassName} src={imagen} alt={alt} />
-                </div>
-              </Carousel.Item>
-            ))}
-          </Carousel>
-        </div>
-
-        {ofertas.length > 0 && (
-          <Row className="g-4">
-            {ofertas.map((producto) => (
-              <Col xs={12} sm={6} md={4} lg={3} key={producto._id}>
-                <CardProducto producto={producto} />
-              </Col>
-            ))}
-          </Row>
-        )}
-      </Container>
     </div>
   );
 }

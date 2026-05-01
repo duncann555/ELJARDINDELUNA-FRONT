@@ -14,9 +14,10 @@ import Swal from "sweetalert2";
 import "../../styles/productos.css";
 
 import { useCarrito } from "../../context/CarritoContext";
-import { formatCurrency } from "../../helpers/app";
+import { formatCurrency, optimizarImagenCloudinary } from "../../helpers/app";
 import { solicitarJsonApi } from "../../helpers/clienteApi";
 import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
+import { obtenerProductosPublicos } from "../../helpers/productosApi";
 
 const IMG_PLACEHOLDER = (text) =>
   `https://placehold.co/800x800/png?text=${encodeURIComponent(text || "Sin Imagen")}`;
@@ -110,7 +111,7 @@ function CardProducto({ producto }) {
         style={{ width: "100%", aspectRatio: "1/1" }}
       >
         <img
-          src={imagenUrl || IMG_PLACEHOLDER(nombre)}
+          src={optimizarImagenCloudinary(imagenUrl) || IMG_PLACEHOLDER(nombre)}
           alt={nombre}
           loading="lazy"
           className="card-img-top productos-card-image"
@@ -197,13 +198,15 @@ export default function Productos() {
       setLoading(true);
 
       try {
-        const endpoint = terminoBusqueda
-          ? `/productos/buscar?nombre=${encodeURIComponent(terminoBusqueda)}`
-          : "/productos";
-        const datos = await solicitarJsonApi(endpoint, {
-          signal: controller.signal,
-          mensajeError: "No se pudieron cargar los productos.",
-        });
+        const datos = terminoBusqueda
+          ? await solicitarJsonApi(
+              `/productos/buscar?nombre=${encodeURIComponent(terminoBusqueda)}`,
+              {
+                signal: controller.signal,
+                mensajeError: "No se pudieron cargar los productos.",
+              },
+            )
+          : await obtenerProductosPublicos();
 
         if (activo) {
           setProductos(Array.isArray(datos) ? datos : []);

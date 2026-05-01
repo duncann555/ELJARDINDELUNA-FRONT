@@ -298,14 +298,6 @@
   transform: none !important;
 }
 
-.producto-oferta-badge {
-  background: linear-gradient(135deg, #b75861 0%, #9f3d49 100%) !important;
-  color: #ffffff;
-  border-radius: 999px;
-  letter-spacing: 0.12em;
-  font-size: 0.7rem;
-}
-
 .producto-stock-badge {
   background: linear-gradient(135deg, #b75861 0%, #9f3d49 100%) !important;
   color: #ffffff;
@@ -438,61 +430,8 @@
   box-shadow: inset 0 0 0 1px rgba(217, 200, 162, 0.14);
 }
 
-.inicio-highlight-offer {
-  border: 1px solid rgba(45, 68, 93, 0.08);
-}
-
-:root[data-theme="light"] .inicio-highlight-offer {
-  border-color: rgba(45, 68, 93, 0.14);
-  box-shadow:
-    0 24px 48px rgba(29, 48, 70, 0.12),
-    0 2px 0 rgba(255, 255, 255, 0.72) !important;
-}
-
-:root[data-theme="dark"] .inicio-highlight-offer {
-  border-color: rgba(217, 200, 162, 0.08);
-  box-shadow: 0 24px 46px rgba(2, 6, 23, 0.3) !important;
-}
-
 .main-carousel .carousel-hero-wrapper {
   max-height: 500px;
-}
-
-.main-carousel-ofertas {
-  max-width: 1200px;
-  border-radius: 24px;
-  margin: 0 auto;
-  overflow: hidden;
-  border: 1px solid rgba(45, 68, 93, 0.08);
-}
-
-.main-carousel-ofertas-frame {
-  aspect-ratio: 2 / 1;
-  overflow: hidden;
-}
-
-.main-carousel-ofertas-image {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-  object-position: center;
-}
-
-.main-carousel-ofertas-image--top {
-  object-position: center 72%;
-}
-
-:root[data-theme="light"] .main-carousel-ofertas {
-  border-color: rgba(45, 68, 93, 0.14);
-  box-shadow:
-    0 28px 52px rgba(29, 48, 70, 0.12),
-    0 2px 0 rgba(255, 255, 255, 0.7) !important;
-}
-
-:root[data-theme="dark"] .main-carousel-ofertas {
-  border-color: rgba(217, 200, 162, 0.08);
-  box-shadow: 0 26px 48px rgba(2, 6, 23, 0.34) !important;
 }
 
 .carousel-control-prev,
@@ -599,18 +538,6 @@
 
   .producto-card .card-body {
     padding: 1rem;
-  }
-
-  .main-carousel-ofertas {
-    border-radius: 18px;
-  }
-
-  .main-carousel-ofertas-frame {
-    aspect-ratio: 16 / 10;
-  }
-
-  .main-carousel-ofertas-image--top {
-    object-position: center 78%;
   }
 
   .beneficios-wrapper .container {

@@ -159,3 +159,20 @@ export const formatDate = (
   },
 ) =>
   value ? new Date(value).toLocaleString("es-AR", options) : "-";
+
+export const optimizarImagenCloudinary = (
+  url,
+  transformation = "f_auto,q_auto",
+) => {
+  const imageUrl = String(url || "").trim();
+
+  if (!imageUrl || !imageUrl.includes("res.cloudinary.com") || !imageUrl.includes("/upload/")) {
+    return imageUrl;
+  }
+
+  if (imageUrl.includes("/upload/f_auto") || imageUrl.includes("/upload/q_auto")) {
+    return imageUrl;
+  }
+
+  return imageUrl.replace("/upload/", `/upload/${transformation}/`);
+};

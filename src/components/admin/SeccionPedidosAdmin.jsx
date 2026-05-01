@@ -8,6 +8,7 @@ import {
   obtenerTextoEstadoPago,
   obtenerTextoEstadoPedido,
   obtenerTextoMetodoPagoPedido,
+  obtenerTextoTipoEnvioPedido,
   obtenerVarianteEstadoPago,
   obtenerVarianteEstadoPedido,
 } from "./utilidadesAdmin";
@@ -86,7 +87,8 @@ export default function SeccionPedidosAdmin({
                           - descuento transferencia 7% {formatCurrency(obtenerDescuentoPedido(pedido))}
                         </>
                       )}{" "}
-                      + envio {formatCurrency(obtenerCostoEnvioPedido(pedido))}
+                      + {obtenerTextoTipoEnvioPedido(pedido)}{" "}
+                      {formatCurrency(obtenerCostoEnvioPedido(pedido))}
                     </small>
                   </td>
 

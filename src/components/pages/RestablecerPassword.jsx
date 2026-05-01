@@ -33,10 +33,7 @@ export default function RestablecerPassword() {
     password: "",
     passwordConfirm: "",
   });
-  const [touched, setTouched] = useState({
-    password: false,
-    passwordConfirm: false,
-  });
+  const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleFieldChange = (field, value) => {
@@ -54,32 +51,12 @@ export default function RestablecerPassword() {
       setPasswordConfirm(value);
     }
 
-    if (touched[field] || (field === "password" && touched.passwordConfirm)) {
-      const nextPassword = field === "password" ? value : password;
-      const nextPasswordConfirm =
-        field === "passwordConfirm" ? value : passwordConfirm;
-
+    if (fieldErrors[field] || (field === "password" && fieldErrors.passwordConfirm)) {
       setFieldErrors({
-        password: validatePassword(nextPassword),
-        passwordConfirm: validatePasswordConfirmation(
-          nextPasswordConfirm,
-          nextPassword,
-        ),
+        password: field === "passwordConfirm" ? fieldErrors.password : "",
+        passwordConfirm: "",
       });
     }
-  };
-
-  const handleFieldBlur = (field) => {
-    const nextTouched = {
-      ...touched,
-      [field]: true,
-    };
-
-    setTouched(nextTouched);
-    setFieldErrors({
-      password: validatePassword(password),
-      passwordConfirm: validatePasswordConfirmation(passwordConfirm, password),
-    });
   };
 
   const validateForm = () => {
@@ -88,10 +65,7 @@ export default function RestablecerPassword() {
       passwordConfirm: validatePasswordConfirmation(passwordConfirm, password),
     };
 
-    setTouched({
-      password: true,
-      passwordConfirm: true,
-    });
+    setSubmitted(true);
     setFieldErrors(nextErrors);
 
     return !Object.values(nextErrors).some(Boolean);
@@ -116,6 +90,11 @@ export default function RestablecerPassword() {
       setError("");
       setPassword("");
       setPasswordConfirm("");
+      setSubmitted(false);
+      setFieldErrors({
+        password: "",
+        passwordConfirm: "",
+      });
       setSuccessMessage(
         data?.mensaje || "La contrasena se actualizo correctamente.",
       );
@@ -177,11 +156,10 @@ export default function RestablecerPassword() {
               maxLength={PASSWORD_MAX_LENGTH}
               value={password}
               disabled={!token || Boolean(successMessage)}
-              isInvalid={Boolean(touched.password && fieldErrors.password)}
+              isInvalid={Boolean(submitted && fieldErrors.password)}
               onChange={(event) =>
                 handleFieldChange("password", event.target.value)
               }
-              onBlur={() => handleFieldBlur("password")}
             />
             <Form.Control.Feedback type="invalid">
               {fieldErrors.password}
@@ -201,12 +179,11 @@ export default function RestablecerPassword() {
               value={passwordConfirm}
               disabled={!token || Boolean(successMessage)}
               isInvalid={Boolean(
-                touched.passwordConfirm && fieldErrors.passwordConfirm,
+                submitted && fieldErrors.passwordConfirm,
               )}
               onChange={(event) =>
                 handleFieldChange("passwordConfirm", event.target.value)
               }
-              onBlur={() => handleFieldBlur("passwordConfirm")}
             />
             <Form.Control.Feedback type="invalid">
               {fieldErrors.passwordConfirm}

@@ -7,6 +7,24 @@ export const obtenerDescuentoPedido = (pedido) =>
 export const obtenerCostoEnvioPedido = (pedido) =>
   Number(pedido?.envio?.costo || 0);
 
+export const obtenerTipoEnvioPedido = (pedido) =>
+  String(pedido?.envio?.tipo || pedido?.datosEnvio?.tipo || "")
+    .trim()
+    .toLowerCase();
+
+export const obtenerTextoTipoEnvioPedido = (pedido) => {
+  switch (obtenerTipoEnvioPedido(pedido)) {
+    case "andreani_sucursal":
+      return "Andreani a sucursal";
+    case "cadete_local":
+      return "Acordar con el vendedor";
+    case "andreani_domicilio":
+      return "Andreani a domicilio";
+    default:
+      return pedido?.envio?.proveedor || "Envio nacional";
+  }
+};
+
 export const obtenerMetodoPagoPedido = (pedido) =>
   String(pedido?.metodoPago || "").trim().toLowerCase() || "mercado_pago";
 

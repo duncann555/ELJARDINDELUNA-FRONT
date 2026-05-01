@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import {
   getApiErrorMessage,
   getJwtPayload,
@@ -38,6 +38,10 @@ const normalizarUsuario = (userData) => {
     rol: source.rol || "Usuario",
     estado: source.estado || "Activo",
     carrito: Array.isArray(source.carrito) ? source.carrito : [],
+    datosEnvioPreferidos:
+      source.datosEnvioPreferidos && typeof source.datosEnvioPreferidos === "object"
+        ? source.datosEnvioPreferidos
+        : null,
   };
 };
 
@@ -82,24 +86,27 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const limpiarSesionLocal = () => {
+  const limpiarSesionLocal = useCallback(() => {
     setUser(null);
     setToken("");
     limpiarPersistenciaCompleta();
-  };
+  }, []);
 
-  const aplicarSesion = (nextUser, nextToken) => {
-    const normalizedUser = normalizarUsuario(nextUser);
-    const normalizedToken = normalizeToken(nextToken);
+  const aplicarSesion = useCallback(
+    (nextUser, nextToken) => {
+      const normalizedUser = normalizarUsuario(nextUser);
+      const normalizedToken = normalizeToken(nextToken);
 
-    if (!normalizedUser?.uid || !normalizedToken) {
-      throw crearErrorAuth("No se pudo recuperar una sesion valida.");
-    }
+      if (!normalizedUser?.uid || !normalizedToken) {
+        throw crearErrorAuth("No se pudo recuperar una sesion valida.");
+      }
 
-    setUser(normalizedUser);
-    setToken(normalizedToken);
-    persistirSesion(normalizedUser, normalizedToken);
-  };
+      setUser(normalizedUser);
+      setToken(normalizedToken);
+      persistirSesion(normalizedUser, normalizedToken);
+    },
+    [],
+  );
 
   useEffect(() => {
     const session = leerSesionPersistida();
@@ -112,7 +119,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     setLoading(false);
-  }, []);
+  }, [aplicarSesion]);
 
   useEffect(() => {
     const normalizedToken = normalizeToken(token);
@@ -141,7 +148,7 @@ export const AuthProvider = ({ children }) => {
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [token]);
+  }, [token, limpiarSesionLocal]);
 
   const loginConEmailYPassword = async (email, password) => {
     limpiarPersistenciaCompleta();

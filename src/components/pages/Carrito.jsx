@@ -40,6 +40,7 @@ import {
 import "../../styles/carrito.css";
 
 const ENVIO_INICIAL = {
+  tipo: "andreani_domicilio",
   provincia: "",
   ciudad: "",
   domicilio: "",
@@ -47,19 +48,57 @@ const ENVIO_INICIAL = {
   entreCalles: "",
   referencia: "",
   codigoPostal: "",
+  sucursalAndreani: "",
+  horarioConveniente: "",
 };
-const ENVIO_FIJO = Number(import.meta.env.VITE_FIXED_SHIPPING_COST || 9500);
+const TIPO_ENVIO_ANDREANI_DOMICILIO = "andreani_domicilio";
+const TIPO_ENVIO_ANDREANI_SUCURSAL = "andreani_sucursal";
+const TIPO_ENVIO_CADETE_LOCAL = "cadete_local";
+const COSTO_ENVIO_ANDREANI = Number(import.meta.env.VITE_COSTO_ENVIO_ANDREANI || 9500);
+const LOCALIDADES_CADETE = ["San Miguel de Tucumán", "Yerba Buena"];
+const OPCIONES_ENVIO = [
+  {
+    tipo: TIPO_ENVIO_ANDREANI_DOMICILIO,
+    titulo: "Andreani a domicilio",
+    descripcion: "Recibí tu pedido en tu dirección.",
+  },
+  {
+    tipo: TIPO_ENVIO_ANDREANI_SUCURSAL,
+    titulo: "Andreani a sucursal",
+    descripcion: "Retirá tu pedido en una sucursal Andreani.",
+  },
+  {
+    tipo: TIPO_ENVIO_CADETE_LOCAL,
+    titulo: "Acordar con el vendedor",
+    descripcion: "Coordinaremos la entrega por WhatsApp.",
+  },
+];
 const METODO_PAGO_MERCADO_PAGO = "mercado_pago";
 const METODO_PAGO_TRANSFERENCIA = "transferencia";
 const DESCUENTO_TRANSFERENCIA = 0.07;
 const normalizePhone = (value) => String(value || "").replace(/\D/g, "");
 const normalizeCheckoutText = (value) => String(value || "").trim();
+const normalizarLocalidad = (value) =>
+  normalizeCheckoutText(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+const localidadPermiteCadete = (ciudad) =>
+  LOCALIDADES_CADETE.some(
+    (localidad) => normalizarLocalidad(localidad) === normalizarLocalidad(ciudad),
+  );
+const obtenerCostoEnvio = (tipo) =>
+  tipo === TIPO_ENVIO_CADETE_LOCAL ? 0 : COSTO_ENVIO_ANDREANI;
+const obtenerTituloEnvio = (tipo) =>
+  OPCIONES_ENVIO.find((opcion) => opcion.tipo === tipo)?.titulo ||
+  "Andreani a domicilio";
 const calcularDescuentoTransferencia = (subtotal, metodoPago) =>
   metodoPago === METODO_PAGO_TRANSFERENCIA
     ? Number((subtotal * DESCUENTO_TRANSFERENCIA).toFixed(2))
     : 0;
 
 const construirEnvioPayload = (envio) => ({
+  tipo: envio.tipo || TIPO_ENVIO_ANDREANI_DOMICILIO,
   provincia: normalizeCheckoutText(envio.provincia),
   ciudad: normalizeCheckoutText(envio.ciudad),
   domicilio: normalizeCheckoutText(envio.domicilio),
@@ -67,6 +106,8 @@ const construirEnvioPayload = (envio) => ({
   entreCalles: normalizeCheckoutText(envio.entreCalles),
   referencia: normalizeCheckoutText(envio.referencia),
   codigoPostal: normalizeCheckoutText(envio.codigoPostal),
+  sucursalAndreani: normalizeCheckoutText(envio.sucursalAndreani),
+  horarioConveniente: normalizeCheckoutText(envio.horarioConveniente),
 });
 
 const construirProductosResumen = (carritoCheckout) =>
@@ -79,12 +120,19 @@ const construirProductosResumen = (carritoCheckout) =>
     }))
     .sort((a, b) => a.id.localeCompare(b.id));
 
-const construirCheckoutHash = ({ userId, productos, envio, metodoPago }) =>
+const construirCheckoutHash = ({
+  userId,
+  productos,
+  envio,
+  metodoPago,
+  guardarDatosEnvio,
+}) =>
   JSON.stringify({
     userId: String(userId || ""),
     productos: productos.map(({ id, cantidad }) => ({ id, cantidad })),
     envio,
     metodoPago: String(metodoPago || ""),
+    guardarDatosEnvio: Boolean(guardarDatosEnvio),
   });
 
 const puedeReutilizarPedidoGuardado = ({ pedidoGuardado, userId, checkoutHash }) =>
@@ -201,15 +249,16 @@ const Carrito = () => {
   const [envio, setEnvio] = useState(() =>
     ({
       ...ENVIO_INICIAL,
+      ...(user?.datosEnvioPreferidos || {}),
       ...leerStorageJson(CHECKOUT_ENVIO_STORAGE_KEY, {}),
     }),
   );
   const [erroresEnvio, setErroresEnvio] = useState({});
-  const [touchedEnvio, setTouchedEnvio] = useState({});
   const [procesandoPago, setProcesandoPago] = useState(false);
   const [metodoPagoSeleccionado, setMetodoPagoSeleccionado] = useState(
     METODO_PAGO_MERCADO_PAGO,
   );
+  const [guardarDatosEnvio, setGuardarDatosEnvio] = useState(false);
   const [comprobanteTransferencia, setComprobanteTransferencia] = useState(null);
 
   useEffect(() => {
@@ -221,53 +270,83 @@ const Carrito = () => {
     [carrito],
   );
 
+  const cadeteDisponible = useMemo(
+    () => localidadPermiteCadete(envio.ciudad),
+    [envio.ciudad],
+  );
+  const camposEnvioRequeridos = useMemo(() => {
+    switch (envio.tipo) {
+      case TIPO_ENVIO_ANDREANI_SUCURSAL:
+        return ["provincia", "ciudad", "codigoPostal", "sucursalAndreani", "celular"];
+      case TIPO_ENVIO_CADETE_LOCAL:
+        return ["ciudad", "celular"];
+      default:
+        return ["provincia", "ciudad", "codigoPostal", "domicilio", "celular"];
+    }
+  }, [envio.tipo]);
   const envioCompleto = useMemo(
     () =>
-      [
-        envio.provincia,
-        envio.ciudad,
-        envio.domicilio,
-        envio.celular,
-        envio.codigoPostal,
-      ].every((valor) => typeof valor === "string" && valor.trim().length > 0),
-    [envio],
+      camposEnvioRequeridos.every((campo) =>
+        typeof envio[campo] === "string" && envio[campo].trim().length > 0,
+      ),
+    [camposEnvioRequeridos, envio],
   );
-  const envioValido = useMemo(
-    () =>
-      ![
-        validarCampoEnvio("provincia", envio.provincia),
-        validarCampoEnvio("ciudad", envio.ciudad),
-        validarCampoEnvio("domicilio", envio.domicilio),
-        validarCampoEnvio("celular", envio.celular),
-        validarCampoEnvio("entreCalles", envio.entreCalles),
-        validarCampoEnvio("referencia", envio.referencia),
-        validarCampoEnvio("codigoPostal", envio.codigoPostal),
-      ].some(Boolean),
-    [envio],
-  );
+  const envioValido = ![
+    validarCampoEnvio("tipo", envio.tipo),
+    validarCampoEnvio("provincia", envio.provincia),
+    validarCampoEnvio("ciudad", envio.ciudad),
+    validarCampoEnvio("domicilio", envio.domicilio),
+    validarCampoEnvio("celular", envio.celular),
+    validarCampoEnvio("entreCalles", envio.entreCalles),
+    validarCampoEnvio("referencia", envio.referencia),
+    validarCampoEnvio("codigoPostal", envio.codigoPostal),
+    validarCampoEnvio("sucursalAndreani", envio.sucursalAndreani),
+    validarCampoEnvio("horarioConveniente", envio.horarioConveniente),
+  ].some(Boolean);
   const descuentoTransferencia = useMemo(
     () => calcularDescuentoTransferencia(subtotal, metodoPagoSeleccionado),
     [metodoPagoSeleccionado, subtotal],
   );
-  const costoEnvio = carrito.length > 0 ? ENVIO_FIJO : 0;
+  const costoEnvio = carrito.length > 0 ? obtenerCostoEnvio(envio.tipo) : 0;
   const totalFinal = subtotal - descuentoTransferencia + costoEnvio;
+  const guardarDatosDomicilio = envio.tipo !== TIPO_ENVIO_CADETE_LOCAL && guardarDatosEnvio;
+  const envioListo =
+    envioCompleto &&
+    envioValido &&
+    !(envio.tipo === TIPO_ENVIO_CADETE_LOCAL && !cadeteDisponible);
 
   function validarCampoEnvio(name, value) {
     switch (name) {
+      case "tipo":
+        return [TIPO_ENVIO_ANDREANI_DOMICILIO, TIPO_ENVIO_ANDREANI_SUCURSAL, TIPO_ENVIO_CADETE_LOCAL].includes(value)
+          ? ""
+          : "El tipo de envío no es válido";
       case "provincia":
+        if (envio.tipo === TIPO_ENVIO_CADETE_LOCAL) return "";
         return validateProvincia(value);
       case "ciudad":
         return validateCiudad(value);
       case "domicilio":
+        if (envio.tipo === TIPO_ENVIO_CADETE_LOCAL) return "";
+        if (envio.tipo === TIPO_ENVIO_ANDREANI_SUCURSAL) return "";
         return validateDomicilioCompleto(value);
       case "celular":
         return validateCelularEntrega(value);
       case "entreCalles":
+        if (envio.tipo === TIPO_ENVIO_CADETE_LOCAL) return "";
         return validateTextoOpcional(value, "Entre calles", 120);
       case "referencia":
         return validateTextoOpcional(value, "La referencia", 180);
       case "codigoPostal":
+        if (envio.tipo === TIPO_ENVIO_CADETE_LOCAL) return "";
         return validateCodigoPostal(value);
+      case "sucursalAndreani":
+        if (envio.tipo !== TIPO_ENVIO_ANDREANI_SUCURSAL) return "";
+        return normalizeCheckoutText(value).length >= 3
+          ? ""
+          : "La sucursal Andreani es obligatoria";
+      case "horarioConveniente":
+        return validateTextoOpcional(value, "El horario conveniente", 120);
       default:
         return "";
     }
@@ -275,6 +354,10 @@ const Carrito = () => {
 
   const validarEnvio = () => {
     const nuevosErrores = {
+      tipo:
+        envio.tipo === TIPO_ENVIO_CADETE_LOCAL && !cadeteDisponible
+          ? "Acordar con el vendedor solo está disponible para San Miguel de Tucumán y Yerba Buena"
+          : validarCampoEnvio("tipo", envio.tipo),
       provincia: validarCampoEnvio("provincia", envio.provincia),
       ciudad: validarCampoEnvio("ciudad", envio.ciudad),
       domicilio: validarCampoEnvio("domicilio", envio.domicilio),
@@ -282,53 +365,36 @@ const Carrito = () => {
       entreCalles: validarCampoEnvio("entreCalles", envio.entreCalles),
       referencia: validarCampoEnvio("referencia", envio.referencia),
       codigoPostal: validarCampoEnvio("codigoPostal", envio.codigoPostal),
+      sucursalAndreani: validarCampoEnvio("sucursalAndreani", envio.sucursalAndreani),
+      horarioConveniente: validarCampoEnvio("horarioConveniente", envio.horarioConveniente),
     };
 
     setErroresEnvio(nuevosErrores);
-    setTouchedEnvio({
-      provincia: true,
-      ciudad: true,
-      domicilio: true,
-      celular: true,
-      entreCalles: true,
-      referencia: true,
-      codigoPostal: true,
-    });
 
     return !Object.values(nuevosErrores).some(Boolean);
   };
 
   const handleEnvioChange = (event) => {
     const { name, value } = event.target;
-    const nextEnvio = {
-      ...envio,
-      [name]: value,
-    };
-
     setEnvio((prevEnvio) => ({
       ...prevEnvio,
       [name]: value,
     }));
 
-    if (touchedEnvio[name]) {
+    if (erroresEnvio[name]) {
       setErroresEnvio((prevErrores) => ({
         ...prevErrores,
-        [name]: validarCampoEnvio(name, nextEnvio[name]),
+        [name]: "",
       }));
     }
   };
 
-  const handleEnvioBlur = (event) => {
-    const { name, value } = event.target;
-
-    setTouchedEnvio((prev) => ({
-      ...prev,
-      [name]: true,
+  const handleTipoEnvioChange = (tipo) => {
+    setEnvio((prevEnvio) => ({
+      ...prevEnvio,
+      tipo,
     }));
-    setErroresEnvio((prev) => ({
-      ...prev,
-      [name]: validarCampoEnvio(name, value),
-    }));
+    setErroresEnvio({});
   };
 
   const solicitarDatosCheckout = async (metodoPago, mensajeProceso) => {
@@ -347,7 +413,7 @@ const Carrito = () => {
     if (!validarEnvio()) {
       await Swal.fire({
         title: "Faltan datos de envio",
-        text: "Completa provincia, ciudad, domicilio completo, celular y codigo postal antes de continuar.",
+        text: "Completa los datos requeridos para la forma de envio elegida antes de continuar.",
         icon: "warning",
         confirmButtonText: "Revisar",
       });
@@ -378,6 +444,7 @@ const Carrito = () => {
       productos: productosResumen,
       envio: envioPayload,
       metodoPago,
+      guardarDatosEnvio: guardarDatosDomicilio,
     });
 
     return {
@@ -426,7 +493,10 @@ const Carrito = () => {
       null,
     envio: pedidoData?.envio || baseResumen.envio || {
       ...envioPayload,
-      proveedor: "Envio nacional",
+      proveedor: obtenerTituloEnvio(envioPayload.tipo),
+      tipo: envioPayload.tipo,
+      operador:
+        envioPayload.tipo === TIPO_ENVIO_CADETE_LOCAL ? "cadete" : "andreani",
       costo: costoEnvio,
       esGratis: false,
     },
@@ -451,6 +521,7 @@ const Carrito = () => {
           })),
           envio: envioPayload,
           metodoPago,
+          guardarDatosEnvio: guardarDatosDomicilio,
         },
       },
     );
@@ -754,12 +825,9 @@ const Carrito = () => {
         </div>
 
         <Alert variant="secondary" className="rounded-4 border-0 shadow-sm">
-          <strong>Envios a todo el pais.</strong>
-          {" "}
-          El envio cuesta
-          {" "}
-          {formatCurrency(ENVIO_FIJO)}
-          .
+          <strong>Envíos disponibles.</strong>{" "}
+          Andreani a domicilio o sucursal {formatCurrency(COSTO_ENVIO_ANDREANI)}.
+          Acordar con el vendedor: costo de entrega a coordinar por WhatsApp.
         </Alert>
 
         <Row className="g-4">
@@ -820,10 +888,10 @@ const Carrito = () => {
                 <div className="checkout-card-header mb-4">
                   <div className="checkout-step-badge">2</div>
                   <div>
-                    <h5 className="fw-bold mb-1">Direccion de entrega</h5>
+                    <h5 className="fw-bold mb-1">Forma de envío</h5>
                     <p className="text-muted mb-0">
-                      Usaremos estos datos para registrar tu pedido y coordinar
-                      el envio a todo el pais con tarifa fija de {formatCurrency(ENVIO_FIJO)}.
+                      Ya tenemos tu nombre y email por tu cuenta de Google.
+                      Completá los datos necesarios para enviar tu pedido.
                     </p>
                   </div>
                 </div>
@@ -841,36 +909,90 @@ const Carrito = () => {
                   </Alert>
                 )}
 
-                <Alert variant="secondary" className="rounded-4">
-                  Envio fijo nacional:
-                  {" "}
-                  <strong>{formatCurrency(ENVIO_FIJO)}</strong>
-                </Alert>
+                {user && (
+                  <Alert variant="success" className="rounded-4">
+                    <strong>{`${user.nombre || ""} ${user.apellido || ""}`.trim() || "Cliente"}</strong>
+                    {user.email ? ` - ${user.email}` : ""}
+                  </Alert>
+                )}
+
+                <div className="d-grid gap-3 mb-4">
+                  {OPCIONES_ENVIO.map((opcion) => {
+                    const deshabilitado =
+                      opcion.tipo === TIPO_ENVIO_CADETE_LOCAL && !cadeteDisponible;
+
+                    return (
+                      <Card
+                        key={opcion.tipo}
+                        className={`border rounded-4 ${
+                          envio.tipo === opcion.tipo
+                            ? "border-success shadow-sm"
+                            : "border-light-subtle"
+                        } ${deshabilitado ? "opacity-75" : ""}`}
+                      >
+                        <Card.Body className="py-3">
+                          <Form.Check
+                            type="radio"
+                            id={`tipo-envio-${opcion.tipo}`}
+                            name="tipo"
+                            checked={envio.tipo === opcion.tipo}
+                            disabled={deshabilitado}
+                            onChange={() => handleTipoEnvioChange(opcion.tipo)}
+                            label={
+                              <span className="fw-semibold text-dark">
+                                {opcion.titulo}
+                                {opcion.tipo !== TIPO_ENVIO_CADETE_LOCAL
+                                  ? ` - ${formatCurrency(obtenerCostoEnvio(opcion.tipo))}`
+                                  : ""}
+                              </span>
+                            }
+                          />
+                          <div className="small text-muted ms-4 mt-1">
+                            {opcion.descripcion}
+                            {deshabilitado
+                              ? " Disponible solo para San Miguel de Tucumán y Yerba Buena."
+                              : ""}
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    );
+                  })}
+                  {erroresEnvio.tipo && (
+                    <div className="text-danger small">{erroresEnvio.tipo}</div>
+                  )}
+                </div>
+
+                {envio.tipo === TIPO_ENVIO_CADETE_LOCAL && (
+                  <Alert variant="info" className="rounded-4">
+                    Coordinaremos la entrega y el costo por WhatsApp.
+                  </Alert>
+                )}
 
                 <Row className="g-3">
-                  <Col md={6}>
-                    <Form.Group>
-                      <Form.Label>Provincia</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="provincia"
-                        minLength={2}
-                        maxLength={80}
-                        value={envio.provincia}
-                        onChange={handleEnvioChange}
-                        onBlur={handleEnvioBlur}
-                        placeholder="Buenos Aires"
-                        isInvalid={Boolean(erroresEnvio.provincia)}
-                      />
-                      <Form.Control.Feedback type="invalid">
-                        {erroresEnvio.provincia}
-                      </Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
+                  {envio.tipo !== TIPO_ENVIO_CADETE_LOCAL && (
+                    <Col md={6}>
+                      <Form.Group>
+                        <Form.Label>Provincia</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="provincia"
+                          minLength={2}
+                          maxLength={80}
+                          value={envio.provincia}
+                          onChange={handleEnvioChange}
+                          placeholder="Buenos Aires"
+                          isInvalid={Boolean(erroresEnvio.provincia)}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {erroresEnvio.provincia}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  )}
 
-                  <Col md={6}>
+                  <Col md={envio.tipo === TIPO_ENVIO_CADETE_LOCAL ? 12 : 6}>
                     <Form.Group>
-                      <Form.Label>Ciudad</Form.Label>
+                      <Form.Label>Ciudad/localidad</Form.Label>
                       <Form.Control
                         type="text"
                         name="ciudad"
@@ -878,8 +1000,7 @@ const Carrito = () => {
                         maxLength={80}
                         value={envio.ciudad}
                         onChange={handleEnvioChange}
-                        onBlur={handleEnvioBlur}
-                        placeholder="La Plata"
+                        placeholder="Yerba Buena"
                         isInvalid={Boolean(erroresEnvio.ciudad)}
                       />
                       <Form.Control.Feedback type="invalid">
@@ -888,49 +1009,76 @@ const Carrito = () => {
                     </Form.Group>
                   </Col>
 
-                  <Col md={8}>
-                    <Form.Group>
-                      <Form.Label>Domicilio Completo</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="domicilio"
-                        minLength={5}
-                        maxLength={160}
-                        value={envio.domicilio}
-                        onChange={handleEnvioChange}
-                        onBlur={handleEnvioBlur}
-                        placeholder="Calle, altura, piso y dpto"
-                        isInvalid={Boolean(erroresEnvio.domicilio)}
-                      />
-                      <Form.Control.Feedback type="invalid">
-                        {erroresEnvio.domicilio}
-                      </Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
+                  {envio.tipo !== TIPO_ENVIO_CADETE_LOCAL && (
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label>Código postal</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="codigoPostal"
+                          minLength={3}
+                          maxLength={10}
+                          value={envio.codigoPostal}
+                          onChange={handleEnvioChange}
+                          placeholder="4000"
+                          isInvalid={Boolean(erroresEnvio.codigoPostal)}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {erroresEnvio.codigoPostal}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  )}
+
+                  {envio.tipo === TIPO_ENVIO_ANDREANI_SUCURSAL && (
+                    <Col md={8}>
+                      <Form.Group>
+                        <Form.Label>Sucursal Andreani</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="sucursalAndreani"
+                          minLength={3}
+                          maxLength={160}
+                          value={envio.sucursalAndreani}
+                          onChange={handleEnvioChange}
+                          placeholder="Sucursal preferida"
+                          isInvalid={Boolean(erroresEnvio.sucursalAndreani)}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {erroresEnvio.sucursalAndreani}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  )}
+
+                  {envio.tipo === TIPO_ENVIO_ANDREANI_DOMICILIO && (
+                    <Col md={8}>
+                      <Form.Group>
+                        <Form.Label>Domicilio completo</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="domicilio"
+                          minLength={5}
+                          maxLength={160}
+                          value={envio.domicilio}
+                          onChange={handleEnvioChange}
+                          placeholder="Calle, altura, piso y dpto"
+                          isInvalid={Boolean(erroresEnvio.domicilio)}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {erroresEnvio.domicilio}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  )}
 
                   <Col md={4}>
                     <Form.Group>
-                      <Form.Label>Codigo postal</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="codigoPostal"
-                        minLength={3}
-                        maxLength={10}
-                        value={envio.codigoPostal}
-                        onChange={handleEnvioChange}
-                        onBlur={handleEnvioBlur}
-                        placeholder="1900"
-                        isInvalid={Boolean(erroresEnvio.codigoPostal)}
-                      />
-                      <Form.Control.Feedback type="invalid">
-                        {erroresEnvio.codigoPostal}
-                      </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-
-                  <Col md={6}>
-                    <Form.Group>
-                      <Form.Label>Celular</Form.Label>
+                      <Form.Label>
+                        {envio.tipo === TIPO_ENVIO_CADETE_LOCAL
+                          ? "Celular / WhatsApp"
+                          : "Celular"}
+                      </Form.Label>
                       <Form.Control
                         type="text"
                         name="celular"
@@ -938,8 +1086,7 @@ const Carrito = () => {
                         maxLength={18}
                         value={envio.celular}
                         onChange={handleEnvioChange}
-                        onBlur={handleEnvioBlur}
-                        placeholder="Ej: 11 23456789"
+                        placeholder="Ej: 381 4137174"
                         isInvalid={Boolean(erroresEnvio.celular)}
                       />
                       <Form.Control.Feedback type="invalid">
@@ -948,28 +1095,33 @@ const Carrito = () => {
                     </Form.Group>
                   </Col>
 
-                  <Col md={6}>
-                    <Form.Group>
-                      <Form.Label>Entre Calles</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="entreCalles"
-                        maxLength={120}
-                        value={envio.entreCalles}
-                        onChange={handleEnvioChange}
-                        onBlur={handleEnvioBlur}
-                        placeholder="Ej: Santa Fe y Pueyrredon"
-                        isInvalid={Boolean(erroresEnvio.entreCalles)}
-                      />
-                      <Form.Control.Feedback type="invalid">
-                        {erroresEnvio.entreCalles}
-                      </Form.Control.Feedback>
-                    </Form.Group>
-                  </Col>
+                  {envio.tipo === TIPO_ENVIO_ANDREANI_DOMICILIO && (
+                    <Col md={6}>
+                      <Form.Group>
+                        <Form.Label>Entre calles (opcional)</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="entreCalles"
+                          maxLength={120}
+                          value={envio.entreCalles}
+                          onChange={handleEnvioChange}
+                          placeholder="Ej: Francia y Rojas Paz"
+                          isInvalid={Boolean(erroresEnvio.entreCalles)}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {erroresEnvio.entreCalles}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  )}
 
                   <Col xs={12}>
                     <Form.Group>
-                      <Form.Label>Referencia Opcional</Form.Label>
+                      <Form.Label>
+                        {envio.tipo === TIPO_ENVIO_CADETE_LOCAL
+                          ? "Comentario opcional"
+                          : "Referencia opcional"}
+                      </Form.Label>
                       <Form.Control
                         as="textarea"
                         rows={3}
@@ -977,8 +1129,11 @@ const Carrito = () => {
                         maxLength={180}
                         value={envio.referencia}
                         onChange={handleEnvioChange}
-                        onBlur={handleEnvioBlur}
-                        placeholder="Ej: porton negro, departamento 2B, casa al fondo"
+                        placeholder={
+                          envio.tipo === TIPO_ENVIO_CADETE_LOCAL
+                            ? "Ej: prefiero coordinar por la tarde"
+                            : "Ej: portón negro, departamento 2B, casa al fondo"
+                        }
                         isInvalid={Boolean(erroresEnvio.referencia)}
                       />
                       <Form.Control.Feedback type="invalid">
@@ -986,6 +1141,18 @@ const Carrito = () => {
                       </Form.Control.Feedback>
                     </Form.Group>
                   </Col>
+
+                  {envio.tipo !== TIPO_ENVIO_CADETE_LOCAL && (
+                    <Col xs={12}>
+                      <Form.Check
+                        type="checkbox"
+                        id="guardar-datos-envio"
+                        checked={guardarDatosEnvio}
+                        onChange={(event) => setGuardarDatosEnvio(event.target.checked)}
+                        label="Guardar estos datos para futuras compras"
+                      />
+                    </Col>
+                  )}
                 </Row>
 
               </Card.Body>
@@ -1001,7 +1168,7 @@ const Carrito = () => {
                     <div>
                       <h5 className="fw-bold mb-1">Resumen de compra</h5>
                       <p className="text-muted mb-0">
-                        Aqui ves el subtotal, el descuento si eliges transferencia y el total final.
+                        Acá ves productos, envío, descuento si elegís transferencia y total final.
                       </p>
                     </div>
                   </div>
@@ -1019,8 +1186,14 @@ const Carrito = () => {
                   )}
 
                   <div className="d-flex justify-content-between mb-2">
-                    <span className="text-muted">Envio nacional</span>
-                    <span>{formatCurrency(costoEnvio)}</span>
+                    <span className="text-muted">
+                      Envío: {obtenerTituloEnvio(envio.tipo)}
+                    </span>
+                    <span>
+                      {envio.tipo === TIPO_ENVIO_CADETE_LOCAL
+                        ? "A coordinar por WhatsApp"
+                        : formatCurrency(costoEnvio)}
+                    </span>
                   </div>
 
                   <hr />
@@ -1106,7 +1279,7 @@ const Carrito = () => {
                         </div>
 
                         <div className="small text-muted mb-3">
-                          El descuento se aplica solo sobre los productos. El envio se mantiene fijo.
+                          El descuento se aplica solo sobre los productos. El envío no tiene descuento.
                         </div>
 
                         <div className="d-grid gap-2">
@@ -1138,8 +1311,14 @@ const Carrito = () => {
                               </small>
                             </div>
                             <div className="d-flex justify-content-between">
-                              <small className="text-muted">Envio nacional</small>
-                              <small className="fw-semibold">{formatCurrency(costoEnvio)}</small>
+                              <small className="text-muted">
+                                Envío: {obtenerTituloEnvio(envio.tipo)}
+                              </small>
+                              <small className="fw-semibold">
+                                {envio.tipo === TIPO_ENVIO_CADETE_LOCAL
+                                  ? "A coordinar por WhatsApp"
+                                  : formatCurrency(costoEnvio)}
+                              </small>
                             </div>
                           </div>
                           <div className="pt-2">
@@ -1179,8 +1358,7 @@ const Carrito = () => {
                     disabled={
                       carrito.length === 0 ||
                       !token ||
-                      !envioCompleto ||
-                      !envioValido ||
+                      !envioListo ||
                       procesandoPago
                     }
                   >
