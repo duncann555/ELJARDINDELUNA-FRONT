@@ -1,14 +1,37 @@
 :root {
   --admin-brand: #53b852;
   --admin-brand-dark: #2d643f;
+  --admin-text: #24364a;
+  --admin-muted: #647489;
   --admin-bg: #f8f9fa;
   --admin-card-bg: #ffffff;
+  --admin-surface-soft: #f8f4ec;
+  --admin-table-head-bg: #e4ebf2;
+  --admin-table-hover: #eef9f0;
   --admin-border-soft: rgba(36, 54, 74, 0.16);
   --admin-border-strong: rgba(36, 54, 74, 0.28);
   --admin-border-heavy: rgba(36, 54, 74, 0.42);
   --admin-border-accent: rgba(83, 184, 82, 0.5);
   --admin-shadow-soft: 0 18px 34px rgba(36, 54, 74, 0.08);
   --admin-shadow-strong: 0 24px 48px rgba(36, 54, 74, 0.12);
+}
+
+:root[data-theme="dark"] {
+  --admin-brand: #93b98c;
+  --admin-brand-dark: #d7c39a;
+  --admin-text: #edf4f1;
+  --admin-muted: #b9c8d0;
+  --admin-bg: #101b28;
+  --admin-card-bg: #182a3b;
+  --admin-surface-soft: #213447;
+  --admin-table-head-bg: #263c50;
+  --admin-table-hover: rgba(147, 185, 140, 0.12);
+  --admin-border-soft: rgba(226, 235, 239, 0.12);
+  --admin-border-strong: rgba(226, 235, 239, 0.2);
+  --admin-border-heavy: rgba(226, 235, 239, 0.3);
+  --admin-border-accent: rgba(147, 185, 140, 0.46);
+  --admin-shadow-soft: 0 18px 34px rgba(2, 8, 16, 0.28);
+  --admin-shadow-strong: 0 24px 48px rgba(2, 8, 16, 0.38);
 }
 
 body {
@@ -20,6 +43,32 @@ body {
     radial-gradient(circle at top left, rgba(217, 200, 162, 0.14), transparent 28%),
     radial-gradient(circle at 88% 10%, rgba(83, 184, 82, 0.08), transparent 24%),
     linear-gradient(180deg, rgba(248, 249, 250, 0.96) 0%, rgba(243, 239, 231, 0.96) 100%);
+  color: var(--admin-text);
+}
+
+.admin-panel h1,
+.admin-panel h2,
+.admin-panel h3,
+.admin-panel h4,
+.admin-panel h5,
+.admin-panel h6,
+.admin-modal-dialog h1,
+.admin-modal-dialog h2,
+.admin-modal-dialog h3,
+.admin-modal-dialog h4,
+.admin-modal-dialog h5,
+.admin-modal-dialog h6 {
+  color: var(--admin-text);
+}
+
+.admin-panel .text-dark,
+.admin-modal-dialog .text-dark {
+  color: var(--admin-text) !important;
+}
+
+.admin-panel .text-muted,
+.admin-modal-dialog .text-muted {
+  color: var(--admin-muted) !important;
 }
 
 /* =======================================
@@ -34,6 +83,7 @@ body {
     box-shadow 0.2s ease,
     border-color 0.2s ease;
   overflow: hidden;
+  color: var(--admin-text);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 244, 236, 0.96) 100%);
   box-shadow:
     var(--admin-shadow-soft),
@@ -81,7 +131,7 @@ body {
 }
 
 .admin-tabs .nav-link {
-  color: #516072;
+  color: var(--admin-muted);
   font-weight: 600;
   border: 2px solid transparent;
   border-bottom: 3px solid transparent;
@@ -118,6 +168,7 @@ body {
 ======================================= */
 .admin-section-card {
   position: relative;
+  color: var(--admin-text);
   border: 2px solid var(--admin-border-strong) !important;
   border-radius: 1.15rem !important;
   background:
@@ -158,6 +209,12 @@ body {
 .admin-modal-dialog .form-select {
   border-radius: 0.9rem !important;
   background-color: rgba(255, 255, 255, 0.98) !important;
+  color: var(--admin-text) !important;
+}
+
+.admin-panel .form-control::placeholder,
+.admin-modal-dialog .form-control::placeholder {
+  color: var(--admin-muted);
 }
 
 .admin-panel .form-control:focus,
@@ -186,6 +243,7 @@ body {
   border-radius: 1rem;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.96);
+  color: var(--admin-text);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.88),
     inset 0 0 0 1px rgba(36, 54, 74, 0.04);
@@ -194,15 +252,20 @@ body {
 .admin-table {
   margin-bottom: 0;
   background: transparent;
+  --bs-table-color: var(--admin-text);
+  --bs-table-bg: transparent;
+  --bs-table-hover-color: var(--admin-text);
+  --bs-table-hover-bg: var(--admin-table-hover);
+  --bs-table-border-color: var(--admin-border-soft);
 }
 
 .admin-table thead th,
 .table .admin-table thead th,
 .admin-panel .table thead th,
 .admin-modal-dialog .table thead th {
-  background: linear-gradient(180deg, #eff4f8 0%, #e4ebf2 100%);
+  background: linear-gradient(180deg, #eff4f8 0%, var(--admin-table-head-bg) 100%);
   border-bottom: 2px solid var(--admin-border-heavy);
-  color: #475569;
+  color: var(--admin-text);
   font-weight: 700;
   text-transform: uppercase;
   font-size: 0.82rem;
@@ -216,14 +279,15 @@ body {
   padding: 1rem;
   vertical-align: middle;
   border-top: 1.5px solid rgba(36, 54, 74, 0.12);
+  color: var(--admin-text);
 }
 
 .admin-table tbody tr:hover {
-  background-color: #eef9f0;
+  background-color: var(--admin-table-hover);
 }
 
 .table-hover tbody tr:hover {
-  background-color: #eef9f0;
+  background-color: var(--admin-table-hover);
 }
 
 .admin-thumb {
@@ -299,6 +363,7 @@ body {
   border: 2px solid var(--admin-border-heavy);
   border-radius: 1.4rem;
   overflow: hidden;
+  color: var(--admin-text);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(248, 244, 236, 0.99) 100%);
   box-shadow:
@@ -321,7 +386,7 @@ body {
 
 .admin-modal-dialog .modal-title {
   font-weight: 700;
-  color: #24364a;
+  color: var(--admin-text);
 }
 
 .admin-modal-dialog .btn-close {
@@ -350,6 +415,219 @@ body {
   box-shadow:
     0 12px 24px rgba(36, 54, 74, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.86);
+}
+
+/* =======================================
+   DARK THEME ADMIN OVERRIDES
+======================================= */
+:root[data-theme="dark"] .admin-panel {
+  background:
+    radial-gradient(circle at top left, rgba(215, 195, 154, 0.12), transparent 30%),
+    radial-gradient(circle at 88% 10%, rgba(147, 185, 140, 0.1), transparent 24%),
+    linear-gradient(180deg, rgba(16, 27, 40, 0.98) 0%, rgba(22, 36, 51, 0.98) 100%) !important;
+}
+
+:root[data-theme="dark"] .status-card {
+  background:
+    linear-gradient(180deg, rgba(28, 46, 63, 0.98) 0%, rgba(22, 36, 51, 0.98) 100%) !important;
+  box-shadow:
+    var(--admin-shadow-soft),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 0 1px rgba(147, 185, 140, 0.06);
+}
+
+:root[data-theme="dark"] .status-card::before,
+:root[data-theme="dark"] .admin-section-card::before {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="dark"] .status-card:hover {
+  box-shadow:
+    var(--admin-shadow-strong),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 0 1px rgba(147, 185, 140, 0.12);
+}
+
+:root[data-theme="dark"] .status-icon-wrapper {
+  box-shadow:
+    inset 0 0 0 1px rgba(226, 235, 239, 0.12),
+    0 8px 18px rgba(2, 8, 16, 0.24);
+}
+
+:root[data-theme="dark"] .admin-tabs .nav-tabs {
+  border-bottom-color: var(--admin-border-strong);
+}
+
+:root[data-theme="dark"] .admin-tabs .nav-link {
+  color: var(--admin-muted);
+}
+
+:root[data-theme="dark"] .admin-tabs .nav-link:hover {
+  color: var(--admin-brand-dark);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--admin-border-soft);
+  border-bottom-color: var(--admin-border-accent);
+}
+
+:root[data-theme="dark"] .admin-tabs .nav-link.active {
+  color: var(--admin-text) !important;
+  background:
+    linear-gradient(180deg, rgba(31, 51, 68, 0.98) 0%, rgba(24, 42, 59, 0.98) 100%) !important;
+  border-color: var(--admin-border-strong) !important;
+  border-bottom-color: var(--admin-brand) !important;
+  box-shadow:
+    0 12px 24px rgba(2, 8, 16, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .admin-section-card,
+:root[data-theme="dark"] .admin-panel .bg-white,
+:root[data-theme="dark"] .admin-modal-card,
+:root[data-theme="dark"] .admin-modal-switchbox {
+  background:
+    linear-gradient(180deg, rgba(28, 46, 63, 0.98) 0%, rgba(22, 36, 51, 0.98) 100%) !important;
+  color: var(--admin-text);
+  box-shadow:
+    var(--admin-shadow-soft),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 0 1px rgba(147, 185, 140, 0.05);
+}
+
+:root[data-theme="dark"] .admin-panel .form-control,
+:root[data-theme="dark"] .admin-panel .form-select,
+:root[data-theme="dark"] .admin-panel .input-group-text,
+:root[data-theme="dark"] .admin-modal-dialog .form-control,
+:root[data-theme="dark"] .admin-modal-dialog .form-select,
+:root[data-theme="dark"] .admin-modal-dialog .form-check-input {
+  background-color: rgba(12, 24, 36, 0.92) !important;
+  color: var(--admin-text) !important;
+  border-color: var(--admin-border-strong) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 0 1px rgba(147, 185, 140, 0.06);
+}
+
+:root[data-theme="dark"] .admin-panel .form-control::placeholder,
+:root[data-theme="dark"] .admin-modal-dialog .form-control::placeholder {
+  color: rgba(185, 200, 208, 0.76);
+}
+
+:root[data-theme="dark"] .admin-panel .form-control:focus,
+:root[data-theme="dark"] .admin-panel .form-select:focus,
+:root[data-theme="dark"] .admin-modal-dialog .form-control:focus,
+:root[data-theme="dark"] .admin-modal-dialog .form-select:focus {
+  border-color: var(--admin-brand) !important;
+  box-shadow:
+    0 0 0 4px rgba(147, 185, 140, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+:root[data-theme="dark"] .admin-table-wrap,
+:root[data-theme="dark"] .admin-modal-table-wrap {
+  background: rgba(15, 28, 42, 0.95);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 0 1px rgba(147, 185, 140, 0.05);
+}
+
+:root[data-theme="dark"] .admin-table thead th,
+:root[data-theme="dark"] .table .admin-table thead th,
+:root[data-theme="dark"] .admin-panel .table thead th,
+:root[data-theme="dark"] .admin-modal-dialog .table thead th {
+  background: linear-gradient(180deg, #2f485d 0%, var(--admin-table-head-bg) 100%) !important;
+  color: var(--admin-text) !important;
+  border-bottom-color: var(--admin-border-heavy);
+}
+
+:root[data-theme="dark"] .admin-table td,
+:root[data-theme="dark"] .admin-panel .table td,
+:root[data-theme="dark"] .admin-modal-dialog .table td {
+  color: var(--admin-text) !important;
+  border-top-color: var(--admin-border-soft);
+}
+
+:root[data-theme="dark"] .admin-table tbody tr:hover,
+:root[data-theme="dark"] .table-hover tbody tr:hover {
+  background-color: var(--admin-table-hover) !important;
+}
+
+:root[data-theme="dark"] .admin-thumb {
+  border-color: var(--admin-border-strong);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 10px 18px rgba(2, 8, 16, 0.28),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .btn-admin-primary {
+  color: #102016 !important;
+  background: linear-gradient(135deg, #9dc497 0%, #d7c39a 100%) !important;
+  border-color: rgba(215, 195, 154, 0.9) !important;
+  box-shadow:
+    0 12px 24px rgba(147, 185, 140, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26);
+}
+
+:root[data-theme="dark"] .btn-admin-primary:hover,
+:root[data-theme="dark"] .btn-admin-primary:focus-visible {
+  color: #08130d !important;
+  background: linear-gradient(135deg, #add1a8 0%, #e4d1a6 100%) !important;
+  border-color: #e4d1a6 !important;
+}
+
+:root[data-theme="dark"] .admin-action-btn {
+  box-shadow:
+    0 10px 20px rgba(2, 8, 16, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .admin-panel .btn-outline-warning,
+:root[data-theme="dark"] .admin-modal-dialog .btn-outline-warning {
+  color: #f2cf73;
+}
+
+:root[data-theme="dark"] .admin-panel .btn-outline-warning:hover,
+:root[data-theme="dark"] .admin-modal-dialog .btn-outline-warning:hover {
+  color: #1a1608;
+}
+
+:root[data-theme="dark"] .admin-panel .btn-outline-success,
+:root[data-theme="dark"] .admin-modal-dialog .btn-outline-success {
+  color: #a6d7a1;
+}
+
+:root[data-theme="dark"] .admin-panel .btn-outline-primary,
+:root[data-theme="dark"] .admin-modal-dialog .btn-outline-primary {
+  color: #9ec5fe;
+}
+
+:root[data-theme="dark"] .admin-panel .btn-outline-danger,
+:root[data-theme="dark"] .admin-modal-dialog .btn-outline-danger {
+  color: #ffb3bd;
+}
+
+:root[data-theme="dark"] .admin-modal-dialog .modal-content {
+  background:
+    linear-gradient(180deg, rgba(28, 46, 63, 0.99) 0%, rgba(18, 32, 47, 0.99) 100%) !important;
+  color: var(--admin-text);
+  box-shadow:
+    0 30px 60px rgba(2, 8, 16, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="dark"] .admin-modal-dialog .modal-header,
+:root[data-theme="dark"] .admin-modal-dialog .modal-footer {
+  background:
+    linear-gradient(180deg, rgba(31, 51, 68, 0.92) 0%, rgba(22, 36, 51, 0.92) 100%) !important;
+  border-color: var(--admin-border-strong);
+}
+
+:root[data-theme="dark"] .admin-modal-preview {
+  background: rgba(12, 24, 36, 0.92);
+  border-color: var(--admin-border-strong);
+  box-shadow:
+    0 12px 24px rgba(2, 8, 16, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .admin-modal-dialog .form-check-input {

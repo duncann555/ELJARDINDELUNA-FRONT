@@ -27,6 +27,7 @@ VITE_MP_CHECKOUT_MODE=production
 ```
 
 No configures Access Token ni Client Secret en el frontend.
+Tampoco configures `VITE_ADMIN_PASSWORD`: la contraseña admin pertenece solo al backend.
 
 ## Vercel
 

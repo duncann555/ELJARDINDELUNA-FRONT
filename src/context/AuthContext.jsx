@@ -16,6 +16,7 @@ const STORAGE_KEYS = {
   authToken: "eljardinluna_auth_token",
   authUser: "eljardinluna_auth_user",
 };
+const LEGACY_STORAGE_KEYS = ["admin_token", "admin_user", "adminToken"];
 
 const leerJson = (storageKey) => {
   try {
@@ -47,6 +48,7 @@ const normalizarUsuario = (userData) => {
 
 const limpiarPersistenciaCompleta = () => {
   Object.values(STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
+  LEGACY_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
 };
 
 const persistirSesion = (user, token) => {
