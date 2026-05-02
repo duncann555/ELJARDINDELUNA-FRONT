@@ -16,8 +16,7 @@ Por defecto espera el backend en `http://localhost:3001/api`.
 Debes configurar estas variables en Vercel:
 
 - `VITE_API_URL`
-- `VITE_MP_CHECKOUT_MODE=production`
-- `VITE_MP_PUBLIC_KEY` si se integra el SDK publico de Mercado Pago
+- `VITE_MP_CHECKOUT_MODE=production` o `sandbox`
 
 Valor esperado en produccion para la API:
 
@@ -27,7 +26,9 @@ VITE_MP_CHECKOUT_MODE=production
 ```
 
 No configures Access Token ni Client Secret en el frontend.
+El checkout abre la URL que devuelve el backend. No hace falta configurar Public Key ni cargar scripts de Mercado Pago en React para Checkout Pro por redireccion.
 Tampoco configures `VITE_ADMIN_PASSWORD`: la contraseña admin pertenece solo al backend.
+Para probar Mercado Pago en produccion, limpia `localStorage` y `sessionStorage`, crea una compra nueva desde cero y usa una cuenta compradora real distinta de la cuenta vendedora.
 
 ## Vercel
 

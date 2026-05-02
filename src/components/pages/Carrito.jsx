@@ -581,7 +581,7 @@ const Carrito = () => {
       resumenPedido: construirResumenPedidoGuardado({
         pedidoId: pedidoGuardado.pedidoId,
         pedidoData: pedidoGuardado,
-        preferenceId: pedidoGuardado.preferenceId || null,
+        preferenceId: null,
         baseResumen: pedidoGuardado,
         checkoutHash,
         productosResumen,
@@ -596,7 +596,7 @@ const Carrito = () => {
     const {
       respuesta: checkoutResponse,
       datos: checkoutData,
-    } = await solicitarApi("/pagos/checkout", {
+    } = await solicitarApi("/pagos/crear-preferencia", {
       method: "POST",
       token,
       json: { pedidoId },

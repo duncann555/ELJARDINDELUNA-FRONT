@@ -87,7 +87,16 @@ export const construirMensajeError = (data, fallback) => {
 };
 
 export const obtenerCheckoutUrl = (checkoutData) => {
+  const modoCheckout = String(import.meta.env.VITE_MP_CHECKOUT_MODE || "production")
+    .trim()
+    .toLowerCase();
+
+  if (modoCheckout === "sandbox" && checkoutData?.sandbox_init_point) {
+    return checkoutData.sandbox_init_point;
+  }
+
   if (checkoutData?.init_point) return checkoutData.init_point;
+  if (checkoutData?.sandbox_init_point) return checkoutData.sandbox_init_point;
 
   return null;
 };
