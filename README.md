@@ -27,6 +27,7 @@ VITE_MP_CHECKOUT_MODE=production
 
 No configures Access Token ni Client Secret en el frontend.
 El checkout abre la URL que devuelve el backend. No hace falta configurar Public Key ni cargar scripts de Mercado Pago en React para Checkout Pro por redireccion.
+En Vercel, `VITE_MP_CHECKOUT_MODE` debe quedar exactamente en `production` para el sitio productivo. Despues de cambiar una variable `VITE_`, redeploya el frontend porque Vite la inserta durante el build.
 Tampoco configures `VITE_ADMIN_PASSWORD`: la contraseña admin pertenece solo al backend.
 Para probar Mercado Pago en produccion, limpia `localStorage` y `sessionStorage`, crea una compra nueva desde cero y usa una cuenta compradora real distinta de la cuenta vendedora.
 

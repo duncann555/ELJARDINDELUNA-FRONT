@@ -87,20 +87,23 @@ export const construirMensajeError = (data, fallback) => {
 };
 
 export const obtenerCheckoutUrl = (checkoutData) => {
-  const modoCheckout = String(import.meta.env.VITE_MP_CHECKOUT_MODE || "production")
+  const modoFrontend = String(import.meta.env.VITE_MP_CHECKOUT_MODE || "production")
     .trim()
     .toLowerCase();
   const backendEnvironment = String(checkoutData?.environment || "")
     .trim()
     .toLowerCase();
+  const modoCheckout = ["production", "sandbox"].includes(backendEnvironment)
+    ? backendEnvironment
+    : modoFrontend;
 
   if (
     backendEnvironment &&
     ["production", "sandbox"].includes(backendEnvironment) &&
-    modoCheckout !== backendEnvironment
+    modoFrontend !== backendEnvironment
   ) {
-    throw new Error(
-      `Mercado Pago esta configurado como ${backendEnvironment} en backend y ${modoCheckout} en frontend.`,
+    console.warn(
+      `Mercado Pago esta configurado como ${backendEnvironment} en backend y ${modoFrontend} en frontend. Se usara ${backendEnvironment}.`,
     );
   }
 
