@@ -90,6 +90,19 @@ export const obtenerCheckoutUrl = (checkoutData) => {
   const modoCheckout = String(import.meta.env.VITE_MP_CHECKOUT_MODE || "production")
     .trim()
     .toLowerCase();
+  const backendEnvironment = String(checkoutData?.environment || "")
+    .trim()
+    .toLowerCase();
+
+  if (
+    backendEnvironment &&
+    ["production", "sandbox"].includes(backendEnvironment) &&
+    modoCheckout !== backendEnvironment
+  ) {
+    throw new Error(
+      `Mercado Pago esta configurado como ${backendEnvironment} en backend y ${modoCheckout} en frontend.`,
+    );
+  }
 
   if (modoCheckout === "sandbox" && checkoutData?.sandbox_init_point) {
     return checkoutData.sandbox_init_point;
