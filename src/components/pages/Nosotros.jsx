@@ -1,14 +1,61 @@
 import { Button, Card, Col, Container, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import logo from "../../assets/EL_JARDIN_DE_LUNA.png";
+import logo from "../../assets/EL_JARDIN_DE_LUNA_FOOTER.png";
 import { CONTACTO_WHATSAPP_URL } from "../../helpers/contact";
-import "../../styles/nosotros.css";
 
 const TAGS = ["Bienestar", "Herboristería", "Cosmética Natural", "Aromas"];
 
+const BLOQUES_ESENCIA = [
+  {
+    titulo: "Qué hacemos",
+    texto:
+      "Reunimos tinturas madres, esencias aromáticas y propuestas de cosmética natural pensadas para el bienestar cotidiano.",
+  },
+  {
+    titulo: "Cómo elegimos",
+    texto:
+      "Priorizamos ingredientes, calidad, reputación y una relación honesta entre precio, utilidad y origen.",
+  },
+  {
+    titulo: "Para quién es",
+    texto:
+      "Para vos, si querés sumar hábitos más conscientes, regalar bienestar o encontrar opciones naturales para tu rutina.",
+  },
+];
+
+const VALORES = [
+  {
+    titulo: "Transparencia",
+    texto: "Precios claros, información directa y sin letra chica.",
+  },
+  {
+    titulo: "Cercanía",
+    texto: "Escuchamos necesidades reales y mejoramos con feedback.",
+  },
+  {
+    titulo: "Calidad",
+    texto: "Menos relleno, más productos que realmente suman valor.",
+  },
+  {
+    titulo: "Experiencia",
+    texto: "Comprar tiene que sentirse fácil, amable y confiable.",
+  },
+];
+
+function CardNosotros({ titulo, texto }) {
+  return (
+    <Card className="h-100 nosotros-card">
+      <Card.Body>
+        <h5 className="fw-bold font-playfair">{titulo}</h5>
+        <p className="text-muted mb-0">{texto}</p>
+      </Card.Body>
+    </Card>
+  );
+}
+
 export default function Nosotros() {
   return (
-    <div className="nosotros-wrapper">
+    <main className="nosotros-wrapper">
       <Container className="py-4">
         <section className="nosotros-hero mb-5">
           <Row className="align-items-center g-4">
@@ -18,15 +65,12 @@ export default function Nosotros() {
                   src={logo}
                   alt="El Jardín de Luna"
                   className="nosotros-logo"
-                  onError={(event) => {
-                    event.currentTarget.style.display = "none";
-                  }}
                 />
 
                 <div>
                   <p className="nosotros-overline mb-1">Nuestra esencia</p>
                   <h1 className="fw-bold mb-1 font-playfair nosotros-title">
-                    Somos <span className="texto-resaltado">El Jardín de Luna</span>
+                    Somos <span>El Jardín de Luna</span>
                   </h1>
 
                   <div className="d-flex flex-wrap gap-2">
@@ -81,41 +125,11 @@ export default function Nosotros() {
 
         <section className="mb-5">
           <Row className="g-4">
-            <Col xs={12} md={4}>
-              <Card className="h-100 nosotros-card">
-                <Card.Body>
-                  <h5 className="fw-bold font-playfair">Qué hacemos</h5>
-                  <p className="text-muted mb-0">
-                    Reunimos tinturas madres, esencias aromáticas y propuestas
-                    de cosmética natural pensadas para el bienestar cotidiano.
-                  </p>
-                </Card.Body>
-              </Card>
-            </Col>
-
-            <Col xs={12} md={4}>
-              <Card className="h-100 nosotros-card">
-                <Card.Body>
-                  <h5 className="fw-bold font-playfair">Cómo elegimos</h5>
-                  <p className="text-muted mb-0">
-                    Priorizamos ingredientes, calidad, reputación y una
-                    relación honesta entre precio, utilidad y origen.
-                  </p>
-                </Card.Body>
-              </Card>
-            </Col>
-
-            <Col xs={12} md={4}>
-              <Card className="h-100 nosotros-card">
-                <Card.Body>
-                  <h5 className="fw-bold font-playfair">Para quién es</h5>
-                  <p className="text-muted mb-0">
-                    Para vos, si querés sumar hábitos más conscientes, regalar
-                    bienestar o encontrar opciones naturales para tu rutina.
-                  </p>
-                </Card.Body>
-              </Card>
-            </Col>
+            {BLOQUES_ESENCIA.map((bloque) => (
+              <Col xs={12} md={4} key={bloque.titulo}>
+                <CardNosotros titulo={bloque.titulo} texto={bloque.texto} />
+              </Col>
+            ))}
           </Row>
         </section>
 
@@ -127,53 +141,15 @@ export default function Nosotros() {
           </div>
 
           <Row className="g-4">
-            <Col xs={12} md={6} lg={3}>
-              <Card className="h-100 nosotros-card">
-                <Card.Body>
-                  <h6 className="fw-bold font-playfair">Transparencia</h6>
-                  <p className="text-muted mb-0">
-                    Precios claros, información directa y sin letra chica.
-                  </p>
-                </Card.Body>
-              </Card>
-            </Col>
-
-            <Col xs={12} md={6} lg={3}>
-              <Card className="h-100 nosotros-card">
-                <Card.Body>
-                  <h6 className="fw-bold font-playfair">Cercania</h6>
-                  <p className="text-muted mb-0">
-                    Escuchamos necesidades reales y mejoramos con feedback.
-                  </p>
-                </Card.Body>
-              </Card>
-            </Col>
-
-            <Col xs={12} md={6} lg={3}>
-              <Card className="h-100 nosotros-card">
-                <Card.Body>
-                  <h6 className="fw-bold font-playfair">Calidad</h6>
-                  <p className="text-muted mb-0">
-                    Menos relleno, más productos que realmente suman valor.
-                  </p>
-                </Card.Body>
-              </Card>
-            </Col>
-
-            <Col xs={12} md={6} lg={3}>
-              <Card className="h-100 nosotros-card">
-                <Card.Body>
-                  <h6 className="fw-bold font-playfair">Experiencia</h6>
-                  <p className="text-muted mb-0">
-                    Comprar tiene que sentirse fácil, amable y confiable.
-                  </p>
-                </Card.Body>
-              </Card>
-            </Col>
+            {VALORES.map((valor) => (
+              <Col xs={12} md={6} lg={3} key={valor.titulo}>
+                <CardNosotros titulo={valor.titulo} texto={valor.texto} />
+              </Col>
+            ))}
           </Row>
         </section>
 
-        <section className="nosotros-cta">
+        <section>
           <Card className="nosotros-card-cta">
             <Card.Body className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
               <div>
@@ -184,7 +160,7 @@ export default function Nosotros() {
                 </p>
               </div>
 
-              <div className="d-flex flex-column flex-sm-row gap-2 nosotros-cta-actions">
+              <div className="d-flex flex-column flex-sm-row gap-2">
                 <Button as={Link} to="/productos">
                   Ir a productos
                 </Button>
@@ -196,6 +172,6 @@ export default function Nosotros() {
           </Card>
         </section>
       </Container>
-    </div>
+    </main>
   );
 }

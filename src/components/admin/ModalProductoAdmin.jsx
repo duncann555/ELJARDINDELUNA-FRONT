@@ -1,248 +1,395 @@
 import { useEffect, useMemo } from "react";
-import { Button, Col, FloatingLabel, Form, Modal, Row } from "react-bootstrap";
+import {
+  Alert,
+  Button,
+  Col,
+  Form,
+  Modal,
+  Row,
+  Spinner,
+} from "react-bootstrap";
 import { useForm, useWatch } from "react-hook-form";
-import { obtenerCategoriaVisible, optimizarImagenCloudinary } from "../../helpers/app";
 import {
-  asValidationRule,
-  normalizeText,
-  validateProductImageFile,
-  validateProductoCategoria,
-  validateProductoDescripcion,
-  validateProductoNombre,
-  validateProductoPrecio,
-  validateProductoStock,
-} from "../../helpers/validation";
-import {
-  CATEGORIAS_PRODUCTO,
+  getImageUrl,
+  joinMultilineValue,
   PRODUCTO_VACIO,
 } from "./utilidadesAdmin";
 
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+
+const getDefaultValues = (product) => ({
+  name: product?.name || PRODUCTO_VACIO.name,
+  slug: product?.slug || PRODUCTO_VACIO.slug,
+  botanicalName:
+    product?.botanicalName || PRODUCTO_VACIO.botanicalName,
+  category: product?.category || PRODUCTO_VACIO.category,
+  presentation: product?.presentation || PRODUCTO_VACIO.presentation,
+  price: product?.price ?? PRODUCTO_VACIO.price,
+  stock: product?.stock ?? PRODUCTO_VACIO.stock,
+  description: product?.description || PRODUCTO_VACIO.description,
+  ingredients: joinMultilineValue(product?.ingredients),
+  warnings: joinMultilineValue(product?.warnings),
+  active: product?.active ?? PRODUCTO_VACIO.active,
+});
+
+const validateImage = (files, hasExistingImage) => {
+  const image = files?.[0];
+
+  if (!image) {
+    return hasExistingImage || "Seleccioná una imagen para el producto.";
+  }
+
+  if (!IMAGE_TYPES.includes(image.type)) {
+    return "La imagen debe ser JPG, PNG, WebP o AVIF.";
+  }
+
+  if (image.size > MAX_IMAGE_SIZE) {
+    return "La imagen no puede superar los 2 MB.";
+  }
+
+  return true;
+};
+
 export default function ModalProductoAdmin({
   show,
-  modoProducto,
-  productoInicial,
-  cerrarModalProducto,
-  guardarProducto,
+  mode,
+  product,
+  saving = false,
+  errorMessage = "",
+  onClose,
+  onSave,
 }) {
+  const existingImage = getImageUrl(product?.images?.[0]);
   const {
     register,
     handleSubmit,
-    reset,
     control,
     formState: { errors },
   } = useForm({
-    mode: "onSubmit",
-    reValidateMode: "onSubmit",
+    mode: "onBlur",
+    defaultValues: getDefaultValues(product),
   });
-  const imagenFile = useWatch({ control, name: "imagen" });
+  const selectedImages = useWatch({ control, name: "image" });
 
-  const previewArchivo = useMemo(() => {
-    if (!imagenFile || imagenFile.length === 0) {
-      return null;
-    }
+  const localPreview = useMemo(() => {
+    const image = selectedImages?.[0];
+    return image ? URL.createObjectURL(image) : "";
+  }, [selectedImages]);
 
-    return URL.createObjectURL(imagenFile[0]);
-  }, [imagenFile]);
+  useEffect(
+    () => () => {
+      if (localPreview) URL.revokeObjectURL(localPreview);
+    },
+    [localPreview],
+  );
 
-  useEffect(() => {
-    return () => {
-      if (previewArchivo) {
-        URL.revokeObjectURL(previewArchivo);
-      }
-    };
-  }, [previewArchivo]);
-
-  useEffect(() => {
-    if (!show) return;
-    if (productoInicial && modoProducto === "editar") {
-      reset(productoInicial);
-      return;
-    }
-
-    reset(PRODUCTO_VACIO);
-  }, [productoInicial, modoProducto, show, reset]);
-
-  const preview =
-    previewArchivo ||
-    (show && modoProducto === "editar"
-      ? optimizarImagenCloudinary(productoInicial?.imagenUrl) || null
-      : null);
-
-  const enviarFormulario = (data) => {
+  const submitProduct = (values) => {
     const formData = new FormData();
+    const image = values.image?.[0];
 
-    Object.entries(data).forEach(([key, value]) => {
-      if (key === "oferta") {
-        return;
-      }
+    formData.append("name", values.name.trim());
+    formData.append("slug", values.slug.trim().toLowerCase());
+    formData.append("botanicalName", values.botanicalName.trim());
+    formData.append("category", values.category.trim());
+    formData.append("description", values.description.trim());
+    formData.append("presentation", values.presentation.trim());
+    formData.append("ingredients", values.ingredients.trim());
+    formData.append("warnings", values.warnings.trim());
+    formData.append("price", String(values.price));
+    formData.append("stock", String(values.stock));
+    formData.append("active", String(Boolean(values.active)));
 
-      if (key === "imagen") {
-        if (value && value.length > 0) {
-          formData.append("imagen", value[0]);
-        }
-        return;
-      }
+    if (image) formData.append("image", image);
 
-      formData.append(key, typeof value === "string" ? normalizeText(value) : value);
-    });
-
-    guardarProducto(formData);
+    onSave(formData);
   };
+
+  const preview = localPreview || existingImage;
+  const title = mode === "edit" ? "Editar producto" : "Nuevo producto";
 
   return (
     <Modal
       show={show}
-      onHide={cerrarModalProducto}
-      centered
+      onHide={saving ? undefined : onClose}
       size="lg"
-      backdrop="static"
-      dialogClassName="admin-modal-dialog"
+      centered
+      backdrop={saving ? "static" : true}
+      keyboard={!saving}
+      dialogClassName="admin-modal"
     >
-      <Modal.Header closeButton>
-        <Modal.Title>
-          {modoProducto === "crear" ? "Nuevo producto" : "Editar producto"}
-        </Modal.Title>
+      <Modal.Header closeButton={!saving}>
+        <Modal.Title>{title}</Modal.Title>
       </Modal.Header>
 
       <Modal.Body>
-        <Form id="formProducto" onSubmit={handleSubmit(enviarFormulario)}>
-          <FloatingLabel label="Nombre del producto" className="mb-3">
-            <Form.Control
-              type="text"
-              {...register("nombre", {
-                validate: asValidationRule(validateProductoNombre),
-              })}
-              isInvalid={!!errors.nombre}
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.nombre?.message}
-            </Form.Control.Feedback>
-          </FloatingLabel>
+        {errorMessage && (
+          <Alert variant="danger" role="alert">
+            {errorMessage}
+          </Alert>
+        )}
 
-          <Row className="mb-3">
-            <Col md={6}>
-              <FloatingLabel label="Categoría">
-                <Form.Select
-                  {...register("categoria", {
-                    validate: asValidationRule((value) =>
-                      validateProductoCategoria(value, CATEGORIAS_PRODUCTO),
-                    ),
-                  })}
-                  isInvalid={!!errors.categoria}
-                >
-                  <option value="">Seleccioná una categoría</option>
-                  {CATEGORIAS_PRODUCTO.map((categoria) => (
-                    <option key={categoria} value={categoria}>
-                      {obtenerCategoriaVisible(categoria)}
-                    </option>
-                  ))}
-                </Form.Select>
-                <Form.Control.Feedback type="invalid">
-                  {errors.categoria?.message}
-                </Form.Control.Feedback>
-              </FloatingLabel>
-            </Col>
-
-            <Col md={6}>
-              <FloatingLabel label="Precio ($)">
+        <Form
+          id="admin-product-form"
+          noValidate
+          onSubmit={handleSubmit(submitProduct)}
+        >
+          <Row className="g-3">
+            <Col md={8}>
+              <Form.Group controlId="admin-product-name">
+                <Form.Label>Nombre</Form.Label>
                 <Form.Control
-                  type="number"
-                  step="0.01"
-                  {...register("precio", {
-                    validate: asValidationRule(validateProductoPrecio),
+                  type="text"
+                  maxLength={120}
+                  disabled={saving}
+                  isInvalid={Boolean(errors.name)}
+                  {...register("name", {
+                    required: "Ingresá el nombre del producto.",
+                    validate: (value) =>
+                      Boolean(value.trim()) || "Ingresá el nombre del producto.",
                   })}
-                  isInvalid={!!errors.precio}
                 />
                 <Form.Control.Feedback type="invalid">
-                  {errors.precio?.message}
+                  {errors.name?.message}
                 </Form.Control.Feedback>
-              </FloatingLabel>
+              </Form.Group>
             </Col>
-          </Row>
 
-          <Row className="mb-3">
+            <Col md={4}>
+              <Form.Group controlId="admin-product-slug">
+                <Form.Label>Slug</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="nombre-del-producto"
+                  maxLength={120}
+                  disabled={saving}
+                  isInvalid={Boolean(errors.slug)}
+                  {...register("slug", {
+                    required: "Ingresá el slug.",
+                    pattern: {
+                      value: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+                      message:
+                        "Usá minúsculas, números y guiones, sin espacios.",
+                    },
+                  })}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.slug?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+
             <Col md={6}>
-              <FloatingLabel label="Stock disponible">
+              <Form.Group controlId="admin-product-botanical-name">
+                <Form.Label>Nombre botánico</Form.Label>
+                <Form.Control
+                  type="text"
+                  maxLength={160}
+                  disabled={saving}
+                  {...register("botanicalName")}
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group controlId="admin-product-category">
+                <Form.Label>Categoría</Form.Label>
+                <Form.Control
+                  type="text"
+                  maxLength={80}
+                  disabled={saving}
+                  isInvalid={Boolean(errors.category)}
+                  {...register("category", {
+                    required: "Ingresá una categoría.",
+                    validate: (value) =>
+                      Boolean(value.trim()) || "Ingresá una categoría.",
+                  })}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.category?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group controlId="admin-product-presentation">
+                <Form.Label>Presentación</Form.Label>
+                <Form.Control
+                  type="text"
+                  maxLength={120}
+                  disabled={saving}
+                  isInvalid={Boolean(errors.presentation)}
+                  {...register("presentation", {
+                    required: "Indicá la presentación.",
+                    validate: (value) =>
+                      Boolean(value.trim()) || "Indicá la presentación.",
+                  })}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.presentation?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+
+            <Col xs={6} md={3}>
+              <Form.Group controlId="admin-product-price">
+                <Form.Label>Precio</Form.Label>
                 <Form.Control
                   type="number"
-                  {...register("stock", {
-                    validate: asValidationRule(validateProductoStock),
+                  min="0"
+                  step="0.01"
+                  disabled={saving}
+                  isInvalid={Boolean(errors.price)}
+                  {...register("price", {
+                    required: "Ingresá el precio.",
+                    valueAsNumber: true,
+                    min: {
+                      value: 0,
+                      message: "El precio no puede ser negativo.",
+                    },
                   })}
-                  isInvalid={!!errors.stock}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.price?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+
+            <Col xs={6} md={3}>
+              <Form.Group controlId="admin-product-stock">
+                <Form.Label>Stock</Form.Label>
+                <Form.Control
+                  type="number"
+                  min="0"
+                  step="1"
+                  disabled={saving}
+                  isInvalid={Boolean(errors.stock)}
+                  {...register("stock", {
+                    required: "Ingresá el stock.",
+                    valueAsNumber: true,
+                    min: {
+                      value: 0,
+                      message: "El stock no puede ser negativo.",
+                    },
+                    validate: (value) =>
+                      Number.isInteger(value) || "El stock debe ser un entero.",
+                  })}
                 />
                 <Form.Control.Feedback type="invalid">
                   {errors.stock?.message}
                 </Form.Control.Feedback>
-              </FloatingLabel>
+              </Form.Group>
+            </Col>
+
+            <Col xs={12}>
+              <Form.Group controlId="admin-product-description">
+                <Form.Label>Descripción</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={4}
+                  maxLength={1600}
+                  disabled={saving}
+                  isInvalid={Boolean(errors.description)}
+                  {...register("description", {
+                    required: "Ingresá una descripción.",
+                    validate: (value) =>
+                      Boolean(value.trim()) || "Ingresá una descripción.",
+                  })}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.description?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
             </Col>
 
             <Col md={6}>
-              <FloatingLabel label="Estado del producto">
-                <Form.Select {...register("estado")}>
-                  <option value="Activo">Activo</option>
-                  <option value="Inactivo">Inactivo</option>
-                </Form.Select>
-              </FloatingLabel>
+              <Form.Group controlId="admin-product-ingredients">
+                <Form.Label>Ingredientes</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={5}
+                  placeholder="Uno por línea"
+                  disabled={saving}
+                  {...register("ingredients")}
+                />
+                <Form.Text>Escribí un ingrediente por línea.</Form.Text>
+              </Form.Group>
             </Col>
+
+            <Col md={6}>
+              <Form.Group controlId="admin-product-warnings">
+                <Form.Label>Advertencias</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={5}
+                  placeholder="Una por línea"
+                  disabled={saving}
+                  {...register("warnings")}
+                />
+                <Form.Text>Escribí una advertencia por línea.</Form.Text>
+              </Form.Group>
+            </Col>
+
+            <Col md={8}>
+              <Form.Group controlId="admin-product-image">
+                <Form.Label>Imagen principal</Form.Label>
+                <Form.Control
+                  type="file"
+                  accept={IMAGE_TYPES.join(",")}
+                  disabled={saving}
+                  isInvalid={Boolean(errors.image)}
+                  {...register("image", {
+                    validate: (files) =>
+                      validateImage(files, Boolean(existingImage)),
+                  })}
+                />
+                <Form.Text>JPG, PNG, WebP o AVIF. Máximo 2 MB.</Form.Text>
+                <Form.Control.Feedback type="invalid">
+                  {errors.image?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+
+            <Col md={4} className="d-flex align-items-end">
+              <Form.Group className="admin-switch-field">
+                <Form.Check
+                  id="admin-product-active"
+                  type="switch"
+                  label="Visible en la tienda"
+                  disabled={saving}
+                  {...register("active")}
+                />
+              </Form.Group>
+            </Col>
+
+            {preview && (
+              <Col xs={12}>
+                <div className="admin-image-preview">
+                  <img src={preview} alt="Vista previa del producto" />
+                </div>
+              </Col>
+            )}
           </Row>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Imagen</Form.Label>
-            <Form.Control
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/avif"
-              isInvalid={!!errors.imagen}
-              {...register("imagen", {
-                validate: (value) => validateProductImageFile(value?.[0]) || true,
-              })}
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.imagen?.message}
-            </Form.Control.Feedback>
-          </Form.Group>
-
-          {preview && (
-            <div className="text-center mb-3">
-              <img
-                src={preview}
-                alt="Preview del producto"
-                className="admin-modal-preview img-fluid rounded shadow-sm"
-                style={{ maxHeight: "150px" }}
-              />
-            </div>
-          )}
-
-          <FloatingLabel label="Descripción">
-            <Form.Control
-              as="textarea"
-              style={{ height: "100px" }}
-              {...register("descripcion", {
-                validate: asValidationRule(validateProductoDescripcion),
-              })}
-              isInvalid={!!errors.descripcion}
-            />
-            <Form.Control.Feedback type="invalid">
-              {errors.descripcion?.message}
-            </Form.Control.Feedback>
-          </FloatingLabel>
-
-          <Form.Group className="admin-modal-switchbox my-3 p-3 bg-light rounded border">
-            <Form.Check
-              type="switch"
-              label="Mostrar en la sección de destacados"
-              id="destacado-switch"
-              {...register("destacado")}
-            />
-          </Form.Group>
         </Form>
       </Modal.Body>
 
       <Modal.Footer>
-        <Button variant="secondary" onClick={cerrarModalProducto}>
+        <Button
+          type="button"
+          variant="outline-secondary"
+          onClick={onClose}
+          disabled={saving}
+        >
           Cancelar
         </Button>
-        <Button variant="success" type="submit" form="formProducto">
-          Guardar
+        <Button
+          type="submit"
+          form="admin-product-form"
+          variant="success"
+          disabled={saving}
+        >
+          {saving && <Spinner animation="border" size="sm" className="me-2" />}
+          {saving ? "Guardando…" : "Guardar producto"}
         </Button>
       </Modal.Footer>
     </Modal>

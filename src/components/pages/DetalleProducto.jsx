@@ -1,215 +1,197 @@
-import { useEffect, useState } from "react";
-import { Breadcrumb, Button, Col, Container, Row } from "react-bootstrap";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, Button, Col, Container, Row } from "react-bootstrap";
 import { Link, useParams } from "react-router-dom";
-import Swal from "sweetalert2";
-import "../../styles/detalle.css";
+import FALLBACK_IMAGE from "../../assets/EL_JARDIN_DE_LUNA_FOOTER.png";
 import { useCarrito } from "../../context/CarritoContext";
-import {
-  formatCurrency,
-  obtenerCategoriaVisible,
-  optimizarImagenCloudinary,
-} from "../../helpers/app";
-import { solicitarJsonApi } from "../../helpers/clienteApi";
-import { mostrarLoginRequeridoCarrito } from "../../helpers/carrito";
-import EstadoBadge from "../shared/EstadoBadge";
+import { getSafeErrorMessage } from "../../helpers/api";
+import { MAX_CART_QUANTITY } from "../../helpers/cart";
+import { formatCurrency } from "../../helpers/format";
+import { obtenerProducto } from "../../helpers/products";
+import PageState from "../shared/PageState";
 
-const IMG_PLACEHOLDER = (text) =>
-  `https://placehold.co/600x600/png?text=${encodeURIComponent(text || "Sin Imagen")}`;
+const DetailRow = ({ label, value }) =>
+  value ? (
+    <div className="detail-row">
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  ) : null;
 
-const DetalleProducto = () => {
-  const { id } = useParams();
+export default function DetalleProducto() {
+  const { identifier } = useParams();
   const { agregarAlCarrito } = useCarrito();
-
-  const [producto, setProducto] = useState(null);
-  const [cantidad, setCantidad] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const [feedback, setFeedback] = useState("");
+  const [requestKey, setRequestKey] = useState(0);
+  const [state, setState] = useState({
+    status: "loading",
+    product: null,
+    error: "",
+    identifier: "",
+  });
+  const retry = useCallback(() => {
+    setState((current) => ({ ...current, status: "loading", error: "" }));
+    setRequestKey((value) => value + 1);
+  }, []);
 
   useEffect(() => {
-    let activo = true;
     const controller = new AbortController();
 
-    const cargarProducto = async () => {
-      setLoading(true);
-      setError("");
-
-      try {
-        const datos = await solicitarJsonApi(`/productos/${id}`, {
-          signal: controller.signal,
-          mensajeError: "No se pudo cargar el producto.",
-        });
-
-        if (activo) {
-          setProducto(datos);
-          setCantidad(1);
+    obtenerProducto(identifier, { signal: controller.signal })
+      .then((product) => {
+        if (!controller.signal.aborted) {
+          setQuantity(1);
+          setFeedback("");
+          setState(
+            product
+              ? { status: "success", product, error: "", identifier }
+              : {
+                  status: "empty",
+                  product: null,
+                  error: "",
+                  identifier,
+                },
+          );
         }
-      } catch (err) {
-        if (!activo || err.name === "AbortError") {
-          return;
+      })
+      .catch((error) => {
+        if (error?.name !== "AbortError" && !controller.signal.aborted) {
+          setState({
+            status: "error",
+            product: null,
+            error: getSafeErrorMessage(error),
+            identifier,
+          });
         }
+      });
 
-        if (activo) {
-          setProducto(null);
-          setError(err.message || "No se pudo cargar el detalle");
-        }
-      } finally {
-        if (activo) {
-          setLoading(false);
-        }
-      }
-    };
+    return () => controller.abort();
+  }, [identifier, requestKey]);
+  const currentState =
+    state.identifier === identifier
+      ? state
+      : { status: "loading", product: null, error: "" };
 
-    void cargarProducto();
+  const addToCart = () => {
+    if (agregarAlCarrito(state.product, quantity)) {
+      setFeedback(
+        `${quantity} ${quantity === 1 ? "unidad agregada" : "unidades agregadas"} al carrito.`,
+      );
+    }
+  };
 
-    return () => {
-      activo = false;
-      controller.abort();
-    };
-  }, [id]);
-
-  if (loading) {
-    return <div className="text-center py-5">Cargando producto...</div>;
-  }
-
-  if (error || !producto) {
+  if (currentState.status !== "success") {
     return (
-      <div className="text-center py-5">
-        <p className="mb-3">{error || "No se pudo cargar el producto."}</p>
-        <Button as={Link} to="/productos" variant="success">
-          Volver a productos
-        </Button>
-      </div>
+      <main className="store-page">
+        <Container>
+          <PageState
+            status={currentState.status}
+            error={currentState.error}
+            emptyMessage="El producto no existe o ya no está disponible."
+            onRetry={retry}
+          />
+          {currentState.status === "empty" && (
+            <div className="text-center">
+              <Button as={Link} to="/productos" variant="success">
+                Volver al catálogo
+              </Button>
+            </div>
+          )}
+        </Container>
+      </main>
     );
   }
 
-  const stockDisponible = Number(producto.stock) || 0;
-
-  const handleRestar = () => {
-    if (cantidad > 1) setCantidad(cantidad - 1);
-  };
-
-  const handleSumar = () => {
-    if (cantidad < stockDisponible) setCantidad(cantidad + 1);
-  };
-
-  const handleAgregarAlCarrito = () => {
-    const agregado = agregarAlCarrito(producto);
-
-    if (!agregado) {
-      void mostrarLoginRequeridoCarrito();
-      return;
-    }
-
-    for (let i = 1; i < cantidad; i += 1) {
-      agregarAlCarrito(producto);
-    }
-
-    Swal.fire({
-      position: "top-end",
-      icon: "success",
-      title: `Agregaste ${cantidad} ${producto.nombre}`,
-      showConfirmButton: false,
-      timer: 1500,
-      toast: true,
-      background: "#f0fdf4",
-      color: "#166534",
-    });
-  };
+  const product = currentState.product;
+  const available = product.stock > 0;
+  const maximumQuantity = Math.min(product.stock, MAX_CART_QUANTITY);
 
   return (
-    <div className="page-wrapper py-4 py-md-5">
+    <main className="store-page">
       <Container>
-        <Breadcrumb className="custom-breadcrumb mb-4 d-none d-md-block">
-          <Breadcrumb.Item linkAs={Link} linkProps={{ to: "/" }}>
-            Inicio
-          </Breadcrumb.Item>
-          <Breadcrumb.Item linkAs={Link} linkProps={{ to: "/productos" }}>
-            Productos
-          </Breadcrumb.Item>
-          <Breadcrumb.Item active>{producto.nombre}</Breadcrumb.Item>
-        </Breadcrumb>
-
-        <div className="d-md-none mb-3">
-          <Link to="/productos" className="text-decoration-none text-muted fw-bold">
-            <i className="bi bi-arrow-left me-2"></i>
-            Volver
-          </Link>
-        </div>
-
-        <Row className="g-4 g-lg-5 align-items-start">
-          <Col xs={12} lg={6} className="mb-3 mb-lg-0">
-            <div className="detalle-img-container shadow-sm position-relative">
+        <Link to="/productos" className="back-link">
+          <i className="bi bi-arrow-left" aria-hidden="true"></i>
+          Volver a productos
+        </Link>
+        <Row className="g-5 align-items-start product-detail">
+          <Col lg={6}>
+            <div className="product-detail-image-wrap">
               <img
-                src={
-                  optimizarImagenCloudinary(producto.imagenUrl) ||
-                  producto.imagen ||
-                  IMG_PLACEHOLDER(producto.nombre)
-                }
-                alt={producto.nombre}
-                className="img-fluid object-fit-contain"
-                onError={(event) => {
-                  event.target.onerror = null;
-                  event.target.src = IMG_PLACEHOLDER(producto.nombre);
-                }}
+                src={product.images[0] || FALLBACK_IMAGE}
+                alt={product.name}
+                className="product-detail-image"
               />
             </div>
           </Col>
+          <Col lg={6}>
+            <p className="eyebrow">{product.category || "Botánica"}</p>
+            <h1>{product.name}</h1>
+            {product.botanicalName && (
+              <p className="product-detail-botanical">{product.botanicalName}</p>
+            )}
+            <p className="product-detail-price">
+              {formatCurrency(product.price)}
+            </p>
+            <p className="product-detail-description">
+              {product.description || "Consultanos para conocer más sobre este producto."}
+            </p>
 
-          <Col xs={12} lg={6}>
-            <div className="detalle-info h-100 d-flex flex-column justify-content-center">
-              <div>
-                <EstadoBadge
-                  tipo="categoria"
-                  valor={obtenerCategoriaVisible(producto.categoria)}
-                  className="mb-3"
-                />
+            <dl className="detail-list">
+              <DetailRow label="Presentación" value={product.presentation} />
+              <DetailRow label="Ingredientes" value={product.ingredients} />
+              <DetailRow label="Advertencias" value={product.warnings} />
+            </dl>
 
-                <h1 className="fw-bold display-5 text-dark font-playfair mb-2">
-                  {producto.nombre}
-                </h1>
+            <p className={`stock-label ${available ? "" : "is-empty"}`}>
+              {available
+                ? `${product.stock} unidades disponibles`
+                : "Producto sin stock"}
+            </p>
 
-                <div className="precio-container mb-4">
-                  <span className="precio-main">{formatCurrency(producto.precio)}</span>
-                </div>
-
-                <p className="detalle-desc mb-4 fs-6">{producto.descripcion}</p>
-              </div>
-
-              <div className="compra-actions p-3 p-md-0 rounded-3 bg-light bg-md-transparent border border-md-0 mb-4 mb-md-5">
-                <div className="d-flex flex-column flex-sm-row gap-3">
-                  <div className="cantidad-selector d-flex align-items-center justify-content-between w-100 w-sm-auto">
-                    <button onClick={handleRestar} className="btn-qty" disabled={cantidad <= 1}>
-                      -
-                    </button>
-                    <span className="fw-bold">{cantidad}</span>
-                    <button
-                      onClick={handleSumar}
-                      className="btn-qty"
-                      disabled={cantidad >= stockDisponible}
-                    >
-                      +
-                    </button>
-                  </div>
-
+            {available && (
+              <div className="detail-purchase">
+                <label htmlFor="product-quantity">Cantidad</label>
+                <div className="quantity-control">
                   <Button
-                    className="btn-add-cart w-100 rounded-3 fw-bold py-2 py-md-3"
-                    onClick={handleAgregarAlCarrito}
-                    disabled={stockDisponible <= 0}
+                    variant="outline-secondary"
+                    onClick={() =>
+                      setQuantity((current) => Math.max(1, current - 1))
+                    }
+                    disabled={quantity <= 1}
+                    aria-label="Restar una unidad"
                   >
-                    <i className="bi bi-bag-plus-fill me-2"></i>
-                    Agregar al carrito
+                    −
+                  </Button>
+                  <output id="product-quantity" aria-live="polite">
+                    {quantity}
+                  </output>
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() =>
+                      setQuantity((current) =>
+                        Math.min(maximumQuantity, current + 1),
+                      )
+                    }
+                    disabled={quantity >= maximumQuantity}
+                    aria-label="Sumar una unidad"
+                  >
+                    +
                   </Button>
                 </div>
-                <div className="text-center mt-2 d-md-none">
-                  <small className="text-muted">Stock disponible: {stockDisponible}</small>
-                </div>
+                <Button variant="success" size="lg" onClick={addToCart}>
+                  Agregar al carrito
+                </Button>
               </div>
-            </div>
+            )}
+
+            {feedback && (
+              <Alert variant="success" className="mt-3" aria-live="polite">
+                {feedback} <Link to="/carrito">Ver carrito</Link>
+              </Alert>
+            )}
           </Col>
         </Row>
       </Container>
-    </div>
+    </main>
   );
-};
-
-export default DetalleProducto;
+}

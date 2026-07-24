@@ -1,328 +1,117 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import {
-  getApiErrorMessage,
-  getJwtPayload,
-  isTokenExpired,
-  normalizeToken,
-} from "../helpers/app";
-import { solicitarApi } from "../helpers/clienteApi";
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { apiRequest } from "../helpers/api";
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
+const ADMIN_TOKEN_KEY = "eljardinluna_admin_token";
 
-const ADMIN_ROLE = "Administrador";
-
-const STORAGE_KEYS = {
-  authToken: "eljardinluna_auth_token",
-  authUser: "eljardinluna_auth_user",
-};
-const LEGACY_STORAGE_KEYS = ["admin_token", "admin_user", "adminToken"];
-
-const leerJson = (storageKey) => {
+const leerToken = () => {
   try {
-    const rawValue = localStorage.getItem(storageKey);
-    return rawValue ? JSON.parse(rawValue) : null;
+    return sessionStorage.getItem(ADMIN_TOKEN_KEY) || "";
   } catch {
-    return null;
+    return "";
   }
 };
 
-const normalizarUsuario = (userData) => {
-  const source = userData && typeof userData === "object" ? userData : {};
-
-  return {
-    uid: source.uid || source._id || "",
-    nombre: source.nombre || "",
-    apellido: source.apellido || "",
-    email: source.email || "",
-    telefono: source.telefono || "",
-    rol: source.rol || "Usuario",
-    estado: source.estado || "Activo",
-    carrito: Array.isArray(source.carrito) ? source.carrito : [],
-    datosEnvioPreferidos:
-      source.datosEnvioPreferidos && typeof source.datosEnvioPreferidos === "object"
-        ? source.datosEnvioPreferidos
-        : null,
-  };
-};
-
-const limpiarPersistenciaCompleta = () => {
-  Object.values(STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
-  LEGACY_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
-};
-
-const persistirSesion = (user, token) => {
-  localStorage.setItem(STORAGE_KEYS.authToken, token);
-  localStorage.setItem(STORAGE_KEYS.authUser, JSON.stringify(user));
-};
-
-const leerSesionPersistida = () => {
-  const user = normalizarUsuario(leerJson(STORAGE_KEYS.authUser));
-  const token = normalizeToken(localStorage.getItem(STORAGE_KEYS.authToken));
-
-  if (!user?.uid || !token || isTokenExpired(token)) {
-    return null;
+const guardarToken = (token) => {
+  try {
+    if (token) {
+      sessionStorage.setItem(ADMIN_TOKEN_KEY, token);
+    } else {
+      sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+    }
+  } catch {
+    // La sesión sigue funcionando en memoria si el navegador bloquea el storage.
   }
-
-  return { user, token };
-};
-
-const crearErrorAuth = (message) => {
-  const error = new Error(message);
-  error.isAuthError = true;
-  return error;
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error("useAuth debe usarse dentro de un AuthProvider");
+    throw new Error("useAuth debe usarse dentro de AuthProvider.");
   }
 
   return context;
 };
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState("");
-  const [loading, setLoading] = useState(true);
+export function AuthProvider({ children }) {
+  const [token, setToken] = useState(leerToken);
+  const [admin, setAdmin] = useState(null);
+  const [loading, setLoading] = useState(Boolean(leerToken()));
 
-  const limpiarSesionLocal = useCallback(() => {
-    setUser(null);
+  const logout = useCallback(() => {
+    guardarToken("");
     setToken("");
-    limpiarPersistenciaCompleta();
+    setAdmin(null);
+    setLoading(false);
   }, []);
 
-  const aplicarSesion = useCallback(
-    (nextUser, nextToken) => {
-      const normalizedUser = normalizarUsuario(nextUser);
-      const normalizedToken = normalizeToken(nextToken);
+  useEffect(() => {
+    if (!token || admin) return undefined;
 
-      if (!normalizedUser?.uid || !normalizedToken) {
-        throw crearErrorAuth("No se pudo recuperar una sesión válida.");
+    const controller = new AbortController();
+
+    const validarSesion = async () => {
+      try {
+        const data = await apiRequest("/admin/sesion", {
+          token,
+          signal: controller.signal,
+        });
+
+        if (!controller.signal.aborted) {
+          setAdmin(data?.admin || null);
+        }
+      } catch (error) {
+        if (error?.name !== "AbortError" && !controller.signal.aborted) {
+          logout();
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
       }
+    };
 
-      setUser(normalizedUser);
-      setToken(normalizedToken);
-      persistirSesion(normalizedUser, normalizedToken);
-    },
-    [],
-  );
+    void validarSesion();
+    return () => controller.abort();
+  }, [admin, logout, token]);
 
-  useEffect(() => {
-    const session = leerSesionPersistida();
+  const login = useCallback(async ({ email, password }) => {
+    const data = await apiRequest("/admin/login", {
+      method: "POST",
+      json: { email: String(email || "").trim(), password },
+    });
+    const nextToken = String(data?.token || "");
 
-    if (session) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      aplicarSesion(session.user, session.token);
-    } else {
-      limpiarPersistenciaCompleta();
+    if (!nextToken || !data?.admin) {
+      throw new Error("La API no devolvió una sesión de administración válida.");
     }
 
+    guardarToken(nextToken);
+    setToken(nextToken);
+    setAdmin(data.admin);
     setLoading(false);
-  }, [aplicarSesion]);
 
-  useEffect(() => {
-    const normalizedToken = normalizeToken(token);
+    return { token: nextToken, admin: data.admin };
+  }, []);
 
-    if (!normalizedToken) {
-      return undefined;
-    }
-
-    if (isTokenExpired(normalizedToken)) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      limpiarSesionLocal();
-      return undefined;
-    }
-
-    const payload = getJwtPayload(normalizedToken);
-
-    if (!payload?.exp) {
-      return undefined;
-    }
-
-    const refreshDelay = Math.max(payload.exp * 1000 - Date.now() - 30_000, 0);
-    const timeoutId = window.setTimeout(() => {
-      limpiarSesionLocal();
-    }, refreshDelay);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [token, limpiarSesionLocal]);
-
-  const loginConEmailYPassword = async (email, password) => {
-    limpiarPersistenciaCompleta();
-
-    const { respuesta, datos } = await solicitarApi("/usuarios/iniciar-sesion", {
-      method: "POST",
-      json: { email, password },
-    });
-
-    if (!respuesta.ok) {
-      throw crearErrorAuth(
-        getApiErrorMessage(datos, "Error al iniciar sesión."),
-      );
-    }
-
-    const loggedUser = normalizarUsuario(datos?.usuario || datos);
-    const loggedToken = normalizeToken(datos?.token);
-
-    aplicarSesion(loggedUser, loggedToken);
-
-    return {
-      user: loggedUser,
-      token: loggedToken,
-      destination: loggedUser.rol === ADMIN_ROLE ? "/admin" : "/",
-    };
-  };
-
-  const loginConFirebaseSocial = async ({ provider, idToken, telefono = "" }) => {
-    limpiarPersistenciaCompleta();
-
-    const payload = {
-      provider,
-      idToken,
-    };
-
-    if (String(telefono || "").trim()) {
-      payload.telefono = String(telefono).replace(/\D/g, "");
-    }
-
-    const { respuesta, datos } = await solicitarApi(
-      "/usuarios/iniciar-sesion-social",
-      {
-      method: "POST",
-      json: payload,
-      },
-    );
-
-    if (respuesta.status === 428 || datos?.requiereTelefono) {
-      return {
-        requiresPhone: true,
-        message:
-          getApiErrorMessage(
-            datos,
-            "Necesitamos tu número de WhatsApp para completar el acceso.",
-          ),
-        profile: datos?.perfil || {},
-      };
-    }
-
-    if (!respuesta.ok) {
-      throw crearErrorAuth(
-        getApiErrorMessage(
-          datos,
-          "No se pudo completar el acceso con tu cuenta social.",
-        ),
-      );
-    }
-
-    const loggedUser = normalizarUsuario(datos?.usuario || datos);
-    const loggedToken = normalizeToken(datos?.token);
-
-    aplicarSesion(loggedUser, loggedToken);
-
-    return {
-      user: loggedUser,
-      token: loggedToken,
-      destination: loggedUser.rol === ADMIN_ROLE ? "/admin" : "/",
-    };
-  };
-
-  const registrarUsuario = async (payload) => {
-    limpiarPersistenciaCompleta();
-
-    const { respuesta, datos } = await solicitarApi("/usuarios", {
-      method: "POST",
-      json: payload,
-    });
-
-    if (!respuesta.ok) {
-      throw crearErrorAuth(
-        getApiErrorMessage(datos, "No se pudo crear la cuenta."),
-      );
-    }
-
-    const createdUser = normalizarUsuario(datos?.usuario || datos);
-    const createdToken = normalizeToken(datos?.token);
-
-    aplicarSesion(createdUser, createdToken);
-
-    return {
-      user: createdUser,
-      token: createdToken,
-      destination: createdUser.rol === ADMIN_ROLE ? "/admin" : "/",
-    };
-  };
-
-  const solicitarRecuperacionPassword = async (email) => {
-    const { respuesta, datos } = await solicitarApi(
-      "/usuarios/recuperar-password",
-      {
-      method: "POST",
-      json: { email },
-      },
-    );
-
-    if (!respuesta.ok) {
-      throw crearErrorAuth(
-        getApiErrorMessage(
-          datos,
-          "No se pudo iniciar la recuperación de contraseña.",
-        ),
-      );
-    }
-
-    return datos || {
-      mensaje:
-        "Si el email existe, te vamos a enviar un enlace para restablecer tu contraseña.",
-    };
-  };
-
-  const restablecerPassword = async (tokenValue, password) => {
-    const { respuesta, datos } = await solicitarApi(
-      "/usuarios/restablecer-password",
-      {
-      method: "POST",
-      json: { token: tokenValue, password },
-      },
-    );
-
-    if (!respuesta.ok) {
-      throw crearErrorAuth(
-        getApiErrorMessage(datos, "No se pudo restablecer la contraseña."),
-      );
-    }
-
-    return datos || {
-      mensaje: "La contraseña se actualizó correctamente",
-    };
-  };
-
-  const logout = async () => {
-    limpiarSesionLocal();
-  };
-
-  const isAuthenticated = Boolean(user && token);
-
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        loading,
-        loginConEmailYPassword,
-        loginConFirebaseSocial,
-        registrarUsuario,
-        solicitarRecuperacionPassword,
-        restablecerPassword,
-        logout,
-        isAuthenticated,
-      }}
-    >
-      {!loading && children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({
+      token,
+      admin,
+      login,
+      logout,
+      isAuthenticated: Boolean(token && admin),
+      loading,
+    }),
+    [admin, loading, login, logout, token],
   );
-};
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}

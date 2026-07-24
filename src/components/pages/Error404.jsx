@@ -1,16 +1,15 @@
 import { Button, Container } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import "../../styles/Error404.css";
 
 export default function Error404() {
   const navigate = useNavigate();
 
   return (
-    <section className="error-page-wrapper">
-      <Container className="d-flex justify-content-center align-items-center min-vh-100">
+    <main className="error-page-wrapper">
+      <Container className="d-flex justify-content-center align-items-center">
         <div className="error-card text-center">
           <div className="error-visual mb-4">
-            <h1 className="display-1 fw-bold text-success font-playfair floating-anim">
+            <h1 className="display-1 fw-bold text-success font-playfair">
               404
             </h1>
             <div className="leaf-decoration" aria-hidden="true">*</div>
@@ -20,14 +19,15 @@ export default function Error404() {
             Ups! Parece que te perdiste
           </h2>
 
-          <p className="text-muted mb-5 mx-auto" style={{ maxWidth: "450px" }}>
+          <p className="error-texto">
             El sendero que buscás no existe o cambió de lugar. No te preocupes,
             siempre podés volver a la naturaleza.
           </p>
 
           <div className="d-flex gap-3 justify-content-center flex-wrap">
             <Button
-              className="btn-brand-outline rounded-pill px-4 py-2 fw-bold"
+              variant="outline-success"
+              className="rounded-pill px-4 py-2 fw-bold"
               onClick={() => navigate(-1)}
             >
               <i className="bi bi-arrow-left me-2"></i>
@@ -35,7 +35,8 @@ export default function Error404() {
             </Button>
 
             <Button
-              className="btn-brand rounded-pill px-4 py-2 fw-bold"
+              variant="success"
+              className="rounded-pill px-4 py-2 fw-bold"
               onClick={() => navigate("/", { replace: true })}
             >
               Ir al inicio
@@ -44,6 +45,6 @@ export default function Error404() {
           </div>
         </div>
       </Container>
-    </section>
+    </main>
   );
 }

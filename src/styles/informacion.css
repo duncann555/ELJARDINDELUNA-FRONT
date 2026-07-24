@@ -1,0 +1,180 @@
+.info-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 88% 8%, rgba(217, 200, 162, 0.2), transparent 24rem),
+    radial-gradient(circle at 8% 32%, rgba(123, 141, 120, 0.1), transparent 22rem);
+}
+
+.info-container {
+  max-width: 1120px;
+}
+
+.info-hero {
+  max-width: 780px;
+  margin-bottom: 2.5rem;
+}
+
+.info-eyebrow {
+  display: inline-block;
+  margin-bottom: 0.65rem;
+  color: var(--theme-sage-deep);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.info-title {
+  margin-bottom: 0.8rem;
+  color: var(--theme-night);
+  font-size: clamp(2.4rem, 7vw, 4rem);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.info-lead {
+  margin-bottom: 0;
+  color: var(--theme-muted);
+  font-size: clamp(1rem, 2vw, 1.16rem);
+  line-height: 1.75;
+}
+
+.info-content {
+  max-width: 900px;
+}
+
+.info-card,
+.info-help-card {
+  overflow: hidden;
+  border: 1px solid var(--theme-border);
+  border-radius: 24px;
+  background: rgba(255, 253, 248, 0.94);
+  box-shadow: 0 18px 42px rgba(29, 48, 70, 0.1);
+}
+
+.info-card::before {
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, var(--theme-sage), var(--theme-moon));
+  content: "";
+}
+
+.info-contact-card::before,
+.info-withdrawal-card::before {
+  height: 5px;
+}
+
+.info-withdrawal-card {
+  border-color: rgba(156, 66, 58, 0.26);
+}
+
+.info-withdrawal-card::before {
+  background: linear-gradient(90deg, #9c423a, #d9c8a2);
+}
+
+.info-copy,
+.info-list,
+.info-muted {
+  color: var(--theme-muted);
+  line-height: 1.75;
+}
+
+.info-copy:last-of-type {
+  margin-bottom: 0;
+}
+
+.info-list {
+  padding-left: 1.25rem;
+}
+
+.info-list li + li {
+  margin-top: 0.65rem;
+}
+
+.info-icon {
+  display: inline-grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border: 1px solid rgba(123, 141, 120, 0.24);
+  border-radius: 50%;
+  background: rgba(123, 141, 120, 0.12);
+  color: var(--theme-sage-deep);
+  font-size: 1.25rem;
+}
+
+.info-icon--whatsapp {
+  width: 4rem;
+  height: 4rem;
+  background: rgba(37, 211, 102, 0.12);
+  color: #177c3d;
+  font-size: 1.75rem;
+}
+
+.info-icon--withdrawal {
+  width: 4rem;
+  height: 4rem;
+  border-color: rgba(156, 66, 58, 0.24);
+  background: rgba(156, 66, 58, 0.1);
+  color: #9c423a;
+  font-size: 1.75rem;
+}
+
+.info-primary-action,
+.info-withdrawal-action {
+  min-height: 48px;
+  font-weight: 800;
+}
+
+.info-accordion {
+  --bs-accordion-border-color: var(--theme-border);
+  --bs-accordion-border-radius: 20px;
+  --bs-accordion-inner-border-radius: 20px;
+  --bs-accordion-btn-focus-box-shadow: 0 0 0 0.2rem rgba(123, 141, 120, 0.18);
+  --bs-accordion-active-bg: rgba(123, 141, 120, 0.11);
+  --bs-accordion-active-color: var(--theme-night);
+  overflow: hidden;
+  border-radius: 20px;
+  box-shadow: 0 18px 42px rgba(29, 48, 70, 0.08);
+}
+
+.info-accordion .accordion-button {
+  color: var(--theme-text);
+  font-weight: 700;
+}
+
+.info-accordion .accordion-body {
+  color: var(--theme-muted);
+  line-height: 1.75;
+}
+
+.info-help-card {
+  background:
+    linear-gradient(135deg, rgba(123, 141, 120, 0.12), rgba(217, 200, 162, 0.14)),
+    rgba(255, 253, 248, 0.96);
+}
+
+.info-alert {
+  border-radius: 18px;
+}
+
+@media (max-width: 575.98px) {
+  .info-container {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+
+  .info-hero {
+    margin-bottom: 1.75rem;
+  }
+
+  .info-card,
+  .info-help-card {
+    border-radius: 18px;
+  }
+
+  .info-withdrawal-action {
+    width: 100%;
+    white-space: normal;
+  }
+}

@@ -1,125 +1,186 @@
-import { Button, Table } from "react-bootstrap";
-import { formatCurrency, formatDate } from "../../helpers/app";
+import { useMemo, useState } from "react";
 import {
-  obtenerCostoEnvioPedido,
-  obtenerDescuentoPedido,
-  obtenerEstadoPagoPedido,
-  obtenerSubtotalPedido,
-  obtenerTextoMetodoPagoPedido,
-  obtenerTextoTipoEnvioPedido,
+  Alert,
+  Badge,
+  Button,
+  Form,
+  Spinner,
+  Table,
+} from "react-bootstrap";
+import {
+  formatCurrencyAdmin,
+  formatDateAdmin,
+  getEstadoOperativoMeta,
+  getEstadoPagoMeta,
+  getOrderId,
 } from "./utilidadesAdmin";
-import EstadoBadge from "../shared/EstadoBadge";
+
+const getBuyerName = (order) =>
+  [order?.cliente?.nombre, order?.cliente?.apellido]
+    .filter(Boolean)
+    .join(" ") || "Sin nombre";
 
 export default function SeccionPedidosAdmin({
-  pedidos,
-  cargandoPedidos,
-  pedidosEnGestion,
-  onGestionarPedido,
+  orders = [],
+  loading = false,
+  errorMessage = "",
+  onRetry,
+  onOpen,
 }) {
+  const [search, setSearch] = useState("");
+
+  const filteredOrders = useMemo(() => {
+    const term = search.trim().toLocaleLowerCase("es");
+
+    if (!term) return orders;
+
+    return orders.filter((order) =>
+      [
+        order?.numero,
+        order?.externalReference,
+        getBuyerName(order),
+        order?.cliente?.email,
+        order?.cliente?.telefono,
+        order?.estadoPago,
+        order?.estadoOperativo,
+      ].some((value) =>
+        String(value || "")
+          .toLocaleLowerCase("es")
+          .includes(term),
+      ),
+    );
+  }, [orders, search]);
+
   return (
-    <div className="admin-section-card bg-white p-4 rounded shadow-sm">
-      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <section className="admin-section-card" aria-labelledby="orders-title">
+      <div className="admin-section-header">
         <div>
-          <h5 className="fw-bold mb-1">Gestión de pedidos</h5>
-          <p className="text-muted mb-0">
-            Revisá estados, pagos y resúmenes de compra.
+          <p className="admin-kicker mb-1">Operación</p>
+          <h2 id="orders-title" className="h4 mb-1">
+            Pedidos
+          </h2>
+          <p className="admin-muted mb-0">
+            Consultá compradores, entregas, pagos y el avance de cada pedido.
           </p>
         </div>
-
-        <EstadoBadge tipo="general" valor="pendiente" label={`${pedidosEnGestion} en gestión`} />
       </div>
 
-      {cargandoPedidos ? (
-        <div className="text-center py-5">
-          <div className="spinner-border text-success" role="status"></div>
-          <p className="text-muted mt-3 mb-0">Cargando pedidos...</p>
+      <div className="admin-toolbar">
+        <Form.Group controlId="admin-orders-search" className="flex-grow-1">
+          <Form.Label className="visually-hidden">Buscar pedidos</Form.Label>
+          <Form.Control
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Buscar por número, referencia, cliente, email o estado"
+          />
+        </Form.Group>
+        <span className="admin-muted small">
+          {orders.length} {orders.length === 1 ? "pedido" : "pedidos"}
+        </span>
+      </div>
+
+      {errorMessage && (
+        <Alert variant="danger" className="admin-inline-state" role="alert">
+          <div>
+            <strong>No se pudieron cargar los pedidos.</strong>
+            <div>{errorMessage}</div>
+          </div>
+          <Button
+            type="button"
+            variant="outline-danger"
+            size="sm"
+            onClick={onRetry}
+          >
+            Reintentar
+          </Button>
+        </Alert>
+      )}
+
+      {loading ? (
+        <div className="admin-empty-state" role="status" aria-live="polite">
+          <Spinner animation="border" size="sm" />
+          <span>Cargando pedidos…</span>
         </div>
-      ) : pedidos.length > 0 ? (
+      ) : !errorMessage && filteredOrders.length === 0 ? (
+        <div className="admin-empty-state">
+          <i className="bi bi-receipt" aria-hidden="true"></i>
+          <span>
+            {search
+              ? "No hay pedidos que coincidan con la búsqueda."
+              : "Todavía no hay pedidos."}
+          </span>
+        </div>
+      ) : !errorMessage ? (
         <div className="admin-table-wrap">
-          <Table responsive hover className="align-middle admin-table">
+          <Table responsive hover className="admin-table align-middle mb-0">
             <thead>
               <tr>
-                <th>Pedido</th>
-                <th>Cliente</th>
-                <th>Fecha</th>
-                <th>Total</th>
-                <th>Pago</th>
-                <th>Estado</th>
-                <th>Acciones</th>
+                <th scope="col">Pedido</th>
+                <th scope="col">Fecha</th>
+                <th scope="col">Cliente</th>
+                <th scope="col">Total</th>
+                <th scope="col">Pago</th>
+                <th scope="col">Operación</th>
+                <th scope="col" className="text-end">
+                  Detalle
+                </th>
               </tr>
             </thead>
             <tbody>
-              {pedidos.map((pedido) => {
-                const estadoPago = obtenerEstadoPagoPedido(pedido);
+              {filteredOrders.map((order) => {
+                const orderId = getOrderId(order);
+                const payment = getEstadoPagoMeta(order.estadoPago);
+                const operational = getEstadoOperativoMeta(
+                  order.estadoOperativo,
+                );
 
                 return (
-                <tr key={pedido._id}>
-                  <td>
-                    <div className="fw-bold">
-                      #{String(pedido._id).slice(-6).toUpperCase()}
-                    </div>
-                    <small className="text-muted">
-                      {pedido.productos?.length || 0} productos
-                    </small>
-                  </td>
-
-                  <td>
-                    <div className="fw-bold">
-                      {pedido.usuario?.nombre} {pedido.usuario?.apellido}
-                    </div>
-                    <small className="text-muted">{pedido.usuario?.email || "-"}</small>
-                  </td>
-
-                  <td>{formatDate(pedido.createdAt)}</td>
-                  <td>
-                    <div className="fw-semibold">{formatCurrency(pedido.total)}</div>
-                    <small className="text-muted">
-                      {obtenerTextoMetodoPagoPedido(pedido)} | Subtotal{" "}
-                      {formatCurrency(obtenerSubtotalPedido(pedido))}
-                      {obtenerDescuentoPedido(pedido) > 0 && (
-                        <>
-                          {" "}
-                          - descuento transferencia 7% {formatCurrency(obtenerDescuentoPedido(pedido))}
-                        </>
-                      )}{" "}
-                      + {obtenerTextoTipoEnvioPedido(pedido)}{" "}
-                      {formatCurrency(obtenerCostoEnvioPedido(pedido))}
-                    </small>
-                  </td>
-
-                  <td>
-                    <EstadoBadge tipo="pago" valor={estadoPago} />
-                  </td>
-
-                  <td>
-                    <EstadoBadge tipo="pedido" valor={pedido.estadoPedido} />
-                  </td>
-
-                  <td>
-                    <Button
-                      variant="outline-success"
-                      size="sm"
-                      className="admin-action-btn"
-                      onClick={() => onGestionarPedido(pedido)}
-                    >
-                      Gestionar
-                    </Button>
-                  </td>
-                </tr>
-              );
+                  <tr key={orderId}>
+                    <td>
+                      <strong>{order.numero || `#${orderId}`}</strong>
+                      {order.requiresReview && (
+                        <Badge bg="warning" text="dark" className="ms-2">
+                          Revisar
+                        </Badge>
+                      )}
+                      <span className="admin-table-secondary">
+                        {order.externalReference || orderId}
+                      </span>
+                    </td>
+                    <td>{formatDateAdmin(order.createdAt)}</td>
+                    <td>
+                      <strong>{getBuyerName(order)}</strong>
+                      <span className="admin-table-secondary">
+                        {order.cliente?.email || "Sin email"}
+                      </span>
+                    </td>
+                    <td>{formatCurrencyAdmin(order.total)}</td>
+                    <td>
+                      <Badge bg={payment.variant}>{payment.label}</Badge>
+                    </td>
+                    <td>
+                      <Badge bg={operational.variant}>
+                        {operational.label}
+                      </Badge>
+                    </td>
+                    <td className="text-end">
+                      <Button
+                        type="button"
+                        variant="outline-primary"
+                        size="sm"
+                        onClick={() => onOpen(order)}
+                      >
+                        Ver pedido
+                      </Button>
+                    </td>
+                  </tr>
+                );
               })}
             </tbody>
           </Table>
         </div>
-      ) : (
-        <div className="text-center py-5 text-muted">
-          <i className="bi bi-receipt display-1 d-block mb-3 opacity-25"></i>
-          <h5 className="fw-bold">Todavía no hay pedidos</h5>
-          <p className="mb-0">
-            Cuando entren compras, vas a poder seguirlas desde esta pestaña.
-          </p>
-        </div>
-      )}
-    </div>
+      ) : null}
+    </section>
   );
 }

@@ -1,648 +1,534 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Container, Tab, Tabs } from "react-bootstrap";
-import Swal from "sweetalert2";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Alert,
+  Button,
+  Container,
+  Tab,
+  Tabs,
+} from "react-bootstrap";
+import { useAuth } from "../../context/AuthContext";
+import { getSafeErrorMessage } from "../../helpers/api";
+import {
+  actualizarEstadoPedidoAdmin,
+  actualizarProductoAdmin,
+  actualizarVisibilidadProductoAdmin,
+  crearProductoAdmin,
+  isAdminSessionError,
+  listarPedidosAdmin,
+  listarProductosAdmin,
+  obtenerPedidoAdmin,
+  resolverRevisionPedidoAdmin,
+} from "../../helpers/adminApi";
+import ConfirmacionAdmin from "../admin/ConfirmacionAdmin";
 import ModalPedidoAdmin from "../admin/ModalPedidoAdmin";
 import ModalProductoAdmin from "../admin/ModalProductoAdmin";
-import ResumenAdmin from "../admin/ResumenAdmin";
 import SeccionPedidosAdmin from "../admin/SeccionPedidosAdmin";
 import SeccionProductosAdmin from "../admin/SeccionProductosAdmin";
-import SeccionUsuariosAdmin from "../admin/SeccionUsuariosAdmin";
 import {
+  getNotaRevisionError,
+  getOrderId,
+  getProductId,
+  normalizarNotaRevision,
+  puedeActualizarEstadoOperativo,
   PRODUCTO_VACIO,
-  obtenerIdUsuario,
-  pedidoCuentaComoGestion,
-  pedidoEstaPendienteDePago,
 } from "../admin/utilidadesAdmin";
-import { useAuth } from "../../context/AuthContext";
-import {
-  getApiErrorMessage,
-  getApiValidationErrors,
-  isAuthError,
-} from "../../helpers/app";
-import { solicitarApi } from "../../helpers/clienteApi";
 import "../../styles/admin.css";
 
-const mostrarExito = (mensaje) => Swal.fire("Éxito", mensaje, "success");
-const mostrarError = (mensaje) => Swal.fire("Error", mensaje, "error");
+const upsertById = (items, nextItem, getId) => {
+  const nextId = getId(nextItem);
 
-const mostrarErroresValidacion = async (errores) => {
-  const mensajes = errores.map((error) => `<li>${error}</li>`).join("");
+  if (!nextId) return items;
 
-  await Swal.fire({
-    title: "Error",
-    html: `<ul class="text-start mb-0 ps-3">${mensajes}</ul>`,
-    icon: "error",
-  });
+  const exists = items.some((item) => getId(item) === nextId);
+
+  return exists
+    ? items.map((item) => (getId(item) === nextId ? nextItem : item))
+    : [nextItem, ...items];
 };
 
 export default function Admin() {
-  const { user, token, logout } = useAuth();
-  const esAdmin = user?.rol === "Administrador";
-  const sesionInvalidaRef = useRef(false);
+  const { token, admin, logout } = useAuth();
+  const orderRequestRef = useRef(null);
 
-  const [productos, setProductos] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
-  const [pedidos, setPedidos] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState("");
+  const [productModal, setProductModal] = useState(null);
+  const [productSaving, setProductSaving] = useState(false);
+  const [productError, setProductError] = useState("");
+  const [productToToggle, setProductToToggle] = useState(null);
+  const [productProcessingId, setProductProcessingId] = useState("");
 
-  const [showProdModal, setShowProdModal] = useState(false);
-  const [modoProducto, setModoProducto] = useState("crear");
-  const [productoSeleccionadoId, setProductoSeleccionadoId] = useState(null);
-  const [productoForm, setProductoForm] = useState(PRODUCTO_VACIO);
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState("");
+  const [orderModalOpen, setOrderModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orderDetailLoading, setOrderDetailLoading] = useState(false);
+  const [orderSaving, setOrderSaving] = useState(false);
+  const [orderError, setOrderError] = useState("");
+  const [reviewResolution, setReviewResolution] = useState(null);
+  const [reviewSaving, setReviewSaving] = useState(false);
 
-  const [showPedidoModal, setShowPedidoModal] = useState(false);
-  const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
-  const [guardandoPedido, setGuardandoPedido] = useState(false);
-  const [eliminandoPedido, setEliminandoPedido] = useState(false);
-  const [cargandoPedidos, setCargandoPedidos] = useState(false);
+  const [feedback, setFeedback] = useState(null);
 
-  const [busquedaProd, setBusquedaProd] = useState("");
-  const [busquedaUsuario, setBusquedaUsuario] = useState("");
-  const [productoProcesandoId, setProductoProcesandoId] = useState(null);
-  const [usuarioProcesandoId, setUsuarioProcesandoId] = useState(null);
+  const resolveError = useCallback(
+    (error, fallback) => {
+      if (error?.name === "AbortError") return "";
 
-  const manejarSesionInvalida = useCallback(
-    async (datos) => {
-      if (sesionInvalidaRef.current) {
-        return;
+      if (isAdminSessionError(error)) {
+        logout();
+        return "";
       }
 
-      sesionInvalidaRef.current = true;
-      logout();
-
-      await Swal.fire({
-        title: "Sesión vencida",
-        text:
-          datos?.mensaje ||
-          "Tu sesión ya no es válida. Ingresá nuevamente para seguir administrando productos.",
-        icon: "info",
-        confirmButtonText: "Entendido",
-      });
+      return getSafeErrorMessage(error, fallback);
     },
     [logout],
   );
 
-  const solicitarConAuthAdmin = useCallback(
-    async (ruta, opciones = {}) => {
-      const resultado = await solicitarApi(ruta, {
-        token,
-        ...opciones,
-      });
+  const loadProducts = useCallback(
+    async ({ signal } = {}) => {
+      setProductsLoading(true);
+      setProductsError("");
 
-      if (isAuthError(resultado.respuesta, resultado.datos)) {
-        await manejarSesionInvalida(resultado.datos);
-        return { ...resultado, sesionInvalida: true };
+      try {
+        const nextProducts = await listarProductosAdmin(token, { signal });
+
+        if (!signal?.aborted) setProducts(nextProducts);
+      } catch (error) {
+        const message = resolveError(
+          error,
+          "No pudimos cargar los productos.",
+        );
+        if (!signal?.aborted && message) setProductsError(message);
+      } finally {
+        if (!signal?.aborted) setProductsLoading(false);
       }
-
-      return { ...resultado, sesionInvalida: false };
     },
-    [manejarSesionInvalida, token],
+    [resolveError, token],
   );
 
-  const cargarProductos = useCallback(async () => {
-    if (!token) return;
+  const loadOrders = useCallback(
+    async ({ signal } = {}) => {
+      setOrdersLoading(true);
+      setOrdersError("");
 
-    try {
-      const { respuesta, datos, sesionInvalida } = await solicitarConAuthAdmin(
-        "/productos/admin/todos",
-      );
+      try {
+        const nextOrders = await listarPedidosAdmin(token, { signal });
 
-      if (sesionInvalida) {
-        return;
+        if (!signal?.aborted) setOrders(nextOrders);
+      } catch (error) {
+        const message = resolveError(error, "No pudimos cargar los pedidos.");
+        if (!signal?.aborted && message) setOrdersError(message);
+      } finally {
+        if (!signal?.aborted) setOrdersLoading(false);
       }
-
-      if (!respuesta.ok) {
-        throw new Error(
-          getApiErrorMessage(datos, "No se pudieron cargar los productos."),
-        );
-      }
-
-      setProductos(Array.isArray(datos) ? datos : datos?.productos || []);
-    } catch (error) {
-      console.error("Error al cargar productos:", error);
-    }
-  }, [solicitarConAuthAdmin, token]);
-
-  const cargarUsuarios = useCallback(async () => {
-    if (!token) return;
-
-    try {
-      const { respuesta, datos, sesionInvalida } = await solicitarConAuthAdmin(
-        "/usuarios",
-      );
-
-      if (sesionInvalida) {
-        return;
-      }
-
-      if (!respuesta.ok) {
-        throw new Error(
-          getApiErrorMessage(datos, "No se pudieron cargar los usuarios."),
-        );
-      }
-
-      setUsuarios(Array.isArray(datos) ? datos : datos?.usuarios || []);
-    } catch (error) {
-      console.error("Error al cargar usuarios:", error);
-    }
-  }, [solicitarConAuthAdmin, token]);
-
-  const cargarPedidos = useCallback(async () => {
-    if (!token) return;
-
-    try {
-      setCargandoPedidos(true);
-      const { respuesta, datos, sesionInvalida } = await solicitarConAuthAdmin(
-        "/pedidos",
-      );
-
-      if (sesionInvalida) {
-        return;
-      }
-
-      if (!respuesta.ok) {
-        throw new Error(
-          getApiErrorMessage(datos, "No se pudieron cargar los pedidos."),
-        );
-      }
-
-      setPedidos(Array.isArray(datos) ? datos : datos?.pedidos || []);
-    } catch (error) {
-      console.error("Error al cargar pedidos:", error);
-    } finally {
-      setCargandoPedidos(false);
-    }
-  }, [solicitarConAuthAdmin, token]);
+    },
+    [resolveError, token],
+  );
 
   useEffect(() => {
-    if (!token || !esAdmin) return;
+    const productsController = new AbortController();
+    const ordersController = new AbortController();
 
-    void cargarProductos();
-    void cargarUsuarios();
-    void cargarPedidos();
-  }, [cargarPedidos, cargarProductos, cargarUsuarios, esAdmin, token]);
+    void loadProducts({ signal: productsController.signal });
+    void loadOrders({ signal: ordersController.signal });
 
-  const abrirModalProductoCrear = () => {
-    setModoProducto("crear");
-    setProductoSeleccionadoId(null);
-    setProductoForm(PRODUCTO_VACIO);
-    setShowProdModal(true);
+    return () => {
+      productsController.abort();
+      ordersController.abort();
+      orderRequestRef.current?.abort();
+    };
+  }, [loadOrders, loadProducts]);
+
+  const openCreateProduct = () => {
+    setProductError("");
+    setProductModal({ mode: "create", product: PRODUCTO_VACIO });
   };
 
-  const abrirModalProductoEditar = (producto) => {
-    setModoProducto("editar");
-    setProductoSeleccionadoId(producto._id);
-    setProductoForm(producto);
-    setShowProdModal(true);
+  const openEditProduct = (product) => {
+    setProductError("");
+    setProductModal({ mode: "edit", product });
   };
 
-  const cerrarModalProducto = () => {
-    setShowProdModal(false);
+  const closeProductModal = () => {
+    if (productSaving) return;
+    setProductModal(null);
+    setProductError("");
   };
 
-  const abrirModalPedido = (pedido) => {
-    setPedidoSeleccionado(pedido);
-    setShowPedidoModal(true);
-  };
+  const saveProduct = async (formData) => {
+    if (!productModal) return;
 
-  const cerrarModalPedido = () => {
-    setShowPedidoModal(false);
-    setPedidoSeleccionado(null);
-  };
-
-  const guardarProducto = async (formData) => {
-    try {
-      const ruta =
-        modoProducto === "editar"
-          ? `/productos/${productoSeleccionadoId}`
-          : "/productos";
-      const metodo = modoProducto === "editar" ? "PUT" : "POST";
-
-      const { respuesta, datos, sesionInvalida } = await solicitarConAuthAdmin(
-        ruta,
-        {
-          method: metodo,
-          body: formData,
-        },
-      );
-
-      if (sesionInvalida) {
-        return;
-      }
-
-      const erroresValidacion = getApiValidationErrors(datos);
-
-      if (respuesta.status === 400 && erroresValidacion.length > 0) {
-        await mostrarErroresValidacion(erroresValidacion);
-        return;
-      }
-
-      if (!respuesta.ok) {
-        throw new Error(getApiErrorMessage(datos, "No se pudo guardar el producto."));
-      }
-
-      await cargarProductos();
-      cerrarModalProducto();
-      await mostrarExito("Producto guardado correctamente");
-    } catch (error) {
-      await mostrarError(error.message);
-    }
-  };
-
-  const guardarPedido = async (formulario) => {
-    if (!pedidoSeleccionado) return;
+    setProductSaving(true);
+    setProductError("");
 
     try {
-      setGuardandoPedido(true);
+      const savedProduct =
+        productModal.mode === "edit"
+          ? await actualizarProductoAdmin(
+              token,
+              getProductId(productModal.product),
+              formData,
+            )
+          : await crearProductoAdmin(token, formData);
 
-      const { respuesta, datos, sesionInvalida } = await solicitarConAuthAdmin(
-        `/pedidos/${pedidoSeleccionado._id}`,
-        {
-          method: "PATCH",
-          json: {
-            estadoPedido: formulario.estadoPedido,
-            ...(pedidoSeleccionado?.metodoPago === "transferencia"
-              ? { estadoPago: formulario.estadoPago }
-              : {}),
-          },
-        },
+      if (!savedProduct) {
+        throw new Error("La API no devolvió el producto guardado.");
+      }
+
+      setProducts((current) =>
+        upsertById(current, savedProduct, getProductId),
       );
-
-      if (sesionInvalida) {
-        return;
-      }
-
-      const erroresValidacion = getApiValidationErrors(datos);
-
-      if (respuesta.status === 400 && erroresValidacion.length > 0) {
-        throw new Error(erroresValidacion.join(" | "));
-      }
-
-      if (!respuesta.ok) {
-        throw new Error(
-          getApiErrorMessage(datos, "No se pudo actualizar el pedido."),
-        );
-      }
-
-      await cargarPedidos();
-      cerrarModalPedido();
-      await mostrarExito("Estado del pedido actualizado");
+      setProductModal(null);
+      setFeedback({
+        variant: "success",
+        message:
+          productModal.mode === "edit"
+            ? "El producto se actualizó correctamente."
+            : "El producto se creó correctamente.",
+      });
     } catch (error) {
-      await mostrarError(error.message);
+      const message = resolveError(error, "No pudimos guardar el producto.");
+      if (message) setProductError(message);
     } finally {
-      setGuardandoPedido(false);
+      setProductSaving(false);
     }
   };
 
-  const eliminarPedido = async () => {
-    if (!pedidoSeleccionado?._id) return;
+  const confirmToggleProduct = async () => {
+    const productId = getProductId(productToToggle);
+    if (!productId) return;
 
-    const result = await Swal.fire({
-      title: "¿Eliminar pedido?",
-      text: "Se eliminará el pedido y, si corresponde, se restaurará el stock. Esta acción no se puede deshacer.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#d33",
-    });
-
-    if (!result.isConfirmed) return;
+    setProductProcessingId(productId);
 
     try {
-      setEliminandoPedido(true);
-
-      const { respuesta, datos, sesionInvalida } = await solicitarConAuthAdmin(
-        `/pedidos/${pedidoSeleccionado._id}`,
-        {
-          method: "DELETE",
-        },
+      const updatedProduct = await actualizarVisibilidadProductoAdmin(
+        token,
+        productId,
+        !productToToggle.active,
       );
 
-      if (sesionInvalida) {
-        return;
+      if (!updatedProduct) {
+        throw new Error("La API no devolvió el producto actualizado.");
       }
 
-      if (!respuesta.ok) {
-        throw new Error(
-          getApiErrorMessage(datos, "No se pudo eliminar el pedido."),
-        );
-      }
-
-      await cargarPedidos();
-      cerrarModalPedido();
-      await mostrarExito("Pedido eliminado correctamente");
+      setProducts((current) =>
+        upsertById(current, updatedProduct, getProductId),
+      );
+      setFeedback({
+        variant: "success",
+        message: updatedProduct.active
+          ? "El producto ya está visible en la tienda."
+          : "El producto quedó oculto de la tienda.",
+      });
+      setProductToToggle(null);
     } catch (error) {
-      await mostrarError(error.message);
+      const message = resolveError(
+        error,
+        "No pudimos cambiar la visibilidad del producto.",
+      );
+      if (message) {
+        setFeedback({ variant: "danger", message });
+        setProductToToggle(null);
+      }
     } finally {
-      setEliminandoPedido(false);
+      setProductProcessingId("");
     }
   };
 
-  const eliminarProducto = async (id) => {
-    const result = await Swal.fire({
-      title: "¿Borrar producto?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Sí, borrar",
-      cancelButtonText: "Cancelar",
-    });
+  const openOrder = async (order) => {
+    const orderId = getOrderId(order);
+    if (!orderId) return;
 
-    if (!result.isConfirmed) return;
+    orderRequestRef.current?.abort();
+    const controller = new AbortController();
+    orderRequestRef.current = controller;
 
-    try {
-      const { respuesta, datos, sesionInvalida } = await solicitarConAuthAdmin(
-        `/productos/${id}`,
-        {
-          method: "DELETE",
-        },
-      );
-
-      if (sesionInvalida) {
-        return;
-      }
-
-      if (!respuesta.ok) {
-        throw new Error(
-          getApiErrorMessage(datos, "No se pudo eliminar el producto."),
-        );
-      }
-
-      await cargarProductos();
-      await mostrarExito("Producto eliminado correctamente");
-    } catch (error) {
-      await mostrarError(error.message);
-    }
-  };
-
-  const cambiarEstadoProducto = async (producto) => {
-    const estadoActual = producto.estado === "Inactivo" ? "Inactivo" : "Activo";
-    const nuevoEstado = estadoActual === "Activo" ? "Inactivo" : "Activo";
-    const accion = nuevoEstado === "Inactivo" ? "Suspender" : "Mostrar";
-
-    const result = await Swal.fire({
-      title: `¿${accion} producto?`,
-      text:
-        nuevoEstado === "Inactivo"
-          ? `${producto.nombre} dejará de verse en Inicio y en Productos.`
-          : `${producto.nombre} volverá a mostrarse en Inicio y en Productos.`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: `Sí, ${accion.toLowerCase()}`,
-      cancelButtonText: "Cancelar",
-    });
-
-    if (!result.isConfirmed) return;
+    setSelectedOrder(order);
+    setOrderModalOpen(true);
+    setOrderDetailLoading(true);
+    setOrderError("");
+    setReviewResolution(null);
 
     try {
-      setProductoProcesandoId(producto._id);
+      const detail = await obtenerPedidoAdmin(token, orderId, {
+        signal: controller.signal,
+      });
 
-      const { respuesta, datos, sesionInvalida } = await solicitarConAuthAdmin(
-        `/productos/${producto._id}/estado`,
-        {
-          method: "PATCH",
-          json: { estado: nuevoEstado },
-        },
-      );
-
-      if (sesionInvalida) {
-        return;
+      if (!controller.signal.aborted) {
+        if (!detail) throw new Error("La API no devolvió el pedido.");
+        setSelectedOrder(detail);
       }
-
-      if (!respuesta.ok) {
-        throw new Error(
-          getApiErrorMessage(datos, "No se pudo actualizar el estado del producto."),
-        );
-      }
-
-      await cargarProductos();
-      await mostrarExito(
-        nuevoEstado === "Inactivo"
-          ? "Producto suspendido correctamente"
-          : "Producto visible nuevamente",
-      );
     } catch (error) {
-      await mostrarError(error.message);
+      const message = resolveError(
+        error,
+        "No pudimos cargar el detalle del pedido.",
+      );
+      if (!controller.signal.aborted && message) setOrderError(message);
     } finally {
-      setProductoProcesandoId(null);
+      if (!controller.signal.aborted) setOrderDetailLoading(false);
     }
   };
 
-  const cambiarEstadoUsuario = async (usuario) => {
-    const usuarioId = obtenerIdUsuario(usuario);
-    const nuevoEstado = usuario.estado === "Activo" ? "Suspendido" : "Activo";
+  const closeOrderModal = () => {
+    if (orderSaving || reviewSaving) return;
+    orderRequestRef.current?.abort();
+    setOrderModalOpen(false);
+    setSelectedOrder(null);
+    setOrderError("");
+    setReviewResolution(null);
+  };
 
-    const result = await Swal.fire({
-      title:
-        nuevoEstado === "Suspendido"
-          ? "¿Suspender usuario?"
-          : "¿Reactivar usuario?",
-      text: `${usuario.nombre} ${usuario.apellido} pasará a estado ${nuevoEstado}.`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText:
-        nuevoEstado === "Suspendido" ? "Sí, suspender" : "Sí, reactivar",
-      cancelButtonText: "Cancelar",
-    });
+  const saveOrderStatus = async (estadoOperativo) => {
+    const orderId = getOrderId(selectedOrder);
+    if (!orderId) return;
 
-    if (!result.isConfirmed || !usuarioId) return;
+    if (
+      estadoOperativo === selectedOrder?.estadoOperativo ||
+      !puedeActualizarEstadoOperativo(selectedOrder, estadoOperativo)
+    ) {
+      setOrderError(
+        "Elegí una transición operativa disponible para este pedido.",
+      );
+      return;
+    }
+
+    setOrderSaving(true);
+    setOrderError("");
 
     try {
-      setUsuarioProcesandoId(usuarioId);
-
-      const { respuesta, datos, sesionInvalida } = await solicitarConAuthAdmin(
-        `/usuarios/${usuarioId}`,
-        {
-          method: "PATCH",
-          json: { estado: nuevoEstado },
-        },
+      const updatedOrder = await actualizarEstadoPedidoAdmin(
+        token,
+        orderId,
+        estadoOperativo,
       );
 
-      if (sesionInvalida) {
-        return;
+      if (!updatedOrder) {
+        throw new Error("La API no devolvió el pedido actualizado.");
       }
 
-      if (!respuesta.ok) {
-        throw new Error(
-          getApiErrorMessage(datos, "No se pudo actualizar el usuario."),
-        );
-      }
-
-      await cargarUsuarios();
-      await mostrarExito(
-        `Usuario ${nuevoEstado.toLowerCase()} correctamente`,
-      );
+      setOrders((current) => upsertById(current, updatedOrder, getOrderId));
+      setSelectedOrder(updatedOrder);
+      setOrderModalOpen(false);
+      setFeedback({
+        variant: "success",
+        message: "El estado operativo del pedido se actualizó correctamente.",
+      });
     } catch (error) {
-      await mostrarError(error.message);
+      const message = resolveError(
+        error,
+        "No pudimos actualizar el estado del pedido.",
+      );
+      if (message) setOrderError(message);
     } finally {
-      setUsuarioProcesandoId(null);
+      setOrderSaving(false);
     }
   };
 
-  const eliminarUsuario = async (usuario) => {
-    const usuarioId = obtenerIdUsuario(usuario);
+  const requestReviewResolution = (note) => {
+    const orderId = getOrderId(selectedOrder);
+    const normalizedNote = normalizarNotaRevision(note);
+    const noteError = getNotaRevisionError(normalizedNote);
 
-    const result = await Swal.fire({
-      title: "¿Eliminar usuario?",
-      text: `Se eliminará la cuenta de ${usuario.nombre} ${usuario.apellido}. Esta acción no se puede deshacer.`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#d33",
+    if (!orderId || !selectedOrder?.requiresReview) {
+      setOrderError("Este pedido ya no tiene una revisión pendiente.");
+      return;
+    }
+
+    if (noteError) {
+      setOrderError(noteError);
+      return;
+    }
+
+    setOrderError("");
+    setReviewResolution({
+      orderId,
+      orderLabel: selectedOrder.numero || `#${orderId}`,
+      note: normalizedNote,
     });
+  };
 
-    if (!result.isConfirmed || !usuarioId) return;
+  const confirmReviewResolution = async () => {
+    if (!reviewResolution) return;
+
+    const orderId = getOrderId(selectedOrder);
+
+    if (
+      orderId !== reviewResolution.orderId ||
+      !selectedOrder?.requiresReview
+    ) {
+      setReviewResolution(null);
+      setOrderError("Este pedido ya no tiene una revisión pendiente.");
+      return;
+    }
+
+    setReviewSaving(true);
+    setOrderError("");
 
     try {
-      setUsuarioProcesandoId(usuarioId);
-
-      const { respuesta, datos, sesionInvalida } = await solicitarConAuthAdmin(
-        `/usuarios/${usuarioId}`,
-        {
-          method: "DELETE",
-        },
+      const updatedOrder = await resolverRevisionPedidoAdmin(
+        token,
+        reviewResolution.orderId,
+        reviewResolution.note,
       );
 
-      if (sesionInvalida) {
-        return;
+      if (!updatedOrder) {
+        throw new Error("La API no devolvió el pedido actualizado.");
       }
 
-      if (!respuesta.ok) {
-        throw new Error(
-          getApiErrorMessage(datos, "No se pudo eliminar el usuario."),
-        );
-      }
-
-      await cargarUsuarios();
-      await mostrarExito("Usuario eliminado correctamente");
+      setOrders((current) => upsertById(current, updatedOrder, getOrderId));
+      setSelectedOrder(updatedOrder);
+      setReviewResolution(null);
+      setFeedback({
+        variant: "success",
+        message: "La revisión del pedido quedó resuelta y auditada.",
+      });
     } catch (error) {
-      await mostrarError(error.message);
+      const message = resolveError(
+        error,
+        "No pudimos resolver la revisión del pedido.",
+      );
+      setReviewResolution(null);
+      if (message) setOrderError(message);
     } finally {
-      setUsuarioProcesandoId(null);
+      setReviewSaving(false);
     }
   };
 
-  const productosFiltrados = useMemo(() => {
-    const termino = busquedaProd.toLowerCase();
-
-    return productos.filter(
-      (producto) =>
-        (producto.nombre || "").toLowerCase().includes(termino) ||
-        (producto.categoria || "").toLowerCase().includes(termino),
-    );
-  }, [busquedaProd, productos]);
-
-  const usuariosFiltrados = useMemo(() => {
-    const termino = busquedaUsuario.toLowerCase();
-
-    return usuarios.filter((usuario) => {
-      const nombreCompleto =
-        `${usuario.nombre || ""} ${usuario.apellido || ""}`.toLowerCase();
-
-      return (
-        nombreCompleto.includes(termino) ||
-        (usuario.email || "").toLowerCase().includes(termino) ||
-        (usuario.telefono || "").toLowerCase().includes(termino)
-      );
-    });
-  }, [busquedaUsuario, usuarios]);
-
-  const usuariosActivos = useMemo(
-    () => usuarios.filter((usuario) => usuario.estado === "Activo").length,
-    [usuarios],
-  );
-
-  const usuariosSuspendidos = useMemo(
-    () => usuarios.filter((usuario) => usuario.estado === "Suspendido").length,
-    [usuarios],
-  );
-
-  const pedidosEnGestion = useMemo(
-    () => pedidos.filter(pedidoCuentaComoGestion).length,
-    [pedidos],
-  );
-
-  const pedidosPendientesPago = useMemo(
-    () => pedidos.filter(pedidoEstaPendienteDePago).length,
-    [pedidos],
-  );
-
-  const productosSinStock = useMemo(
-    () => productos.filter((producto) => producto.stock <= 0).length,
-    [productos],
-  );
+  const adminName =
+    admin?.name || admin?.nombre || admin?.email || "Administración";
+  const selectedOrderKey = [
+    getOrderId(selectedOrder) || "pedido",
+    selectedOrder?.estadoOperativo || "pendiente",
+    selectedOrder?.requiresReview ? "requiere-revision" : "sin-revision",
+    selectedOrder?.reviewResolutions?.length || 0,
+    selectedOrder?.updatedAt || "sin-actualizacion",
+  ].join("-");
 
   return (
-    <Container fluid className="admin-panel py-5 px-lg-5 bg-light min-vh-100">
-      <h2 className="fw-bold mb-4 font-playfair">
-        Panel de control - EL JARDÍN DE LUNA
-      </h2>
+    <main className="admin-page">
+      <Container fluid="xl" className="admin-shell">
+        <header className="admin-header">
+          <div className="admin-brand">
+            <span className="admin-brand-mark" aria-hidden="true">
+              <i className="bi bi-flower2"></i>
+            </span>
+            <div>
+              <p className="admin-kicker mb-1">El Jardín de Luna</p>
+              <h1 className="font-playfair mb-0">Panel administrativo</h1>
+            </div>
+          </div>
 
-      <ResumenAdmin
-        productosTotales={productos.length}
-        productosSinStock={productosSinStock}
-        usuariosActivos={usuariosActivos}
-        pedidosEnGestion={pedidosEnGestion}
-        pedidosPendientesPago={pedidosPendientesPago}
+          <div className="admin-header-actions">
+            <div>
+              <span>Sesión iniciada</span>
+              <strong>{adminName}</strong>
+            </div>
+            <Button type="button" variant="outline-secondary" onClick={logout}>
+              Cerrar sesión
+            </Button>
+          </div>
+        </header>
+
+        {feedback && (
+          <Alert
+            variant={feedback.variant}
+            dismissible
+            onClose={() => setFeedback(null)}
+            role="status"
+          >
+            {feedback.message}
+          </Alert>
+        )}
+
+        <Tabs
+          defaultActiveKey="products"
+          className="admin-tabs"
+          mountOnEnter
+        >
+          <Tab eventKey="products" title="Productos">
+            <SeccionProductosAdmin
+              products={products}
+              loading={productsLoading}
+              errorMessage={productsError}
+              processingId={productProcessingId}
+              onRetry={() => void loadProducts()}
+              onCreate={openCreateProduct}
+              onEdit={openEditProduct}
+              onToggleActive={setProductToToggle}
+            />
+          </Tab>
+          <Tab eventKey="orders" title="Pedidos">
+            <SeccionPedidosAdmin
+              orders={orders}
+              loading={ordersLoading}
+              errorMessage={ordersError}
+              onRetry={() => void loadOrders()}
+              onOpen={(order) => void openOrder(order)}
+            />
+          </Tab>
+        </Tabs>
+      </Container>
+
+      {productModal && (
+        <ModalProductoAdmin
+          key={`${productModal.mode}-${getProductId(productModal.product) || "new"}`}
+          show
+          mode={productModal.mode}
+          product={productModal.product}
+          saving={productSaving}
+          errorMessage={productError}
+          onClose={closeProductModal}
+          onSave={saveProduct}
+        />
+      )}
+
+      <ConfirmacionAdmin
+        show={Boolean(productToToggle)}
+        title={
+          productToToggle?.active ? "Ocultar producto" : "Publicar producto"
+        }
+        message={
+          productToToggle?.active
+            ? `${productToToggle?.name || "El producto"} dejará de estar visible en la tienda.`
+            : `${productToToggle?.name || "El producto"} volverá a estar visible en la tienda.`
+        }
+        confirmLabel={productToToggle?.active ? "Ocultar" : "Publicar"}
+        confirmVariant={productToToggle?.active ? "secondary" : "success"}
+        pending={Boolean(productProcessingId)}
+        onCancel={() => setProductToToggle(null)}
+        onConfirm={() => void confirmToggleProduct()}
       />
 
-      <Tabs defaultActiveKey="productos" className="mb-4 admin-tabs">
-        <Tab eventKey="productos" title="Inventario">
-          <SeccionProductosAdmin
-            busqueda={busquedaProd}
-            onBuscarChange={setBusquedaProd}
-            productos={productosFiltrados}
-            productoProcesandoId={productoProcesandoId}
-            onNuevoProducto={abrirModalProductoCrear}
-            onEditarProducto={abrirModalProductoEditar}
-            onCambiarEstadoProducto={cambiarEstadoProducto}
-            onEliminarProducto={eliminarProducto}
-          />
-        </Tab>
+      {orderModalOpen && (
+        <ModalPedidoAdmin
+          key={selectedOrderKey}
+          show
+          pedido={selectedOrder}
+          loading={orderDetailLoading}
+          saving={orderSaving || reviewSaving}
+          errorMessage={orderError}
+          onClose={closeOrderModal}
+          onSave={saveOrderStatus}
+          onRequestReviewResolution={requestReviewResolution}
+        />
+      )}
 
-        <Tab eventKey="usuarios" title="Usuarios">
-          <SeccionUsuariosAdmin
-            usuarioActual={user}
-            busqueda={busquedaUsuario}
-            onBuscarChange={setBusquedaUsuario}
-            usuarios={usuariosFiltrados}
-            totalUsuarios={usuarios.length}
-            usuariosActivos={usuariosActivos}
-            usuariosSuspendidos={usuariosSuspendidos}
-            usuarioProcesandoId={usuarioProcesandoId}
-            onCambiarEstadoUsuario={cambiarEstadoUsuario}
-            onEliminarUsuario={eliminarUsuario}
-          />
-        </Tab>
-
-        <Tab eventKey="pedidos" title="Pedidos">
-          <SeccionPedidosAdmin
-            pedidos={pedidos}
-            cargandoPedidos={cargandoPedidos}
-            pedidosEnGestion={pedidosEnGestion}
-            onGestionarPedido={abrirModalPedido}
-          />
-        </Tab>
-      </Tabs>
-
-      <ModalProductoAdmin
-        show={showProdModal}
-        modoProducto={modoProducto}
-        productoInicial={productoForm}
-        cerrarModalProducto={cerrarModalProducto}
-        guardarProducto={guardarProducto}
+      <ConfirmacionAdmin
+        show={Boolean(reviewResolution)}
+        title="Resolver revisión excepcional"
+        message={
+          reviewResolution
+            ? `Vas a marcar como resuelta la revisión del pedido ${reviewResolution.orderLabel}. La nota «${reviewResolution.note}» quedará en el historial. El estado de pago y el stock no se modificarán.`
+            : ""
+        }
+        confirmLabel="Confirmar resolución"
+        confirmVariant="warning"
+        pending={reviewSaving}
+        onCancel={() => setReviewResolution(null)}
+        onConfirm={() => void confirmReviewResolution()}
       />
-
-      <ModalPedidoAdmin
-        key={pedidoSeleccionado?._id || "pedido-modal"}
-        show={showPedidoModal}
-        pedido={pedidoSeleccionado}
-        cerrarModalPedido={cerrarModalPedido}
-        guardarPedido={guardarPedido}
-        guardandoPedido={guardandoPedido}
-        eliminarPedido={eliminarPedido}
-        eliminandoPedido={eliminandoPedido}
-      />
-    </Container>
+    </main>
   );
 }

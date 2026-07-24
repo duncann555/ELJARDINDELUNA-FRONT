@@ -1,73 +1,85 @@
 import { Col, Container, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import "../../styles/footer.css";
 import LOGO from "../../assets/EL_JARDIN_DE_LUNA_FOOTER.png";
 import {
   CONTACTO_WHATSAPP_LABEL,
   CONTACTO_WHATSAPP_URL,
 } from "../../helpers/contact";
 
-const Footer = () => {
-  const currentYear = new Date().getFullYear();
+const STORE_LINKS = [
+  ["Productos", "/productos"],
+  ["Nosotros", "/nosotros"],
+  ["Contacto", "/contacto"],
+  ["Preguntas frecuentes", "/preguntas-frecuentes"],
+  ["Envíos", "/envios"],
+];
 
+const LEGAL_LINKS = [
+  ["Términos y condiciones", "/terminos-y-condiciones"],
+  ["Privacidad", "/privacidad"],
+  ["Cambios y devoluciones", "/cambios-y-devoluciones"],
+  ["BOTÓN DE ARREPENTIMIENTO", "/arrepentimiento"],
+];
+
+export default function Footer() {
   return (
-    <footer className="footer-section mt-auto">
-      <div className="footer-top-border"></div>
-
-      <Container className="pt-5 pb-4">
-        <Row className="gy-4">
-          <Col xs={12} md={4} className="text-center text-md-start">
-            <Link to="/">
-              <img src={LOGO} alt="El Jardín de Luna" className="footer-logo mb-3" />
+    <footer className="store-footer">
+      <Container>
+        <Row className="g-4">
+          <Col lg={5}>
+            <Link to="/" aria-label="Ir al inicio">
+              <img src={LOGO} alt="El Jardín de Luna" className="footer-logo" />
             </Link>
-
-            <p className="footer-text">
-              Botánica artesanal y bienestar para volver a lo simple, lo noble y lo
-              natural con una experiencia de compra serena y cercana.
+            <p className="footer-description">
+              Botánica artesanal y bienestar, con una experiencia de compra
+              clara, cercana y sin registro.
             </p>
+            <a
+              href={CONTACTO_WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-contact"
+            >
+              <i className="bi bi-whatsapp" aria-hidden="true"></i>
+              {CONTACTO_WHATSAPP_LABEL}
+            </a>
           </Col>
-
-          <Col xs={12} md={4} className="text-center text-md-start">
-            <h5 className="footer-heading">Explorar</h5>
-            <ul className="list-unstyled d-grid gap-2 mb-0 footer-links">
-              <li><Link to="/productos">Tienda online</Link></li>
-              <li><Link to="/nosotros">Nuestra historia</Link></li>
-              <li>
-                <a href={CONTACTO_WHATSAPP_URL} target="_blank" rel="noreferrer">
-                  WhatsApp
-                </a>
-              </li>
-              <li><Link to="/register">Acceso clientes</Link></li>
+          <Col xs={6} lg={3}>
+            <h2>Tienda</h2>
+            <ul>
+              {STORE_LINKS.map(([label, to]) => (
+                <li key={to}>
+                  <Link to={to}>{label}</Link>
+                </li>
+              ))}
             </ul>
           </Col>
-
-          <Col xs={12} md={4} className="text-center text-md-start">
-            <h5 className="footer-heading">Contacto</h5>
-
-            <p className="mb-3 d-flex align-items-center justify-content-center justify-content-md-start">
-              <i className="bi bi-whatsapp me-2 icon-brand"></i>
-              {CONTACTO_WHATSAPP_LABEL}
-            </p>
-            <p className="mb-3 d-flex align-items-center justify-content-center justify-content-md-start">
-              <i className="bi bi-geo-alt-fill me-2 icon-brand"></i>
-              Tucumán, Argentina
-            </p>
-
-            <div className="footer-socials d-flex gap-3 mt-3 justify-content-center justify-content-md-start flex-wrap">
-              <a href="#" aria-label="Instagram"><i className="bi bi-instagram"></i></a>
-              <a href={CONTACTO_WHATSAPP_URL} target="_blank" rel="noreferrer" aria-label="WhatsApp"><i className="bi bi-whatsapp"></i></a>
-            </div>
+          <Col xs={6} lg={4}>
+            <h2>Información legal</h2>
+            <ul>
+              {LEGAL_LINKS.map(([label, to]) => (
+                <li key={to}>
+                  <Link
+                    to={to}
+                    className={to === "/arrepentimiento" ? "withdrawal-link" : ""}
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </Col>
         </Row>
+        <div className="footer-bottom">
+          <small>
+            © {new Date().getFullYear()} El Jardín de Luna. Todos los derechos
+            reservados.
+          </small>
+          <Link to="/admin" className="admin-access">
+            Administración
+          </Link>
+        </div>
       </Container>
-
-      <div className="footer-bottom py-3 text-center">
-        <small>
-          &copy; {currentYear} <strong>El Jardín de Luna</strong> · Todos los derechos reservados.
-        </small>
-      </div>
     </footer>
   );
-};
-
-export default Footer;
+}

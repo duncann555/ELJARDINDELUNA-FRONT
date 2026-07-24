@@ -1,78 +1,138 @@
-import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useState } from "react";
+import {
+  Alert,
+  Button,
+  Card,
+  Container,
+  Form,
+  Spinner,
+} from "react-bootstrap";
 import { useAuth } from "../../context/AuthContext";
-import { isTokenExpired } from "../../helpers/app";
-import { solicitarApi } from "../../helpers/clienteApi";
+import { getSafeErrorMessage } from "../../helpers/api";
+import "../../styles/admin.css";
 
-const ProtectorAdmin = ({ children }) => {
-  const { user, token, loading, isAuthenticated, logout } = useAuth();
-  const [validandoAdmin, setValidandoAdmin] = useState(true);
-  const [tokenAdminValido, setTokenAdminValido] = useState(false);
+function CargandoAdmin() {
+  return (
+    <main className="admin-auth-page">
+      <div className="admin-auth-loading" role="status" aria-live="polite">
+        <Spinner animation="border" size="sm" />
+        <span>Validando acceso administrativo…</span>
+      </div>
+    </main>
+  );
+}
 
-  useEffect(() => {
-    let desmontado = false;
+function LoginAdmin({ login }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-    const validarTokenAdmin = async () => {
-      if (
-        loading ||
-        !isAuthenticated ||
-        !token ||
-        user?.rol !== "Administrador" ||
-        isTokenExpired(token)
-      ) {
-        if (!desmontado) {
-          setTokenAdminValido(false);
-          setValidandoAdmin(false);
-        }
-        return;
-      }
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setErrorMessage("");
+    setSubmitting(true);
 
-      try {
-        setValidandoAdmin(true);
+    try {
+      await login({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+    } catch (error) {
+      setErrorMessage(
+        getSafeErrorMessage(
+          error,
+          "No pudimos iniciar la sesión administrativa.",
+        ),
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-        const { respuesta } = await solicitarApi("/usuarios/admin/validar-token", {
-          method: "GET",
-          token,
-        });
+  return (
+    <main className="admin-auth-page">
+      <Container className="admin-auth-container">
+        <Card className="admin-auth-card">
+          <Card.Body className="p-4 p-md-5">
+            <div className="admin-auth-heading">
+              <span className="admin-auth-icon" aria-hidden="true">
+                <i className="bi bi-shield-lock"></i>
+              </span>
+              <div>
+                <p className="admin-kicker mb-1">Acceso reservado</p>
+                <h1 className="admin-auth-title font-playfair mb-2">
+                  Administración
+                </h1>
+                <p className="admin-muted mb-0">
+                  Ingresá con las credenciales administrativas de El Jardín de
+                  Luna.
+                </p>
+              </div>
+            </div>
 
-        if (!respuesta.ok) {
-          await logout();
-          if (!desmontado) {
-            setTokenAdminValido(false);
-          }
-          return;
-        }
+            {errorMessage && (
+              <Alert variant="danger" className="mt-4" role="alert">
+                {errorMessage}
+              </Alert>
+            )}
 
-        if (!desmontado) {
-          setTokenAdminValido(true);
-        }
-      } catch (error) {
-        console.error("No se pudo validar la sesion admin:", error);
-        await logout();
-        if (!desmontado) {
-          setTokenAdminValido(false);
-        }
-      } finally {
-        if (!desmontado) {
-          setValidandoAdmin(false);
-        }
-      }
-    };
+            <Form onSubmit={handleSubmit} className="mt-4">
+              <Form.Group className="mb-3" controlId="admin-email">
+                <Form.Label>Correo electrónico</Form.Label>
+                <Form.Control
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  autoComplete="username"
+                  maxLength={120}
+                  required
+                  disabled={submitting}
+                />
+              </Form.Group>
 
-    void validarTokenAdmin();
+              <Form.Group className="mb-4" controlId="admin-password">
+                <Form.Label>Contraseña</Form.Label>
+                <Form.Control
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  autoComplete="current-password"
+                  minLength={8}
+                  maxLength={128}
+                  required
+                  disabled={submitting}
+                />
+              </Form.Group>
 
-    return () => {
-      desmontado = true;
-    };
-  }, [isAuthenticated, loading, logout, token, user?.rol]);
+              <Button
+                type="submit"
+                variant="success"
+                className="w-100 admin-primary-button"
+                disabled={submitting || !email.trim() || !password}
+              >
+                {submitting ? (
+                  <>
+                    <Spinner animation="border" size="sm" className="me-2" />
+                    Ingresando…
+                  </>
+                ) : (
+                  "Ingresar"
+                )}
+              </Button>
+            </Form>
+          </Card.Body>
+        </Card>
+      </Container>
+    </main>
+  );
+}
 
-  if (loading || validandoAdmin) return null;
+export default function ProtectorAdmin({ children }) {
+  const { login, isAuthenticated, loading } = useAuth();
 
-  if (!isAuthenticated || !token || user?.rol !== "Administrador" || !tokenAdminValido) {
-    return <Navigate to="/" replace />;
-  }
+  if (loading) return <CargandoAdmin />;
+  if (!isAuthenticated) return <LoginAdmin login={login} />;
 
   return children;
-};
-
-export default ProtectorAdmin;
+}

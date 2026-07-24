@@ -1,118 +1,62 @@
-import { safeJson } from "./app";
+import { apiRequest } from "./api.js";
 
-export { safeJson };
+const money = (value) => Math.round((Number(value) || 0) * 100) / 100;
 
-export const CHECKOUT_ENVIO_STORAGE_KEY =
-  "checkout_envio_el_jardin_de_luna";
-export const CHECKOUT_PEDIDO_STORAGE_KEY =
-  "ultimo_pedido_el_jardin_de_luna";
-
-export const leerStorageJson = (key, fallback) => {
-  try {
-    const value = localStorage.getItem(key);
-    return value ? JSON.parse(value) : fallback;
-  } catch (error) {
-    console.error(`No se pudo leer ${key}:`, error);
-    return fallback;
-  }
-};
-
-export const guardarStorageJson = (key, value) => {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (error) {
-    console.error(`No se pudo guardar ${key}:`, error);
-  }
-};
-
-export const eliminarStorageItem = (key) => {
-  try {
-    localStorage.removeItem(key);
-  } catch (error) {
-    console.error(`No se pudo eliminar ${key}:`, error);
-  }
-};
-
-export const obtenerProductoId = (producto) => producto?._id ?? producto?.id;
-
-const normalizarTextoError = (valor) => {
-  if (typeof valor !== "string") return null;
-
-  const texto = valor.trim();
-  return texto.length > 0 ? texto : null;
-};
-
-const extraerDetalleError = (data) => {
-  const detalle = normalizarTextoError(data?.detalle);
-
-  if (detalle) return detalle;
-
-  if (Array.isArray(data?.causa)) {
-    const causas = data.causa
-      .map((causa) =>
-        normalizarTextoError(causa?.description) ||
-        normalizarTextoError(causa?.message) ||
-        normalizarTextoError(causa?.code),
-      )
-      .filter(Boolean);
-
-    if (causas.length > 0) {
-      return causas.join(", ");
-    }
-  }
-
-  if (typeof data?.causa === "object" && data?.causa !== null) {
-    return (
-      normalizarTextoError(data.causa?.message) ||
-      normalizarTextoError(data.causa?.description)
-    );
-  }
-
-  return normalizarTextoError(data?.error);
-};
-
-export const construirMensajeError = (data, fallback) => {
-  if (Array.isArray(data?.errors) && data.errors.length > 0) {
-    return data.errors.map((error) => error.msg).join(", ");
-  }
-
-  const mensaje = normalizarTextoError(data?.mensaje);
-  const detalle = extraerDetalleError(data);
-
-  if (mensaje && detalle && detalle !== mensaje) {
-    return `${mensaje}: ${detalle}`;
-  }
-
-  return mensaje || detalle || fallback;
-};
-
-export const obtenerCheckoutUrl = (checkoutData) => {
-  const modoFrontend = String(import.meta.env.VITE_MP_CHECKOUT_MODE || "production")
-    .trim()
-    .toLowerCase();
-  const backendEnvironment = String(checkoutData?.environment || "")
-    .trim()
-    .toLowerCase();
-  const modoCheckout = ["production", "sandbox"].includes(backendEnvironment)
-    ? backendEnvironment
-    : modoFrontend;
+export const normalizeCheckoutConfiguration = (data = {}) => {
+  const rawShippingCost = data?.entrega?.costoDomicilio;
+  const shippingCost = Number(rawShippingCost);
 
   if (
-    backendEnvironment &&
-    ["production", "sandbox"].includes(backendEnvironment) &&
-    modoFrontend !== backendEnvironment
+    rawShippingCost === null ||
+    rawShippingCost === undefined ||
+    rawShippingCost === "" ||
+    !Number.isFinite(shippingCost) ||
+    shippingCost < 0
   ) {
-    console.warn(
-      `Mercado Pago esta configurado como ${backendEnvironment} en backend y ${modoFrontend} en frontend. Se usara ${backendEnvironment}.`,
+    throw new Error(
+      "La API no devolvió un costo de envío a domicilio válido.",
     );
   }
 
-  if (modoCheckout === "sandbox" && checkoutData?.sandbox_init_point) {
-    return checkoutData.sandbox_init_point;
-  }
-
-  if (checkoutData?.init_point) return checkoutData.init_point;
-  if (checkoutData?.sandbox_init_point) return checkoutData.sandbox_init_point;
-
-  return null;
+  return {
+    costoDomicilio: money(shippingCost),
+    retiroDisponible: data?.entrega?.retiroDisponible === true,
+  };
 };
+
+export const obtenerConfiguracionCheckout = async ({ signal } = {}) => {
+  const data = await apiRequest("/checkout/configuracion", { signal });
+  return normalizeCheckoutConfiguration(data);
+};
+
+export const calcularTotalesCheckout = (
+  subtotal,
+  metodo,
+  configuration,
+) => {
+  const safeSubtotal = Math.max(0, money(subtotal));
+  const shipping =
+    metodo === "domicilio"
+      ? Math.max(0, money(configuration?.costoDomicilio))
+      : 0;
+
+  return {
+    subtotal: safeSubtotal,
+    costoEnvio: shipping,
+    total: money(safeSubtotal + shipping),
+  };
+};
+
+export const totalesCoinciden = (displayed, order) =>
+  ["subtotal", "costoEnvio", "total"].every(
+    (field) => money(displayed?.[field]) === money(order?.[field]),
+  );
+
+export const TERMINAL_CHECKOUT_ERROR_CODES = new Set([
+  "MERCADO_PAGO_UNAVAILABLE",
+  "MERCADO_PAGO_NOT_CONFIGURED",
+  "MERCADO_PAGO_INVALID_RESPONSE",
+  "CHECKOUT_EXPIRED",
+  "CHECKOUT_STATE_CHANGED",
+  "IDEMPOTENCY_KEY_REUSED",
+]);

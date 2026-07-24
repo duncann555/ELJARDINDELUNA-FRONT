@@ -1,116 +1,80 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import LayoutPrincipal from "./components/layouts/LayoutPrincipal";
+import Carrito from "./components/pages/Carrito";
+import Checkout from "./components/pages/Checkout";
+import Contacto from "./components/pages/Contacto";
+import DetalleProducto from "./components/pages/DetalleProducto";
+import Error404 from "./components/pages/Error404";
+import Informacion from "./components/pages/Informacion";
+import Inicio from "./components/pages/Inicio";
+import Nosotros from "./components/pages/Nosotros";
+import PagoEstado from "./components/pages/PagoEstado";
+import Productos from "./components/pages/Productos";
 import ProtectorAdmin from "./components/routes/ProtectorAdmin";
-import ProtectorSesion from "./components/routes/ProtectorSesion";
+import PageState from "./components/shared/PageState";
 import { AuthProvider } from "./context/AuthContext";
 import { CarritoProvider } from "./context/CarritoContext";
-import "./styles/App.css";
+import "./styles/store.css";
 
 const Admin = lazy(() => import("./components/pages/Admin"));
-const Carrito = lazy(() => import("./components/pages/Carrito"));
-const DetalleProducto = lazy(() => import("./components/pages/DetalleProducto"));
-const Error404 = lazy(() => import("./components/pages/Error404"));
-const Inicio = lazy(() => import("./components/pages/Inicio"));
-const MisCompras = lazy(() => import("./components/pages/MisCompras"));
-const Nosotros = lazy(() => import("./components/pages/Nosotros"));
-const PagoEstado = lazy(() => import("./components/pages/PagoEstado"));
-const Productos = lazy(() => import("./components/pages/Productos"));
-const Register = lazy(() => import("./components/pages/Register"));
-const RecuperarPassword = lazy(() => import("./components/pages/RecuperarPassword"));
-const RestablecerPassword = lazy(() => import("./components/pages/RestablecerPassword"));
-const TransferenciaConfirmada = lazy(() =>
-  import("./components/pages/TransferenciaConfirmada"),
-);
 
-const PageLoader = () => (
-  <div className="min-vh-100 d-flex align-items-center justify-content-center">
-    <div className="spinner-border text-success" role="status">
-      <span className="visually-hidden">Cargando...</span>
-    </div>
-  </div>
-);
-
-function App() {
+export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <CarritoProvider>
-          <div className="min-vh-100">
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route element={<LayoutPrincipal />}>
-                  <Route path="/" element={<Inicio />} />
-                  <Route path="/productos" element={<Productos />} />
-                  <Route path="/producto/:id" element={<DetalleProducto />} />
-                  <Route path="/nosotros" element={<Nosotros />} />
-                  <Route
-                    path="/carrito"
-                    element={
-                      <ProtectorSesion
-                        titulo="Entra a tu cuenta"
-                        mensaje="Así podemos guardar tu carrito y acompañarte mejor en tu compra"
-                      >
-                        <Carrito />
-                      </ProtectorSesion>
+    <AuthProvider>
+      <CarritoProvider>
+        <Routes>
+          <Route element={<LayoutPrincipal />}>
+            <Route index element={<Inicio />} />
+            <Route path="productos" element={<Productos />} />
+            <Route path="producto/:identifier" element={<DetalleProducto />} />
+            <Route path="carrito" element={<Carrito />} />
+            <Route path="checkout" element={<Checkout />} />
+            <Route path="pago/success" element={<PagoEstado />} />
+            <Route path="pago/failure" element={<PagoEstado />} />
+            <Route path="pago/pending" element={<PagoEstado />} />
+            <Route path="nosotros" element={<Nosotros />} />
+            <Route path="contacto" element={<Contacto />} />
+            <Route
+              path="preguntas-frecuentes"
+              element={<Informacion tipo="/preguntas-frecuentes" />}
+            />
+            <Route
+              path="terminos-y-condiciones"
+              element={<Informacion tipo="/terminos-y-condiciones" />}
+            />
+            <Route
+              path="privacidad"
+              element={<Informacion tipo="/privacidad" />}
+            />
+            <Route
+              path="cambios-y-devoluciones"
+              element={<Informacion tipo="/cambios-y-devoluciones" />}
+            />
+            <Route path="envios" element={<Informacion tipo="/envios" />} />
+            <Route
+              path="arrepentimiento"
+              element={<Informacion tipo="/arrepentimiento" />}
+            />
+            <Route
+              path="admin"
+              element={
+                <ProtectorAdmin>
+                  <Suspense
+                    fallback={
+                      <PageState status="loading" />
                     }
-                  />
-                  <Route
-                    path="/mis-compras"
-                    element={
-                      <ProtectorSesion
-                        titulo="Tus compras están protegidas"
-                        mensaje="Iniciá sesión para consultar tu historial de compras."
-                      >
-                        <MisCompras />
-                      </ProtectorSesion>
-                    }
-                  />
-                  <Route
-                    path="/transferencia-confirmada"
-                    element={
-                      <ProtectorSesion
-                        titulo="Primero iniciá sesión"
-                        mensaje="Necesitás iniciar sesión para ver la confirmación de tu pedido."
-                      >
-                        <TransferenciaConfirmada />
-                      </ProtectorSesion>
-                    }
-                  />
-                  <Route path="/pago-exitoso" element={<PagoEstado />} />
-                  <Route path="/pago-pendiente" element={<PagoEstado />} />
-                  <Route path="/pago/success" element={<PagoEstado />} />
-                  <Route path="/pago/failure" element={<PagoEstado />} />
-                  <Route path="/pago/pending" element={<PagoEstado />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route
-                    path="/recuperar-password"
-                    element={<RecuperarPassword />}
-                  />
-                  <Route
-                    path="/restablecer-password"
-                    element={<RestablecerPassword />}
-                  />
-                  <Route path="/login" element={<Navigate to="/" replace />} />
-                  <Route
-                    path="/admin"
-                    element={
-                      <ProtectorAdmin>
-                        <Admin />
-                      </ProtectorAdmin>
-                    }
-                  />
-                </Route>
-
-                <Route path="/404" element={<Error404 />} />
-                <Route path="*" element={<Navigate to="/404" replace />} />
-              </Routes>
-            </Suspense>
-          </div>
-        </CarritoProvider>
-      </AuthProvider>
-    </BrowserRouter>
+                  >
+                    <Admin />
+                  </Suspense>
+                </ProtectorAdmin>
+              }
+            />
+            <Route path="404" element={<Error404 />} />
+            <Route path="*" element={<Navigate to="/404" replace />} />
+          </Route>
+        </Routes>
+      </CarritoProvider>
+    </AuthProvider>
   );
 }
-
-export default App;

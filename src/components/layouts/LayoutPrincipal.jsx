@@ -1,15 +1,22 @@
-import Menu from "../shared/Menu";
-import Footer from "../shared/Footer";
+import { useEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import FloatingButtons from "../shared/FloatingButtons";
-import { Outlet } from "react-router-dom";
+import Footer from "../shared/Footer";
+import Menu from "../shared/Menu";
 
 const LayoutPrincipal = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   return (
     <>
       <Menu />
-      <main className="min-vh-100">
+      <div className="site-content">
         <Outlet />
-      </main>
+      </div>
       <FloatingButtons />
       <Footer />
     </>

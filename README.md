@@ -1,47 +1,117 @@
-# EL JARDIN DE LUNA Frontend
+# El Jardín de Luna — Frontend
 
-Frontend en React + Vite preparado para desplegarse en Vercel.
+Tienda online de botánica artesanal construida con React 19, Vite y Bootstrap.
+La compra es pública y no requiere registro: el carrito vive en el navegador,
+el backend valida stock y totales, y Mercado Pago procesa el pago.
 
-## Local
+## Tecnologías
+
+- React 19, React Router y Context API.
+- Vite.
+- React-Bootstrap, Bootstrap y Bootstrap Icons.
+- React Hook Form.
+- API REST propia; no contiene SDK ni credenciales de Mercado Pago.
+
+## Requisitos
+
+- Node.js 20.19 o superior (también 22.12+).
+- npm 10 o superior.
+- API de El Jardín de Luna disponible.
+
+## Instalación y configuración
+
+Instalá las dependencias, copiá `.env.example` como `.env` y configurá:
+
+```dotenv
+VITE_API_URL=http://localhost:3001/api
+```
+
+En desarrollo existe ese mismo fallback local. En producción `VITE_API_URL` es
+obligatoria y el build no inicia silenciosamente sin ella. Los costos de entrega,
+las credenciales y toda configuración sensible pertenecen al backend.
+
+## Comandos
 
 ```bash
 npm install
 npm run dev
+npm run lint
+npm test
+npm run build
+npm run preview
 ```
 
-Por defecto espera el backend en `http://localhost:3001/api`.
+## Estructura principal
 
-## Variables de entorno
+- `src/components/pages`: tienda, checkout, legales y administración.
+- `src/components/shared`: navegación, pie, tarjetas y estados reutilizables.
+- `src/components/admin`: productos y pedidos del panel protegido.
+- `src/context`: única implementación del carrito y sesión administrativa.
+- `src/helpers`: cliente HTTP, normalización, validación e idempotencia.
+- `src/content`: contenido informativo y legal centralizado.
+- `src/styles`: estilos globales de la tienda, legales y administración.
+- `test`: pruebas esenciales de carrito, checkout, pedidos y productos.
 
-Debes configurar estas variables en Vercel:
+## Flujo de compra
 
-- `VITE_API_URL`
-- `VITE_MP_CHECKOUT_MODE=production` o `sandbox`
+1. El catálogo público se obtiene de `GET /productos`.
+2. El carrito anónimo conserva solo datos mínimos de productos en
+   `localStorage` y respeta el stock informado.
+3. Carrito y checkout consultan `GET /checkout/configuracion` para mostrar
+   envío y total antes del pago.
+4. Antes de crear el pedido se reconcilian precio, disponibilidad y stock.
+5. `POST /checkout/mercadopago` usa una `Idempotency-Key` persistida por intento.
+6. El total definitivo se presenta para confirmación antes de abrir Mercado
+   Pago.
+7. Las rutas `/pago/success`, `/pago/failure` y `/pago/pending` consultan
+   `GET /pedidos/:numero/estado` con `X-Order-Token`. Nunca confían en el estado
+   de la URL y solo vacían el carrito si el backend confirma `approved`.
 
-Valor esperado en produccion para la API:
+## Mercado Pago
 
-```bash
-VITE_API_URL=https://el-jardin-de-luna-backend.onrender.com/api
-VITE_MP_CHECKOUT_MODE=production
-```
+El frontend no recibe el Access Token ni crea preferencias. Envía IDs y
+cantidades al backend, muestra el total recalculado para una confirmación final
+y sólo abre una URL HTTPS oficial de Mercado Pago. La acreditación depende del
+webhook y de la consulta segura al backend.
 
-No configures Access Token ni Client Secret en el frontend.
-El checkout abre la URL que devuelve el backend. No hace falta configurar Public Key ni cargar scripts de Mercado Pago en React para Checkout Pro por redireccion.
-En Vercel, `VITE_MP_CHECKOUT_MODE` debe quedar exactamente en `production` para el sitio productivo. Despues de cambiar una variable `VITE_`, redeploya el frontend porque Vite la inserta durante el build.
-Tampoco configures `VITE_ADMIN_PASSWORD`: la contraseña admin pertenece solo al backend.
-Para probar Mercado Pago en produccion, limpia `localStorage` y `sessionStorage`, crea una compra nueva desde cero y usa una cuenta compradora real distinta de la cuenta vendedora.
+## Administración
 
-## Vercel
+`/admin` carga el panel de forma diferida. El JWT administrativo se guarda
+únicamente en `sessionStorage`; los datos del administrador se mantienen en
+memoria. El panel permite administrar productos, imágenes y el estado operativo
+de pedidos, pero no usuarios ni estados de pago.
 
-Configuracion recomendada:
+## Rutas públicas
 
-- Framework Preset: `Vite`
-- Build Command: `npm run build`
-- Output Directory: `dist`
+- `/`, `/productos`, `/producto/:identifier`
+- `/carrito`, `/checkout`
+- `/pago/success`, `/pago/failure`, `/pago/pending`
+- `/nosotros`, `/contacto`, `/preguntas-frecuentes`
+- `/terminos-y-condiciones`, `/privacidad`
+- `/cambios-y-devoluciones`, `/envios`, `/arrepentimiento`
 
-El archivo `vercel.json` agrega un rewrite para que las rutas del frontend no fallen al refrescar una pagina como `/productos`, `/admin` o `/carrito`.
+La página principal y el pie muestran acceso destacado al Botón de
+Arrepentimiento conforme a la Disposición 954/2025.
 
-## Verificacion rapida
+## Persistencia y privacidad
 
-- Frontend local: `http://localhost:5173`
-- Backend esperado en produccion: `https://tu-backend.onrender.com/api`
+- `localStorage`: carrito anónimo. Como contingencia, puede guardar la referencia
+  mínima del último pedido si `sessionStorage` no está disponible.
+- `sessionStorage`: JWT administrativo, clave idempotente del intento de checkout
+  y referencia mínima del último pedido (`numero`, `orderToken`,
+  `externalReference`).
+- No se almacenan datos personales del checkout ni datos de tarjetas.
+
+## Despliegue
+
+El proyecto genera una SPA en `dist/`. `vercel.json` redirige rutas del navegador
+a `index.html`. Antes de desplegar ejecutá lint, tests, build y configurá
+`VITE_API_URL` con la URL HTTPS de producción.
+
+## Límites y pasos externos
+
+- El pago real o sandbox requiere credenciales y webhook configurados en el
+  backend; no puede validarse sólo desde este repositorio.
+- La carga de imágenes depende de la configuración de Cloudinary del backend.
+- Los textos legales y datos comerciales deben revisarse si cambian el domicilio,
+  canales de atención o condiciones de venta.

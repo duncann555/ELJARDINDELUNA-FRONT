@@ -1,278 +1,331 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Button, Card, Col, Container, Row } from "react-bootstrap";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useEffect, useRef, useState } from "react";
+import { Alert, Button, Card, Container, Spinner } from "react-bootstrap";
+import { Link, useSearchParams } from "react-router-dom";
 import { useCarrito } from "../../context/CarritoContext";
+import { apiRequest, getSafeErrorMessage } from "../../helpers/api";
+import { formatCurrency, formatDate } from "../../helpers/format";
 import {
-  formatCurrency,
-  formatDate,
-  isAuthError,
-} from "../../helpers/app";
+  clearCheckoutAttemptKey,
+  markLastOrderCartConsumed,
+  matchesOrderReference,
+  readLastOrder,
+} from "../../helpers/order";
 import {
-  CHECKOUT_PEDIDO_STORAGE_KEY,
-  guardarStorageJson,
-  leerStorageJson,
-} from "../../helpers/checkout";
-import { solicitarApi } from "../../helpers/clienteApi";
-import EstadoBadge from "../shared/EstadoBadge";
+  FINAL_PAYMENT_STATES,
+  normalizePaymentState,
+  shouldConsumePurchasedCart,
+  shouldReleaseCheckoutAttempt,
+} from "../../helpers/payment";
+import { CONTACTO_WHATSAPP_URL } from "../../helpers/contact";
 
-const ESTADOS = {
-  "/pago/success": {
-    icon: "bi-check2-circle",
-    iconClass: "text-success",
-    badgeValue: "approved",
+const PAYMENT_COPY = {
+  approved: {
+    icon: "bi-check-circle",
+    className: "is-approved",
     title: "Pago confirmado",
-    description:
-      "Tu pedido fue enviado a Mercado Pago correctamente y ya registramos la compra en EL JARDIN DE LUNA.",
+    description: "El pago fue acreditado y tu pedido quedó confirmado.",
   },
-  "/pago/failure": {
+  rejected: {
     icon: "bi-x-circle",
-    iconClass: "text-danger",
-    badgeValue: "rejected",
+    className: "is-rejected",
     title: "Pago no aprobado",
     description:
-      "Mercado Pago no pudo aprobar el pago. Podes volver al carrito e intentar con otro medio.",
+      "El pago no fue aprobado. Tu carrito sigue disponible para intentarlo nuevamente.",
   },
-  "/pago/pending": {
+  cancelled: {
+    icon: "bi-x-circle",
+    className: "is-rejected",
+    title: "Pago cancelado",
+    description:
+      "El pago fue cancelado. Tu carrito sigue disponible para intentarlo nuevamente.",
+  },
+  refunded: {
+    icon: "bi-arrow-counterclockwise",
+    className: "is-rejected",
+    title: "Pago devuelto",
+    description:
+      "El backend confirmó que el pago fue devuelto. Si necesitás detalles, contactanos con tu número de pedido.",
+  },
+  charged_back: {
+    icon: "bi-shield-exclamation",
+    className: "is-rejected",
+    title: "Pago contracargado",
+    description:
+      "El backend informó una contracarga sobre este pago. Contactanos con tu número de pedido.",
+  },
+  pending: {
     icon: "bi-hourglass-split",
-    iconClass: "text-warning",
-    badgeValue: "pending",
-    title: "Estamos esperando la acreditacion",
+    className: "is-pending",
+    title: "Pago en proceso",
     description:
-      "Tu pedido fue creado y el pago quedo pendiente. Te recomendamos guardar este resumen para seguirlo desde admin.",
-  },
-  "/pago-exitoso": {
-    icon: "bi-check2-circle",
-    iconClass: "text-success",
-    badgeValue: "approved",
-    title: "Pago confirmado",
-    description:
-      "Tu pedido fue enviado a Mercado Pago correctamente y ya registramos la compra en EL JARDÍN DE LUNA.",
-  },
-  "/pago-pendiente": {
-    icon: "bi-hourglass-split",
-    iconClass: "text-warning",
-    badgeValue: "pending",
-    title: "Estamos esperando la acreditación",
-    description:
-      "Tu pedido fue creado y el pago quedó pendiente. Te recomendamos guardar este resumen para seguirlo desde admin.",
+      "Mercado Pago todavía no confirmó el resultado. La acreditación puede demorar.",
   },
 };
 
-function PagoEstado() {
-  const location = useLocation();
+const wait = (milliseconds, signal) =>
+  new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(resolve, milliseconds);
+    signal.addEventListener(
+      "abort",
+      () => {
+        window.clearTimeout(timeout);
+        reject(new DOMException("Aborted", "AbortError"));
+      },
+      { once: true },
+    );
+  });
+
+export default function PagoEstado() {
+  const { consumirLineasPedido } = useCarrito();
   const [searchParams] = useSearchParams();
-  const { token, logout } = useAuth();
-  const { vaciarCarrito } = useCarrito();
-  const sincronizadoRef = useRef(false);
-  const [estadoSincronizacion, setEstadoSincronizacion] = useState("idle");
-
-  const estadoActual = ESTADOS[location.pathname] || ESTADOS["/pago/pending"];
-
-  const pedidoGuardado = useMemo(
-    () => leerStorageJson(CHECKOUT_PEDIDO_STORAGE_KEY, null),
-    [],
+  const [requestKey, setRequestKey] = useState(0);
+  const [state, setState] = useState({
+    status: "loading",
+    order: null,
+    error: "",
+  });
+  const [storedOrder] = useState(readLastOrder);
+  const cartConsumptionHandledRef = useRef(
+    Boolean(storedOrder?.cartConsumed),
   );
-
-  const paymentId =
-    searchParams.get("payment_id") || searchParams.get("collection_id") || "";
-  const paymentStatus =
-    searchParams.get("status") ||
-    searchParams.get("collection_status") ||
-    (["/pago/success", "/pago-exitoso"].includes(location.pathname)
-      ? "approved"
-      : location.pathname === "/pago/failure"
-        ? "rejected"
-        : "pending");
-  const preferenceId =
-    searchParams.get("preference_id") || pedidoGuardado?.preferenceId || "";
+  const requestedOrder = String(searchParams.get("pedido") || "").trim();
+  const orderMatches = matchesOrderReference(storedOrder, requestedOrder);
 
   useEffect(() => {
-    if (!pedidoGuardado?.pedidoId) return;
+    if (!orderMatches) return undefined;
 
-    guardarStorageJson(CHECKOUT_PEDIDO_STORAGE_KEY, {
-      ...pedidoGuardado,
-      preferenceId: preferenceId || pedidoGuardado.preferenceId || null,
-      paymentId: paymentId || pedidoGuardado.paymentId || null,
-      estadoPago: paymentStatus || pedidoGuardado.estadoPago || "pending",
-      esRecuperableCheckout: paymentStatus !== "approved",
-    });
-  }, [paymentId, paymentStatus, pedidoGuardado, preferenceId]);
+    const controller = new AbortController();
 
-  useEffect(() => {
-    if (location.pathname === "/pago/failure") return;
+    const pollOrder = async () => {
+      setState((current) => ({ ...current, status: "loading", error: "" }));
 
-    vaciarCarrito();
-  }, [location.pathname, vaciarCarrito]);
-
-  useEffect(() => {
-    if (!token || !preferenceId || !paymentId || sincronizadoRef.current) return;
-
-    sincronizadoRef.current = true;
-    let desmontado = false;
-
-    const sincronizarPago = async () => {
       try {
-        setEstadoSincronizacion("loading");
+        let order = null;
 
-        const { respuesta, datos } = await solicitarApi("/pagos/resultado", {
-          method: "PATCH",
-          token,
-          json: {
-            preferenceId,
-            paymentId: paymentId || undefined,
-            status: paymentStatus,
-          },
-        });
+        for (let attempt = 0; attempt < 5; attempt += 1) {
+          const data = await apiRequest(
+            `/pedidos/${encodeURIComponent(storedOrder.numero)}/estado`,
+            {
+              orderToken: storedOrder.orderToken,
+              signal: controller.signal,
+            },
+          );
+          order = data?.pedido || null;
 
-        if (isAuthError(respuesta, datos)) {
-          logout();
-          throw new Error(datos?.mensaje || "La sesión ya no es válida.");
+          if (!order) {
+            throw new Error("No recibimos el estado del pedido.");
+          }
+
+          if (
+            FINAL_PAYMENT_STATES.has(
+              String(order.estadoPago || "").toLowerCase(),
+            )
+          ) {
+            break;
+          }
+
+          if (attempt < 4) await wait(2000, controller.signal);
         }
 
-        if (!respuesta.ok) {
-          throw new Error(datos?.mensaje || "No se pudo sincronizar el pago.");
-        }
+        if (!controller.signal.aborted) {
+          setState({ status: "success", order, error: "" });
+          const paymentState = normalizePaymentState(order.estadoPago);
 
-        if (!desmontado) {
-          setEstadoSincronizacion("success");
+          if (shouldReleaseCheckoutAttempt(paymentState)) {
+            clearCheckoutAttemptKey();
+          }
+
+          if (
+            shouldConsumePurchasedCart(paymentState) &&
+            !cartConsumptionHandledRef.current
+          ) {
+            cartConsumptionHandledRef.current = true;
+            consumirLineasPedido(storedOrder.items);
+            markLastOrderCartConsumed(storedOrder.numero);
+          }
         }
       } catch (error) {
-        console.error("Error al sincronizar el resultado del pago:", error);
-
-        if (!desmontado) {
-          setEstadoSincronizacion("error");
+        if (error?.name !== "AbortError" && !controller.signal.aborted) {
+          setState({
+            status: "error",
+            order: null,
+            error:
+              error instanceof Error &&
+              error.message === "No recibimos el estado del pedido."
+                ? error.message
+                : getSafeErrorMessage(error),
+          });
         }
       }
     };
 
-    void sincronizarPago();
+    void pollOrder();
+    return () => controller.abort();
+  }, [
+    consumirLineasPedido,
+    orderMatches,
+    requestKey,
+    storedOrder,
+  ]);
 
-    return () => {
-      desmontado = true;
-    };
-  }, [logout, paymentId, paymentStatus, preferenceId, token]);
+  if (!orderMatches) {
+    return (
+      <main className="payment-page">
+        <Container>
+          <Card className="payment-card">
+            <Card.Body>
+              <i className="bi bi-shield-exclamation payment-icon"></i>
+              <h1>No podemos identificar este pedido</h1>
+              <p>
+                Por seguridad, la referencia del enlace debe coincidir con el
+                pedido iniciado en esta pestaña.
+              </p>
+              <div className="payment-actions">
+                <Button as={Link} to="/productos" variant="success">
+                  Ver productos
+                </Button>
+                <Button
+                  as="a"
+                  href={CONTACTO_WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="outline-success"
+                >
+                  Consultar por WhatsApp
+                </Button>
+              </div>
+            </Card.Body>
+          </Card>
+        </Container>
+      </main>
+    );
+  }
+
+  if (state.status === "loading") {
+    return (
+      <main className="payment-page" aria-live="polite">
+        <Container>
+          <Card className="payment-card">
+            <Card.Body>
+              <Spinner animation="border" variant="success" />
+              <h1>Verificando tu pago</h1>
+              <p>
+                Consultamos el estado seguro del pedido. Esto puede demorar unos
+                segundos.
+              </p>
+            </Card.Body>
+          </Card>
+        </Container>
+      </main>
+    );
+  }
+
+  if (state.status === "error") {
+    return (
+      <main className="payment-page">
+        <Container>
+          <Card className="payment-card">
+            <Card.Body>
+              <i className="bi bi-wifi-off payment-icon"></i>
+              <h1>No pudimos verificar el pago</h1>
+              <Alert variant="warning">{state.error}</Alert>
+              <p>
+                No mostramos un resultado hasta que el servidor pueda
+                confirmarlo. Tu carrito no fue modificado.
+              </p>
+              <Button
+                variant="success"
+                onClick={() => setRequestKey((value) => value + 1)}
+              >
+                Volver a consultar
+              </Button>
+            </Card.Body>
+          </Card>
+        </Container>
+      </main>
+    );
+  }
+
+  const order = state.order;
+  const paymentState = normalizePaymentState(order.estadoPago);
+  const copy = PAYMENT_COPY[paymentState];
 
   return (
-    <section className="py-5 bg-light min-vh-100 d-flex align-items-center">
+    <main className="payment-page">
       <Container>
-        <Row className="justify-content-center">
-          <Col lg={8} xl={7}>
-            <Card className="border-0 shadow-lg rounded-4 overflow-hidden">
-              <Card.Body className="p-4 p-md-5">
-                <div className="text-center mb-4">
-                  <div className={`display-2 mb-3 ${estadoActual.iconClass}`}>
-                    <i className={`bi ${estadoActual.icon}`}></i>
-                  </div>
+        <Card className={`payment-card ${copy.className}`}>
+          <Card.Body>
+            <i className={`bi ${copy.icon} payment-icon`} aria-hidden="true"></i>
+            <p className="eyebrow">Estado verificado</p>
+            <h1>{copy.title}</h1>
+            <p>{copy.description}</p>
 
-                  <EstadoBadge
-                    tipo="pago"
-                    valor={estadoActual.badgeValue}
-                    className="mb-3"
-                  />
+            <dl className="payment-details">
+              <div>
+                <dt>Pedido</dt>
+                <dd>{order.numero}</dd>
+              </div>
+              <div>
+                <dt>Referencia</dt>
+                <dd>
+                  {order.externalReference ||
+                    storedOrder.externalReference ||
+                    "Sin referencia"}
+                </dd>
+              </div>
+              <div>
+                <dt>Total</dt>
+                <dd>{formatCurrency(order.total)}</dd>
+              </div>
+              <div>
+                <dt>Última actualización</dt>
+                <dd>{formatDate(order.updatedAt || order.createdAt)}</dd>
+              </div>
+            </dl>
 
-                  <h1 className="fw-bold mb-3">{estadoActual.title}</h1>
-                  <p className="text-muted mb-0">{estadoActual.description}</p>
-                </div>
+            {paymentState === "pending" && (
+              <Alert variant="info">
+                Si el pago se acredita más tarde, podés volver a esta página
+                desde este mismo navegador para consultar nuevamente.
+              </Alert>
+            )}
 
-                {estadoSincronizacion === "loading" && (
-                  <Alert variant="info" className="rounded-4">
-                    Estamos sincronizando el resultado del pago con tu panel de pedidos.
-                  </Alert>
-                )}
-
-                {estadoSincronizacion === "success" && (
-                  <Alert variant="success" className="rounded-4">
-                    El estado del pedido ya quedó actualizado en el sistema.
-                  </Alert>
-                )}
-
-                {estadoSincronizacion === "error" && (
-                  <Alert variant="warning" className="rounded-4">
-                    No pudimos confirmar el estado automáticamente. Si hace falta, podés
-                    revisarlo luego desde admin.
-                  </Alert>
-                )}
-
-                <div className="rounded-4 border p-4 bg-white">
-                  <Row className="g-3">
-                    <Col md={6}>
-                      <small className="text-muted d-block mb-1">Pedido</small>
-                      <div className="fw-bold">
-                        {pedidoGuardado?.pedidoId
-                          ? `#${String(pedidoGuardado.pedidoId).slice(-6).toUpperCase()}`
-                          : "Pendiente de identificación"}
-                      </div>
-                    </Col>
-
-                    <Col md={6}>
-                      <small className="text-muted d-block mb-1">Fecha</small>
-                      <div className="fw-bold">
-                        {formatDate(pedidoGuardado?.createdAt, {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        })}
-                      </div>
-                    </Col>
-
-                    <Col md={6}>
-                      <small className="text-muted d-block mb-1">Estado MP</small>
-                      <div className="fw-bold text-capitalize">{paymentStatus}</div>
-                    </Col>
-
-                    <Col md={6}>
-                      <small className="text-muted d-block mb-1">Payment ID</small>
-                      <div className="fw-bold">{paymentId || "-"}</div>
-                    </Col>
-
-                    <Col md={6}>
-                      <small className="text-muted d-block mb-1">Productos</small>
-                      <div className="fw-bold">
-                        {pedidoGuardado?.cantidadTotal ?? 0} productos
-                      </div>
-                    </Col>
-
-                    <Col md={6}>
-                      <small className="text-muted d-block mb-1">Total</small>
-                      <div className="fw-bold">
-                        {formatCurrency(pedidoGuardado?.total || 0)}
-                      </div>
-                    </Col>
-
-                    <Col xs={12}>
-                      <small className="text-muted d-block mb-1">Envío</small>
-                      <div className="fw-semibold">
-                        {pedidoGuardado?.envio
-                          ? `${pedidoGuardado.envio.domicilio}, ${pedidoGuardado.envio.ciudad}, ${pedidoGuardado.envio.provincia} (${pedidoGuardado.envio.codigoPostal})`
-                          : "No encontramos una dirección guardada para este pedido."}
-                      </div>
-                    </Col>
-                  </Row>
-                </div>
-
-                <div className="d-flex flex-column flex-md-row gap-3 justify-content-center mt-4">
-                  <Button
-                    as={Link}
-                    to="/mis-compras"
-                    variant="outline-success"
-                    className="rounded-pill px-4"
-                  >
-                    Ver mis compras
-                  </Button>
-                  <Button as={Link} to="/productos" variant="success" className="rounded-pill px-4">
-                    Seguir comprando
-                  </Button>
-                  <Button as={Link} to="/" variant="outline-dark" className="rounded-pill px-4">
-                    Volver al inicio
-                  </Button>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
+            <div className="payment-actions">
+              {paymentState === "pending" && (
+                <Button
+                  variant="success"
+                  onClick={() => setRequestKey((value) => value + 1)}
+                >
+                  Consultar estado nuevamente
+                </Button>
+              )}
+              {paymentState !== "approved" && (
+                <Button
+                  as={Link}
+                  to="/carrito"
+                  variant={
+                    paymentState === "pending" ? "outline-success" : "success"
+                  }
+                >
+                  Volver al carrito
+                </Button>
+              )}
+              <Button as={Link} to="/productos" variant="outline-success">
+                Seguir comprando
+              </Button>
+              <Button
+                as="a"
+                href={CONTACTO_WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="link"
+              >
+                Necesito ayuda
+              </Button>
+            </div>
+          </Card.Body>
+        </Card>
       </Container>
-    </section>
+    </main>
   );
 }
-
-export default PagoEstado;
